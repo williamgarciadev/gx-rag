@@ -5,9 +5,14 @@ Repositorio GeneXus — operaciones contra la Syntax DB.
 import re
 import logging
 from typing import Literal
-from datetime import datetime
 
-from src.syntax_db.models import GxSyntax, ValidationLog, MissingMethod, get_session
+from src.syntax_db.models import (
+    BtApi,
+    GxSyntax,
+    MissingMethod,
+    ValidationLog,
+    get_session,
+)
 
 log = logging.getLogger(__name__)
 
@@ -20,9 +25,34 @@ def _normalize_token(snippet: str) -> str:
     # Extraer palabras alfanuméricas + guiones bajos
     tokens = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", snippet)
     # Filtrar palabras comunes de programación
-    stop = {"if", "else", "for", "while", "do", "return", "var", "let", "const",
-            "function", "class", "import", "export", "new", "this", "self",
-            "true", "false", "null", "none", "async", "await", "def", "in", "or", "and"}
+    stop = {
+        "if",
+        "else",
+        "for",
+        "while",
+        "do",
+        "return",
+        "var",
+        "let",
+        "const",
+        "function",
+        "class",
+        "import",
+        "export",
+        "new",
+        "this",
+        "self",
+        "true",
+        "false",
+        "null",
+        "none",
+        "async",
+        "await",
+        "def",
+        "in",
+        "or",
+        "and",
+    }
     return " ".join(t for t in tokens if t.lower() not in stop).strip()
 
 
@@ -61,15 +91,45 @@ def _record_missing(token: str, object_type: str | None, version: str | None) ->
             existing.hit_count += 1
             existing.status = "pending"
         else:
-            session.add(MissingMethod(
-                token=token,
-                object_type=object_type,
-                status="pending",
-            ))
+            session.add(
+                MissingMethod(
+                    token=token,
+                    object_type=object_type,
+                    status="pending",
+                )
+            )
         session.commit()
         session.close()
     except Exception as exc:
         log.error(f"Failed to record missing method: {exc}")
+
+
+def _verify_bt_api(snippet: str, token: str, version: str | None) -> dict:
+    """Verify a token against the BtApi catalog (endpoint names)."""
+    session = get_session()
+    try:
+        entry = session.query(BtApi).filter(BtApi.endpoint == token).first()
+        if entry:
+            _log_verdict(
+                "verify_syntax", snippet, "VÁLIDO", entry.id, version, "bt_api"
+            )
+            return {
+                "verdict": "VÁLIDO",
+                "name": entry.endpoint,
+                "object_type": "BtApi",
+                "signature": {"method": entry.method, "path": entry.path},
+                "source": "bt_api",
+                "notes": f"Endpoint Bantotal válido ({entry.method} {entry.path})",
+            }
+        _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
+        _record_missing(token, "BtApi", version)
+        return {
+            "verdict": "NO_VERIFICABLE",
+            "reason": "Endpoint no encontrado en el catálogo bt_apis. Verificar manualmente.",
+            "token": token,
+        }
+    finally:
+        session.close()
 
 
 def verify_syntax(
@@ -81,22 +141,30 @@ def verify_syntax(
     Verifica un snippet contra el catálogo gx_syntax.
     Retorna veredicto con procedencia.
     """
-    session = get_session()
-
     token = _normalize_token(snippet)
 
+    # bt_api snippets are verified against the BtApi catalog, NOT GxSyntax.
+    if language == "bt_api":
+        return _verify_bt_api(snippet, token, version)
+
+    session = get_session()
+
     # Búsqueda exacta en nombre
-    entry = session.query(GxSyntax).filter(
-        GxSyntax.name == token
-    ).first()
+    entry = session.query(GxSyntax).filter(GxSyntax.name == token).first()
 
     if entry:
-        # Verificar versión si se indicó
-        if version and entry.version_since:
-            # TODO: comparar versiones
-            pass
+        # NOTE: version filtering is not enforced yet — version_since is not a
+        # normalized/comparable format, so we surface the catalog version and
+        # flag a mismatch in notes, but do not gate the verdict on it.
+        version_note = ""
+        if version and entry.version_since and version != entry.version_since:
+            version_note = (
+                f" (versión pedida {version}; catálogo indica {entry.version_since})"
+            )
         session.close()
-        _log_verdict("verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source)
+        _log_verdict(
+            "verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source
+        )
         return {
             "verdict": "VÁLIDO",
             "name": entry.name,
@@ -104,13 +172,16 @@ def verify_syntax(
             "signature": entry.signature,
             "version": entry.version_since,
             "source": entry.source,
-            "notes": f"Válido según {entry.source} ({entry.object_type})",
+            "notes": f"Válido según {entry.source} ({entry.object_type}){version_note}",
         }
 
     # Buscar por similaridad en nombre
-    similar = session.query(GxSyntax).filter(
-        GxSyntax.name.like(f"%{token[:8]}%")
-    ).limit(5).all()
+    similar = (
+        session.query(GxSyntax)
+        .filter(GxSyntax.name.like(f"%{token[:8]}%"))
+        .limit(5)
+        .all()
+    )
 
     session.close()
 
@@ -137,9 +208,7 @@ def verify_syntax(
 def list_methods(object_type: str, version: str | None = None) -> list[str]:
     """Lista todos los métodos de un tipo de objeto."""
     session = get_session()
-    query = session.query(GxSyntax.name).filter(
-        GxSyntax.object_type == object_type
-    )
+    query = session.query(GxSyntax.name).filter(GxSyntax.object_type == object_type)
     if version:
         query = query.filter(GxSyntax.version_since == version)
     results = [r[0] for r in query.distinct().all()]
@@ -147,7 +216,9 @@ def list_methods(object_type: str, version: str | None = None) -> list[str]:
     return results
 
 
-def get_signature(name: str, object_type: str, version: str | None = None) -> dict | None:
+def get_signature(
+    name: str, object_type: str, version: str | None = None
+) -> dict | None:
     """Obtiene la firma exacta de un método/objeto."""
     session = get_session()
     query = session.query(GxSyntax).filter(

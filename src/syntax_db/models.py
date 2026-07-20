@@ -4,7 +4,13 @@ Modelos SQLAlchemy para la Syntax DB (SQLite).
 
 from datetime import datetime
 from sqlalchemy import (
-    Column, String, Integer, Text, DateTime, JSON, Index,
+    Column,
+    String,
+    Integer,
+    Text,
+    DateTime,
+    JSON,
+    Index,
     create_engine,
 )
 from sqlalchemy.orm import declarative_base, Session
@@ -69,6 +75,32 @@ class MissingMethod(Base):
     status = Column(String(50), default="pending")  # pending | curated | rejected
 
 
+class SyntaxCandidate(Base):
+    """Staging area for auto-discovered catalog entries awaiting human curation.
+
+    Extraction from scraped text is heuristic and noisy, so candidates never
+    land directly in the authoritative GxSyntax catalog — a human promotes them
+    (see candidate_repository.promote_candidate), keeping the binary-verdict
+    layer trustworthy.
+    """
+
+    __tablename__ = "syntax_candidates"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False, index=True)
+    object_type = Column(String(100))
+    category = Column(String(100))
+    signature = Column(JSON)
+    description = Column(Text)
+    evidence = Column(Text)  # source snippet backing the candidate
+    source_doc_id = Column(String(255))  # provenance URL
+    hit_count = Column(Integer, default=1)
+    status = Column(String(50), default="pending")  # pending | promoted | rejected
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (Index("ix_candidate_name_objtype", "name", "object_type"),)
+
+
 # ─── Engine / session helpers ─────────────────────────────────────────────────
 
 _engine = None
@@ -85,6 +117,5 @@ def get_engine(db_path: str | Path = "data/syntax.db"):
 
 
 def get_session(db_path: str | Path = "data/syntax.db"):
-    from sqlalchemy.orm import sessionmaker
     engine = get_engine(db_path)
     return Session(engine)
