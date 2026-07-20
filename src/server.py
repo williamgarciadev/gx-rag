@@ -5,9 +5,7 @@ Retrieval semántico (ChromaDB + hybrid search) sobre documentación
 GeneXus y Bantotal, con capa de validación contra SQLite.
 """
 
-import sys
 import logging
-from pathlib import Path
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -37,9 +35,10 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="search_docs",
             description=(
-                "Búsqueda híbrida en la documentación GeneXus/Bantotal. "
-                "Busca en las colecciones gx_docs y bt_docs. "
-                "Devuelve los fragmentos más relevantes con score."
+                "Búsqueda híbrida (dense + BM25 + RRF) en la colección indicada "
+                "de documentación GeneXus/Bantotal. Devuelve los fragmentos más "
+                "relevantes con score. Si la colección está vacía, informa cuáles "
+                "tienen contenido para reintentar."
             ),
             inputSchema={
                 "type": "object",
@@ -188,13 +187,29 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     if name == "search_docs":
         from src.vectorstore.retriever import hybrid_search
+        from src.vectorstore.chroma_client import get_client
+
         q = arguments.get("query", "")
         col = arguments.get("collection", "gx_docs")
         k = arguments.get("top_k", 5)
         try:
             results = hybrid_search(q, collection=col, top_k=k)
             if not results:
-                return [TextContent(type="text", text="No se encontraron resultados.")]
+                # Guide the caller to a collection that actually has content.
+                populated = []
+                try:
+                    for c in get_client().list_collections():
+                        n = c.count()
+                        if n:
+                            populated.append(f"{c.name} ({n} chunks)")
+                except Exception:
+                    pass
+                hint = (
+                    f" Colecciones con contenido: {', '.join(populated)}."
+                    if populated
+                    else " No hay colecciones con contenido; ingestá con add_from_url."
+                )
+                return [TextContent(type="text", text=f"Sin resultados en '{col}'.{hint}")]
             lines = [f"## Resultados ({len(results)} found)\n"]
             for r in results:
                 lines.append(

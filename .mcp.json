@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gx-rag": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "src.server"]
+    }
+  }
+}
