@@ -249,6 +249,22 @@ def get_document(
     return doc
 
 
+@app.get("/article", tags=["retrieval"])
+def get_article(
+    article_id: Annotated[str, Query(alias="id", description="Article ID")],
+    collection: Annotated[str, Query(description="Colección")] = "gx_docs",
+):
+    """
+    Reensambla un artículo completo a partir de sus chunks (orden chunk_index).
+    """
+    from src.vectorstore.collections import get_article
+
+    art = get_article(article_id, collection=collection)
+    if not art:
+        raise HTTPException(status_code=404, detail="Artículo no encontrado")
+    return art
+
+
 @app.get("/verify", tags=["syntax"])
 def verify_syntax(
     snippet: Annotated[str, Query(description="Snippet a verificar")],

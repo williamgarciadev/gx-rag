@@ -83,12 +83,17 @@ def hybrid_search(
     query: str,
     collection: str = "gx_docs",
     top_k: int = 5,
+    min_score: float | None = None,
 ) -> list[dict]:
     """
     Hybrid search: dense embeddings + BM25, combined with Reciprocal Rank Fusion.
 
     RRF is rank-based, so it fuses the two retrievers without needing to
     reconcile their incompatible score scales (L2 distance vs BM25).
+
+    min_score, if given, drops results whose fused score is below it. NOTE: the
+    RRF score is rank-based and NOT calibrated (not a probability); use min_score
+    as a coarse rank floor, not a confidence threshold.
     """
     client = get_client()
     col = client.get_or_create_collection(name=collection)
@@ -104,14 +109,22 @@ def hybrid_search(
 
     output = []
     for doc_id, score in ordered[:top_k]:
+        if min_score is not None and score < min_score:
+            continue
         doc, meta = lookup.get(doc_id, (None, None))
         meta = meta or {}
         output.append(
             {
+                # doc_id is the ChromaDB chunk id — the key get_document() accepts.
+                "doc_id": doc_id,
+                # id is the article id from metadata, for grouping/provenance.
                 "id": meta.get("id", doc_id),
                 "title": meta.get("title", ""),
                 "content": doc,
                 "source": meta.get("source", ""),
+                # url + content_hash let a consuming agent cite without a 2nd call.
+                "url": meta.get("url", ""),
+                "content_hash": meta.get("content_hash", ""),
                 "score": round(score, 6),
             }
         )

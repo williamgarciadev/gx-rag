@@ -67,16 +67,67 @@ def test_empty_collection_returns_empty(monkeypatch):
 
 
 def test_result_shape(monkeypatch):
-    docs = [("a", "genexus transaction", {"id": "a", "title": "T", "source": "s"})]
+    docs = [
+        (
+            "a",
+            "genexus transaction",
+            {
+                "id": "a",
+                "title": "T",
+                "source": "s",
+                "url": "http://x",
+                "content_hash": "H",
+            },
+        )
+    ]
     col = _FakeCollection(docs, dense_order=["a"])
     _wire(monkeypatch, col)
 
     results = retriever.hybrid_search("genexus", top_k=5)
 
     assert len(results) == 1
-    assert set(results[0]) == {"id", "title", "content", "source", "score"}
+    assert set(results[0]) == {
+        "doc_id",
+        "id",
+        "title",
+        "content",
+        "source",
+        "score",
+        "url",
+        "content_hash",
+    }
     assert results[0]["id"] == "a"
     assert results[0]["content"] == "genexus transaction"
+    # Provenance the agent needs to cite without a second call.
+    assert results[0]["url"] == "http://x"
+    assert results[0]["content_hash"] == "H"
+
+
+def test_min_score_filters_out_low_scoring_results(monkeypatch):
+    docs = [("a", "genexus transaction", {"id": "a", "title": "T", "source": "s"})]
+    col = _FakeCollection(docs, dense_order=["a"])
+    _wire(monkeypatch, col)
+
+    # RRF scores are small (~0.03); an impossibly high floor filters everything.
+    assert retriever.hybrid_search("genexus", top_k=5, min_score=1.0) == []
+    # Default (no floor) still returns the hit.
+    assert len(retriever.hybrid_search("genexus", top_k=5)) == 1
+
+
+def test_doc_id_is_chroma_chunk_id_not_metadata_id(monkeypatch):
+    # The Chroma chunk id ('art_c0') differs from the article id in metadata
+    # ('art'). get_document() looks up by the Chroma chunk id, so that is what
+    # search_docs must expose for the result to be fetchable afterwards.
+    docs = [
+        ("art_c0", "genexus transaction", {"id": "art", "title": "T", "source": "s"})
+    ]
+    col = _FakeCollection(docs, dense_order=["art_c0"])
+    _wire(monkeypatch, col)
+
+    result = retriever.hybrid_search("genexus", top_k=5)[0]
+
+    assert result["doc_id"] == "art_c0"  # resolvable by get_document
+    assert result["id"] == "art"  # article id, for grouping/provenance
 
 
 def test_bm25_rescues_document_dense_missed(monkeypatch):

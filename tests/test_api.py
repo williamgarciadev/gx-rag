@@ -13,8 +13,10 @@ pytestmark = pytest.mark.integration
 
 def _raise(exc):
     """Return a function that raises `exc` whenever it is called."""
+
     def _fn(*args, **kwargs):
         raise exc
+
     return _fn
 
 
@@ -37,6 +39,7 @@ def test_health_returns_ok(client):
 
 def test_status_lists_collections_on_success(client, monkeypatch):
     import src.vectorstore.chroma_client as chroma_client
+
     monkeypatch.setattr(chroma_client, "get_client", lambda: _FakeChromaClient())
 
     response = client.get("/status")
@@ -49,7 +52,10 @@ def test_status_lists_collections_on_success(client, monkeypatch):
 
 def test_status_surfaces_chroma_error_instead_of_swallowing_it(client, monkeypatch):
     import src.vectorstore.chroma_client as chroma_client
-    monkeypatch.setattr(chroma_client, "get_client", _raise(RuntimeError("chroma down")))
+
+    monkeypatch.setattr(
+        chroma_client, "get_client", _raise(RuntimeError("chroma down"))
+    )
 
     response = client.get("/status")
 
@@ -63,6 +69,7 @@ def test_status_surfaces_chroma_error_instead_of_swallowing_it(client, monkeypat
 
 def test_verify_returns_result_on_success(client, monkeypatch):
     import src.syntax_db.gx_repository as repo
+
     monkeypatch.setattr(repo, "verify_syntax", lambda *a, **k: "VALIDO")
 
     response = client.get("/verify", params={"snippet": "Msg()"})
@@ -73,6 +80,7 @@ def test_verify_returns_result_on_success(client, monkeypatch):
 
 def test_verify_returns_500_on_error(client, monkeypatch):
     import src.syntax_db.gx_repository as repo
+
     monkeypatch.setattr(repo, "verify_syntax", _raise(RuntimeError("db gone")))
 
     response = client.get("/verify", params={"snippet": "Msg()"})
@@ -84,6 +92,7 @@ def test_verify_returns_500_on_error(client, monkeypatch):
 
 def test_methods_returns_list_on_success(client, monkeypatch):
     import src.syntax_db.gx_repository as repo
+
     monkeypatch.setattr(repo, "list_methods", lambda *a, **k: ["Load", "Save"])
 
     response = client.get("/methods", params={"object_type": "Transaction"})
@@ -96,6 +105,7 @@ def test_methods_returns_list_on_success(client, monkeypatch):
 
 def test_methods_returns_500_on_error(client, monkeypatch):
     import src.syntax_db.gx_repository as repo
+
     monkeypatch.setattr(repo, "list_methods", _raise(RuntimeError("catalog missing")))
 
     response = client.get("/methods", params={"object_type": "Transaction"})
@@ -107,8 +117,10 @@ def test_methods_returns_500_on_error(client, monkeypatch):
 
 def test_documents_accepts_id_query_param_and_returns_doc(client, monkeypatch):
     import src.vectorstore.collections as collections
+
     monkeypatch.setattr(
-        collections, "get_document",
+        collections,
+        "get_document",
         lambda doc_id, collection="gx_docs": {"id": doc_id, "text": "hola"},
     )
 
@@ -121,8 +133,44 @@ def test_documents_accepts_id_query_param_and_returns_doc(client, monkeypatch):
 
 def test_documents_returns_404_when_missing(client, monkeypatch):
     import src.vectorstore.collections as collections
-    monkeypatch.setattr(collections, "get_document", lambda doc_id, collection="gx_docs": None)
+
+    monkeypatch.setattr(
+        collections, "get_document", lambda doc_id, collection="gx_docs": None
+    )
 
     response = client.get("/documents", params={"id": "nope"})
+
+    assert response.status_code == 404
+
+
+def test_article_reassembles_and_returns_whole_doc(client, monkeypatch):
+    import src.vectorstore.collections as collections
+
+    monkeypatch.setattr(
+        collections,
+        "get_article",
+        lambda article_id, collection="gx_docs": {
+            "id": article_id,
+            "content": "first\n\nsecond",
+            "chunks": 2,
+        },
+    )
+
+    response = client.get("/article", params={"id": "art"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == "art"
+    assert body["chunks"] == 2
+
+
+def test_article_returns_404_when_missing(client, monkeypatch):
+    import src.vectorstore.collections as collections
+
+    monkeypatch.setattr(
+        collections, "get_article", lambda article_id, collection="gx_docs": None
+    )
+
+    response = client.get("/article", params={"id": "nope"})
 
     assert response.status_code == 404

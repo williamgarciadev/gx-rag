@@ -28,6 +28,7 @@ server = Server(APP_NAME)
 
 # ─── Tools ────────────────────────────────────────────────────────────────────
 
+
 @server.list_tools()
 async def list_tools() -> list[Tool]:
     """Define las tools disponibles para el cliente MCP."""
@@ -58,8 +59,46 @@ async def list_tools() -> list[Tool]:
                         "description": "Cantidad de resultados a devolver.",
                         "default": 5,
                     },
+                    "snippet_chars": {
+                        "type": "integer",
+                        "description": (
+                            "Largo del fragmento por resultado. Subilo para ver la "
+                            "sintaxis completa; usá get_article para el doc entero."
+                        ),
+                        "default": 600,
+                    },
+                    "min_score": {
+                        "type": "number",
+                        "description": (
+                            "Piso de score RRF (rank-based, NO calibrado: no es "
+                            "probabilidad). Filtro grueso, no umbral de confianza."
+                        ),
+                    },
                 },
                 "required": ["query"],
+            },
+        ),
+        Tool(
+            name="get_article",
+            description=(
+                "Reensambla el documento COMPLETO a partir de sus chunks (orden "
+                "chunk_index). Usalo tras search_docs, con el article_id, cuando "
+                "el fragmento no alcanza para fundamentar sin alucinar."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "article_id": {
+                        "type": "string",
+                        "description": "ID de artículo (campo article_id/id de search_docs).",
+                    },
+                    "collection": {
+                        "type": "string",
+                        "description": "Colección donde está el artículo.",
+                        "default": "gx_docs",
+                    },
+                },
+                "required": ["article_id"],
             },
         ),
         Tool(
@@ -192,8 +231,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         q = arguments.get("query", "")
         col = arguments.get("collection", "gx_docs")
         k = arguments.get("top_k", 5)
+        snippet_chars = arguments.get("snippet_chars", 600)
+        min_score = arguments.get("min_score")
         try:
-            results = hybrid_search(q, collection=col, top_k=k)
+            results = hybrid_search(q, collection=col, top_k=k, min_score=min_score)
             if not results:
                 # Guide the caller to a collection that actually has content.
                 populated = []
@@ -209,13 +250,21 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     if populated
                     else " No hay colecciones con contenido; ingestá con add_from_url."
                 )
-                return [TextContent(type="text", text=f"Sin resultados en '{col}'.{hint}")]
+                return [
+                    TextContent(type="text", text=f"Sin resultados en '{col}'.{hint}")
+                ]
             lines = [f"## Resultados ({len(results)} found)\n"]
             for r in results:
+                content = r["content"] or ""
+                snippet = content[:snippet_chars]
+                truncated = "…" if len(content) > snippet_chars else ""
                 lines.append(
                     f"**{r['title']}** (score={r['score']:.3f})\n"
-                    f"Fuente: {r.get('source', '?')}\n"
-                    f"{r['content'][:300]}...\n"
+                    f"doc_id: `{r['doc_id']}`\n"
+                    f"article_id: `{r.get('id', '')}`\n"
+                    f"Fuente: {r.get('url') or r.get('source', '?')}\n"
+                    f"Hash: {r.get('content_hash', '')}\n"
+                    f"{snippet}{truncated}\n"
                 )
             return [TextContent(type="text", text="\n".join(lines))]
         except Exception as exc:
@@ -224,25 +273,51 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     elif name == "get_document":
         from src.vectorstore.collections import get_document
+
         doc_id = arguments.get("doc_id", "")
         collection = arguments.get("collection", "gx_docs")
         try:
             doc = get_document(doc_id, collection=collection)
             if not doc:
                 return [TextContent(type="text", text="Documento no encontrado.")]
-            return [TextContent(
-                type="text",
-                text=f"# {doc['title']}\n\n"
-                     f"**Fuente:** {doc.get('source', '')}\n"
-                     f"**Colección:** {doc.get('collection', '')}\n"
-                     f"**Hash:** {doc.get('content_hash', '')}\n\n"
-                     f"{doc.get('content', '')}",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"# {doc['title']}\n\n"
+                    f"**Fuente:** {doc.get('source', '')}\n"
+                    f"**Colección:** {doc.get('collection', '')}\n"
+                    f"**Hash:** {doc.get('content_hash', '')}\n\n"
+                    f"{doc.get('content', '')}",
+                )
+            ]
+        except Exception as exc:
+            return [TextContent(type="text", text=f"Error: {exc}")]
+
+    elif name == "get_article":
+        from src.vectorstore.collections import get_article
+
+        article_id = arguments.get("article_id", "")
+        collection = arguments.get("collection", "gx_docs")
+        try:
+            art = get_article(article_id, collection=collection)
+            if not art:
+                return [TextContent(type="text", text="Artículo no encontrado.")]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"# {art['title']} ({art['chunks']} chunks)\n\n"
+                    f"**Fuente:** {art.get('url') or art.get('source', '')}\n"
+                    f"**Colección:** {art.get('collection', '')}\n"
+                    f"**Hash:** {art.get('content_hash', '')}\n\n"
+                    f"{art.get('content', '')}",
+                )
+            ]
         except Exception as exc:
             return [TextContent(type="text", text=f"Error: {exc}")]
 
     elif name == "verify_syntax":
         from src.syntax_db.gx_repository import verify_syntax
+
         snippet = arguments.get("snippet", "")
         lang = arguments.get("language", "gx")
         version = arguments.get("version")
@@ -254,54 +329,63 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     elif name == "list_methods":
         from src.syntax_db.gx_repository import list_methods
+
         obj_type = arguments.get("object_type", "")
         version = arguments.get("version")
         try:
             methods = list_methods(obj_type, version=version)
             if not methods:
                 return [TextContent(type="text", text="Sin resultados.")]
-            return [TextContent(
-                type="text",
-                text="Métodos conocidos:\n" + "\n".join(f"- {m}" for m in methods),
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text="Métodos conocidos:\n" + "\n".join(f"- {m}" for m in methods),
+                )
+            ]
         except Exception as exc:
             return [TextContent(type="text", text=f"Error: {exc}")]
 
     elif name == "add_from_url":
         from scripts.scrape_wiki import scrape
         from src.ingestion.ingestor import ingest
+
         url = arguments.get("url", "")
         if not url:
             return [TextContent(type="text", text="URL requerida.")]
         try:
             article = scrape(url)
             result = ingest(article)
-            return [TextContent(
-                type="text",
-                text=f"Scraped: {result['title']}\n"
-                     f"Género: {result['genre']}\n"
-                     f"Colección: {result['destination']}\n"
-                     f"Chunks indexados: {result['chunks_indexed']}\n"
-                     f"Hash: {result['content_hash'][:16]}...\n"
-                     f"Palabras: {result['word_count']}\n"
-                     f"Saved: {result['md_path']}",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Scraped: {result['title']}\n"
+                    f"Género: {result['genre']}\n"
+                    f"Colección: {result['destination']}\n"
+                    f"Chunks indexados: {result['chunks_indexed']}\n"
+                    f"Hash: {result['content_hash'][:16]}...\n"
+                    f"Palabras: {result['word_count']}\n"
+                    f"Saved: {result['md_path']}",
+                )
+            ]
         except Exception as exc:
             log.error(f"add_from_url error: {exc}")
             return [TextContent(type="text", text=f"Error: {exc}")]
 
     elif name == "ingest_batch":
-        return [TextContent(
-            type="text",
-            text="Batch ingestion aún no implementado. "
-                 "Usar add_from_url para artículos individuales.",
-        )]
+        return [
+            TextContent(
+                type="text",
+                text="Batch ingestion aún no implementado. "
+                "Usar add_from_url para artículos individuales.",
+            )
+        ]
 
     else:
         return [TextContent(type="text", text=f"Tool '{name}' no implementada.")]
 
 
 # ─── Entry point ──────────────────────────────────────────────────────────────
+
 
 async def main():
     log.info(f"{APP_NAME} v{VERSION} starting (stdio)...")
@@ -315,4 +399,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())
