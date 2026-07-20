@@ -21,6 +21,9 @@
         <ScrapeForm @scraped="onScraped" />
         <ArticleList :articles="articles" />
       </div>
+      <div class="content-full">
+        <SearchPanel />
+      </div>
     </main>
   </div>
 </template>
@@ -30,6 +33,7 @@ import { ref, onMounted } from 'vue'
 import StatusBar from './components/StatusBar.vue'
 import ScrapeForm from './components/ScrapeForm.vue'
 import ArticleList from './components/ArticleList.vue'
+import SearchPanel from './components/SearchPanel.vue'
 import { useApi } from './composables/useApi.js'
 
 const { articles: apiArticles } = useApi()
@@ -84,6 +88,7 @@ onMounted(loadArticles)
 
 .main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 24px; }
 .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+.content-full { margin-top: 20px; }
 
 @media (max-width: 768px) {
   .content-grid { grid-template-columns: 1fr; }
