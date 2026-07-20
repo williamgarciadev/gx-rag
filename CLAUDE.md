@@ -34,6 +34,8 @@ npm run build
 
 **Ports**: backend API `8000`, frontend dev `5173` (Vite auto-increments to 5174+ if taken). The frontend calls `/api/*`, which Vite proxies to `VITE_API_TARGET` (default `http://gx-rag-api:8000` for Docker). If `8000` is busy locally, run uvicorn on another port and set `VITE_API_TARGET` to match.
 
+**Local dev launcher** (`./dev.sh`): starts backend + frontend together and defaults to **8050** (backend) / **3050** (frontend) to avoid colliding with other local projects on this machine (`gx-docs-v1` runs on `:8000`). Override with `BACKEND_PORT` / `FRONTEND_PORT`. Docker and the canonical backend port remain `8000`.
+
 **Must run in a venv, not the global interpreter.** A stray global package (`notebooklm_skill`) ships a top-level `scripts` package that shadows this repo's `scripts/` (which has no `__init__.py`, so it's only an implicit namespace package) — that breaks `from scripts import scrape_wiki` in `src/api.py`. A venv isolates the project and avoids the collision. Docker is unaffected (clean base image).
 
 **Tests**: `tests/` contains only `__init__.py` — there are no tests or pytest config yet. Do not claim test coverage exists.
