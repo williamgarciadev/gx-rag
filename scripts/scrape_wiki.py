@@ -109,9 +109,13 @@ _REF_INDICATORS = [
     "clause", "function", "operator", "event",
 ]
 _GUIDE_INDICATORS = [
-    "how to", "tutorial", "guide", "example", "best practice",
+    "how to", "howto:", "tutorial", "guide", "example", "best practice",
     "optimization", "performance", "tip", "trick", "considerations",
     "walkthrough", "step by step",
+]
+_TUTORIAL_PATTERNS = [
+    "step 1", "step 2", "step 3", "first, ", "adding ",
+    "## summary", "## the challenge", "the following steps",
 ]
 _STOPWORDS_TITLE = ["category", "table of contents", "index", "home"]
 
@@ -133,12 +137,19 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
     ref = score(_REF_INDICATORS)
     guide = score(_GUIDE_INDICATORS)
 
+    # Bonus por indicadores fuertes en título
     if any(t in tl for t in ["syntax", "command", "clause"]):
         ref += 5
     if any(t in tl for t in _STOPWORDS_TITLE):
         return "guide", "gx_docs"
-    if any(t in tl for t in ["how to", "tutorial", "example", "optimization"]):
+    if any(t in tl for t in ["how to", "howto:", "tutorial", "example", "optimization"]):
         guide += 3
+
+    # Patrones de tutorial en el cuerpo (suma proporcional a repeticiones)
+    for pat in ["step ", "adding "]:
+        count = ts.lower().count(pat)
+        if count >= 2:
+            guide += count
 
     if ref > guide:
         return "reference", "gx_syntax"
