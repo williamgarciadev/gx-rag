@@ -145,11 +145,11 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
     if any(t in tl for t in ["how to", "howto:", "tutorial", "example", "optimization"]):
         guide += 3
 
-    # Patrones de tutorial en el cuerpo (suma proporcional a repeticiones)
-    for pat in ["step ", "adding "]:
+    # Patrones de tutorial en el cuerpo (mayor peso: son indicador fuerte)
+    for pat in ["step ", "adding ", "challenge"]:
         count = ts.lower().count(pat)
-        if count >= 2:
-            guide += count
+        if count >= 1:
+            guide += count * 2  # peso 2 por repetición
 
     if ref > guide:
         return "reference", "gx_syntax"
@@ -254,16 +254,23 @@ def scrape(url: str) -> ScrapedArticle:
     resp = fetch_article(url)
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    # Extraer título
-    h1 = soup.find("h1", {"class": "WikiName"})
-    title = h1.get_text(strip=True) if h1 else "Unknown"
-
-    # Extraer versión
+    # Extraer versión (antes de perder el soup original)
     version_hint = extract_version_hint(soup)
 
-    # Extraer y limpiar contenido
+    # Extraer y limpiar contenido primero (para obtener raw_text como fallback del título)
     content_soup = extract_main_content(soup)
     raw_text = content_soup.get_text(separator="\n", strip=True)
+
+    # Extraer título: H1 → primer renglón del contenido → "Unknown"
+    h1 = soup.find("h1", {"class": "WikiName"})
+    if h1:
+        title = h1.get_text(strip=True)
+    elif raw_text:
+        title = raw_text.split("\n")[0].strip()
+        if len(title) > 200:  # si es demasiado largo, acortar
+            title = title[:200]
+    else:
+        title = "Unknown"
 
     # Clasificar género
     genre, destination = classify_genre(title, raw_text, url)

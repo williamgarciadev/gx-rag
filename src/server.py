@@ -76,6 +76,11 @@ async def list_tools() -> list[Tool]:
                         "type": "string",
                         "description": "ID interno del documento en ChromaDB.",
                     },
+                    "collection": {
+                        "type": "string",
+                        "description": "Colección donde está el documento.",
+                        "default": "gx_docs",
+                    },
                 },
                 "required": ["doc_id"],
             },
@@ -206,8 +211,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     elif name == "get_document":
         from src.vectorstore.collections import get_document
         doc_id = arguments.get("doc_id", "")
+        collection = arguments.get("collection", "gx_docs")
         try:
-            doc = get_document(doc_id)
+            doc = get_document(doc_id, collection=collection)
             if not doc:
                 return [TextContent(type="text", text="Documento no encontrado.")]
             return [TextContent(
@@ -249,7 +255,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     elif name == "add_from_url":
         from scripts.scrape_wiki import scrape
-        import json
+        from src.vectorstore.indexer import index_article
         url = arguments.get("url", "")
         collection = arguments.get("collection")
         if not url:
@@ -257,18 +263,32 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             article = scrape(url)
             meta = article.metadata
-            # TODO: indexar en ChromaDB + SQLite
             dest = collection or meta.destination
+
+            # Indexar en ChromaDB
+            chunk_ids = index_article(
+                article_id=meta.source_key,
+                title=meta.title,
+                content=article.markdown,
+                source=url,
+                genre=meta.genre,
+                url=url,
+                content_hash=meta.content_hash,
+                collection=dest,
+            )
+
             return [TextContent(
                 type="text",
                 text=f"Scraped: {meta.title}\n"
-                     f"Gênero: {meta.genre}\n"
-                     f"Destino: {dest}\n"
+                     f"Género: {meta.genre}\n"
+                     f"Colección: {dest}\n"
+                     f"Chunks indexados: {len(chunk_ids)}\n"
                      f"Hash: {meta.content_hash[:16]}...\n"
                      f"Palabras: {meta.word_count}",
             )]
         except Exception as exc:
-            return [TextContent(type="text", text=f"Error scrapeando: {exc}")]
+            log.error(f"add_from_url error: {exc}")
+            return [TextContent(type="text", text=f"Error: {exc}")]
 
     elif name == "ingest_batch":
         # TODO: implementar batch
