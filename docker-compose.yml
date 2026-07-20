@@ -1,0 +1,30 @@
+services:
+  gx-rag-api:
+    build: .
+    image: gx-rag-api:latest
+    container_name: gx-rag-api
+    restart: unless-stopped
+    networks:
+      - infra_gateway
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  gx-rag-ui:
+    build: ./frontend
+    image: gx-rag-ui:latest
+    container_name: gx-rag-ui
+    restart: unless-stopped
+    networks:
+      - infra_gateway
+    depends_on:
+      gx-rag-api:
+        condition: service_healthy
+
+networks:
+  infra_gateway:
+    external: true

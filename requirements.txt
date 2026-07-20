@@ -1,0 +1,11 @@
+# gx-bt-rag-mcp dependencies
+# Fijar versiones desde PyPI al momento de instalar.
+
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+httpx>=0.27.0
+beautifulsoup4>=4.12.0
+html2text>=2024.2.26
+pymupdf>=1.24.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
