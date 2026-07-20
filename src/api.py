@@ -194,3 +194,79 @@ def list_articles():
             log.warning(f"Failed to read {meta_file}: {exc}")
     articles.sort(key=lambda a: a.scraped_at or "", reverse=True)
     return ArticlesResponse(count=len(articles), articles=articles)
+
+
+# ─── Retrieval endpoints (MCP wrapper support) ─────────────────────────────────
+
+@app.get("/search", tags=["retrieval"])
+def search(
+    q: Annotated[str, Query(description="Query")],
+    collection: Annotated[str, Query(description="Colección")] = "gx_docs",
+    top_k: Annotated[int, Query(description="Resultados", ge=1, le=20)] = 5,
+):
+    """
+    Búsqueda híbrida en ChromaDB. Proxy para MCP wrapper.
+    """
+    from src.vectorstore.retriever import hybrid_search
+    try:
+        results = hybrid_search(q, collection=collection, top_k=top_k)
+        return {"results": results, "count": len(results)}
+    except Exception as exc:
+        log.error(f"/search error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/documents", tags=["retrieval"])
+def get_document(
+    id: Annotated[str, Query(description="Document ID")],
+    collection: Annotated[str, Query(description="Colección")] = "gx_docs",
+):
+    """
+    Obtiene contenido completo de un documento por ID.
+    """
+    from src.vectorstore.collections import get_document
+    try:
+        doc = get_document(id, collection=collection)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Documento no encontrado")
+        return doc
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.error(f"/documents error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/verify", tags=["syntax"])
+def verify_syntax(
+    snippet: Annotated[str, Query(description="Snippet a verificar")],
+    language: Annotated[str, Query(description="gx | bt_api")] = "gx",
+    version: Annotated[str, Query(description="Versión gx16|gx18")] = "",
+):
+    """
+    Verifica si un snippet es sintácticamente válido.
+    """
+    from src.syntax_db.gx_repository import verify_syntax
+    try:
+        result = verify_syntax(snippet, language=language, version=version or None)
+        return {"result": str(result)}
+    except Exception as exc:
+        log.error(f"/verify error: {exc}")
+        return {"result": f"ERROR: {exc}"}
+
+
+@app.get("/methods", tags=["syntax"])
+def list_methods(
+    object_type: Annotated[str, Query(description="Tipo de objeto GeneXus")],
+    version: Annotated[str, Query(description="Versión gx16|gx18")] = "",
+):
+    """
+    Lista métodos/propiedades de un objeto GeneXus.
+    """
+    from src.syntax_db.gx_repository import list_methods
+    try:
+        methods = list_methods(object_type, version=version or None)
+        return {"methods": methods, "count": len(methods)}
+    except Exception as exc:
+        log.error(f"/methods error: {exc}")
+        return {"methods": [], "count": 0, "error": str(exc)}
