@@ -33,3 +33,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Test / lint artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
