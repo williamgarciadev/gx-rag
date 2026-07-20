@@ -2,9 +2,13 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Dependencias del sistema
+# Dependencias del sistema para sentence-transformers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias Python

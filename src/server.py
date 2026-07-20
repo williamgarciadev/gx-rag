@@ -138,7 +138,7 @@ async def list_tools() -> list[Tool]:
             name="add_from_url",
             description=(
                 "Ingiere un artículo de la wiki GeneXus desde su URL. "
-                "Lo scarpea, clasifica, curade y almacena en ChromaDB."
+                "Lo scrapea, clasifica, guarda en filesystem e indexa en ChromaDB."
             ),
             inputSchema={
                 "type": "object",
@@ -186,7 +186,6 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """Ejecuta una tool y devuelve el resultado."""
     log.info(f"call_tool: {name} {arguments}")
 
-    # ─── Lazy imports para no cargar todo al levantar ──────────────────────
     if name == "search_docs":
         from src.vectorstore.retriever import hybrid_search
         q = arguments.get("query", "")
@@ -255,43 +254,28 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     elif name == "add_from_url":
         from scripts.scrape_wiki import scrape
-        from src.vectorstore.indexer import index_article
+        from src.ingestion.ingestor import ingest
         url = arguments.get("url", "")
-        collection = arguments.get("collection")
         if not url:
             return [TextContent(type="text", text="URL requerida.")]
         try:
             article = scrape(url)
-            meta = article.metadata
-            dest = collection or meta.destination
-
-            # Indexar en ChromaDB
-            chunk_ids = index_article(
-                article_id=meta.source_key,
-                title=meta.title,
-                content=article.markdown,
-                source=url,
-                genre=meta.genre,
-                url=url,
-                content_hash=meta.content_hash,
-                collection=dest,
-            )
-
+            result = ingest(article)
             return [TextContent(
                 type="text",
-                text=f"Scraped: {meta.title}\n"
-                     f"Género: {meta.genre}\n"
-                     f"Colección: {dest}\n"
-                     f"Chunks indexados: {len(chunk_ids)}\n"
-                     f"Hash: {meta.content_hash[:16]}...\n"
-                     f"Palabras: {meta.word_count}",
+                text=f"Scraped: {result['title']}\n"
+                     f"Género: {result['genre']}\n"
+                     f"Colección: {result['destination']}\n"
+                     f"Chunks indexados: {result['chunks_indexed']}\n"
+                     f"Hash: {result['content_hash'][:16]}...\n"
+                     f"Palabras: {result['word_count']}\n"
+                     f"Saved: {result['md_path']}",
             )]
         except Exception as exc:
             log.error(f"add_from_url error: {exc}")
             return [TextContent(type="text", text=f"Error: {exc}")]
 
     elif name == "ingest_batch":
-        # TODO: implementar batch
         return [TextContent(
             type="text",
             text="Batch ingestion aún no implementado. "

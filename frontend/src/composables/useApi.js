@@ -26,6 +26,10 @@ export function useApi() {
     return request('/status')
   }
 
+  async function articles() {
+    return request('/articles')
+  }
+
   async function scrape(url) {
     return request('/scrape', {
       method: 'POST',
@@ -37,5 +41,5 @@ export function useApi() {
     return request(`/scrape?url=${encodeURIComponent(url)}`)
   }
 
-  return { health, status, scrape, scrapeGet }
+  return { health, status, scrape, scrapeGet, articles }
 }

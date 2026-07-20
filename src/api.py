@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 
 from scripts import scrape_wiki as scraper
+from src.ingestion.ingestor import ingest, SCRAPED_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -46,6 +47,7 @@ class ScrapeResponse(BaseModel):
     word_count: int
     markdown_path: str
     metadata_path: str
+    chunks_indexed: int = 0
 
 
 class ScrapeRequest(BaseModel):
@@ -56,6 +58,24 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     version: str
+
+
+class ArticleItem(BaseModel):
+    url: str
+    title: str
+    page_id: str | None
+    genre: str
+    destination: str
+    source_key: str
+    content_hash: str
+    version_hint: str | None
+    word_count: int
+    scraped_at: str | None
+
+
+class ArticlesResponse(BaseModel):
+    count: int
+    articles: list[ArticleItem]
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
@@ -83,46 +103,19 @@ def health():
 @app.post("/scrape", response_model=ScrapeResponse, tags=["ingestion"])
 def scrape_article(req: ScrapeRequest):
     """
-    Scrapea un artículo de la wiki GeneXus desde su URL.
-    Devuelve la metadata y guarda el Markdown + JSON en data/scraped/.
+    Scrapea e ingiere un artículo: guarda en filesystem + indexa en ChromaDB.
     """
     url = str(req.url)
     log.info(f"/scrape request: {url}")
 
     try:
         article = scraper.scrape(url)
-        meta = article.metadata
+        result = ingest(article)
     except Exception as exc:
         log.error(f"Scrape failed for {url}: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
 
-    # Guardar
-    out_dir = Path("data/scraped")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    safe_name = meta.page_id or meta.content_hash[:12]
-    base = out_dir / safe_name
-
-    md_path = base.with_suffix(".md")
-    md_path.write_text(article.markdown, encoding="utf-8")
-
-    meta_path = base.with_suffix(".meta.json")
-    import json
-    meta_path.write_text(
-        json.dumps({
-            "url": meta.url,
-            "title": meta.title,
-            "page_id": meta.page_id,
-            "genre": meta.genre,
-            "destination": meta.destination,
-            "source_key": meta.source_key,
-            "content_hash": meta.content_hash,
-            "version_hint": meta.version_hint,
-            "word_count": meta.word_count,
-            "scraped_at": meta.scraped_at,
-        }, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
+    meta = article.metadata
     return ScrapeResponse(
         url=meta.url,
         title=meta.title,
@@ -133,8 +126,9 @@ def scrape_article(req: ScrapeRequest):
         content_hash=meta.content_hash,
         version_hint=meta.version_hint,
         word_count=meta.word_count,
-        markdown_path=str(md_path),
-        metadata_path=str(meta_path),
+        markdown_path=result["md_path"],
+        metadata_path=result["meta_path"],
+        chunks_indexed=result["chunks_indexed"],
     )
 
 
@@ -151,16 +145,52 @@ def scrape_get(url: Annotated[str, Query(description="URL del artículo wiki")] 
 @app.get("/status", tags=["ingestion"])
 def status():
     """
-    Estado del scraper: artículos guardados, espacio en disco.
+    Estado del scraper: artículos guardados, chunks en ChromaDB, espacio en disco.
     """
     import os, shutil
-    scraped_dir = Path("data/scraped")
-    files = list(scraped_dir.glob("*.md")) if scraped_dir.exists() else []
+    files = list(SCRAPED_DIR.glob("*.md")) if SCRAPED_DIR.exists() else []
     total_size = sum(f.stat().st_size for f in files)
+
+    from src.vectorstore.chroma_client import get_client
+    collections = []
+    try:
+        collections = [c.name for c in get_client().list_collections()]
+    except Exception:
+        pass
 
     stat = shutil.disk_usage(".")
     return {
         "scraped_articles": len(files),
+        "chroma_collections": collections,
         "total_size_bytes": total_size,
         "disk_free_gb": round(stat.free / (1024**3), 1),
     }
+
+
+@app.get("/articles", response_model=ArticlesResponse, tags=["ingestion"])
+def list_articles():
+    """
+    Lista todos los artículos scrapeados con su metadata.
+    """
+    import json
+    articles = []
+    for meta_file in SCRAPED_DIR.glob("*.meta.json"):
+        try:
+            with open(meta_file, encoding="utf-8") as f:
+                data = json.load(f)
+            articles.append(ArticleItem(
+                url=data.get("url", ""),
+                title=data.get("title", "Unknown"),
+                page_id=data.get("page_id"),
+                genre=data.get("genre", "unknown"),
+                destination=data.get("destination", ""),
+                source_key=data.get("source_key", ""),
+                content_hash=data.get("content_hash", ""),
+                version_hint=data.get("version_hint"),
+                word_count=data.get("word_count", 0),
+                scraped_at=data.get("scraped_at"),
+            ))
+        except Exception as exc:
+            log.warning(f"Failed to read {meta_file}: {exc}")
+    articles.sort(key=lambda a: a.scraped_at or "", reverse=True)
+    return ArticlesResponse(count=len(articles), articles=articles)

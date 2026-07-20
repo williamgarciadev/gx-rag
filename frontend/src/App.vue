@@ -26,19 +26,34 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import StatusBar from './components/StatusBar.vue'
 import ScrapeForm from './components/ScrapeForm.vue'
 import ArticleList from './components/ArticleList.vue'
+import { useApi } from './composables/useApi.js'
 
+const { articles: apiArticles } = useApi()
 const articles = ref([])
+
+async function loadArticles() {
+  try {
+    const res = await apiArticles()
+    articles.value = res.articles || []
+  } catch (e) {
+    console.error('Failed to load articles', e)
+  }
+}
 
 function onScraped(article) {
   const exists = articles.value.find(a => a.page_id === article.page_id)
   if (!exists) {
     articles.value.unshift(article)
+  } else {
+    articles.value = articles.value.map(a => a.page_id === article.page_id ? article : a)
   }
 }
+
+onMounted(loadArticles)
 </script>
 
 <style scoped>

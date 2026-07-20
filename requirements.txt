@@ -1,28 +1,28 @@
-# gx-bt-rag-mcp dependencies (versiones fijadas 2026-07-19)
+# gx-bt-rag-mcp dependencies
 
 # MCP
-mcp==1.28.1
+mcp>=1.0
 
 # API
-fastapi==0.115.0
-uvicorn[standard]==0.30.0
+fastapi>=0.115
+uvicorn[standard]>=0.30
 
 # Vector store
-chromadb==1.5.9
-sentence-transformers==5.6.0
-rank-bm25==0.2.2
-langchain-text-splitters==1.1.2
+chromadb>=1.5
+sentence-transformers>=2.0
+rank-bm25>=0.2
+langchain-text-splitters>=0.2
 
 # Scraper / parsing
-httpx==0.28.1
-beautifulsoup4==4.15.0
-html2text==2025.4.15
-pymupdf==1.28.0
+httpx>=0.28
+beautifulsoup4>=4.15
+html2text>=2025
+pymupdf>=1.28
 
 # DB
-SQLAlchemy==2.0.51
+SQLAlchemy>=2.0
 
 # Config / utils
-pydantic==2.13.4
-pydantic-settings==2.14.2
-structlog==26.1.0
+pydantic>=2.0
+pydantic-settings>=2.0
+structlog>=26.0
