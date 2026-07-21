@@ -29,200 +29,225 @@ server = Server(APP_NAME)
 # ─── Tools ────────────────────────────────────────────────────────────────────
 
 
+# Read-only tools — safe for the public internet-facing transport.
+READ_TOOLS: list[Tool] = [
+    Tool(
+        name="search_docs",
+        description=(
+            "Búsqueda híbrida (dense + BM25 + RRF) en la colección indicada "
+            "de documentación GeneXus/Bantotal. Devuelve los fragmentos más "
+            "relevantes con score. Si la colección está vacía, informa cuáles "
+            "tienen contenido para reintentar."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Consulta en lenguaje natural o palabras clave.",
+                },
+                "collection": {
+                    "type": "string",
+                    "enum": ["gx_docs", "bt_docs", "gx_syntax", "bt_apis"],
+                    "description": "Colección a buscar.",
+                    "default": "gx_docs",
+                },
+                "top_k": {
+                    "type": "integer",
+                    "description": "Cantidad de resultados a devolver.",
+                    "default": 5,
+                },
+                "snippet_chars": {
+                    "type": "integer",
+                    "description": (
+                        "Largo del fragmento por resultado. Subilo para ver la "
+                        "sintaxis completa; usá get_article para el doc entero."
+                    ),
+                    "default": 600,
+                },
+                "min_score": {
+                    "type": "number",
+                    "description": (
+                        "Piso de score RRF (rank-based, NO calibrado: no es "
+                        "probabilidad). Filtro grueso, no umbral de confianza."
+                    ),
+                },
+            },
+            "required": ["query"],
+        },
+    ),
+    Tool(
+        name="get_article",
+        description=(
+            "Reensambla el documento COMPLETO a partir de sus chunks (orden "
+            "chunk_index). Usalo tras search_docs, con el article_id, cuando "
+            "el fragmento no alcanza para fundamentar sin alucinar."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "article_id": {
+                    "type": "string",
+                    "description": "ID de artículo (campo article_id/id de search_docs).",
+                },
+                "collection": {
+                    "type": "string",
+                    "description": "Colección donde está el artículo.",
+                    "default": "gx_docs",
+                },
+            },
+            "required": ["article_id"],
+        },
+    ),
+    Tool(
+        name="get_document",
+        description=(
+            "Obtiene el contenido completo de un documento previamente "
+            "indexado, incluyendo su metadata y provenance."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "doc_id": {
+                    "type": "string",
+                    "description": "ID interno del documento en ChromaDB.",
+                },
+                "collection": {
+                    "type": "string",
+                    "description": "Colección donde está el documento.",
+                    "default": "gx_docs",
+                },
+            },
+            "required": ["doc_id"],
+        },
+    ),
+    Tool(
+        name="verify_syntax",
+        description=(
+            "Verifica si una firma, método o comando de GeneXus/Bantotal "
+            "es válido contra el catálogo estructurado. "
+            "Devuelve VÁLIDO / INVÁLIDO / NO_VERIFICABLE con procedencia."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "snippet": {
+                    "type": "string",
+                    "description": "Código o snippet a verificar.",
+                },
+                "language": {
+                    "type": "string",
+                    "enum": ["gx", "bt_api"],
+                    "description": "Lenguaje/dialecto del snippet.",
+                    "default": "gx",
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Versión de GeneXus (gx16, gx18).",
+                },
+            },
+            "required": ["snippet"],
+        },
+    ),
+    Tool(
+        name="list_methods",
+        description=(
+            "Lista todos los métodos/propiedades conocidos de un objeto "
+            "GeneXus específico en el catálogo."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "object_type": {
+                    "type": "string",
+                    "description": "Tipo de objeto (Transaction, Procedure, etc.).",
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Versión de GeneXus (gx16, gx18).",
+                },
+            },
+            "required": ["object_type"],
+        },
+    ),
+]
+
+
+# Write tools — mutate the corpus. Kept OFF the public transport (add_from_url is
+# an SSRF vector; ingestion requires a human gate). stdio/admin surface only.
+WRITE_TOOLS: list[Tool] = [
+    Tool(
+        name="add_from_url",
+        description=(
+            "Ingiere un artículo de la wiki GeneXus desde su URL. "
+            "Lo scrapea, clasifica, guarda en filesystem e indexa en ChromaDB."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL completa del artículo wiki.",
+                },
+                "collection": {
+                    "type": "string",
+                    "enum": ["gx_docs", "gx_syntax"],
+                    "description": "Colección destino (sobreescribe clasificación automática si se indica).",
+                },
+            },
+            "required": ["url"],
+        },
+    ),
+    Tool(
+        name="ingest_batch",
+        description=(
+            "Ingiere todos los archivos Markdown de un directorio local. "
+            "Útil para procesar el corpus Bantotal ya curado."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string",
+                    "description": "Ruta al directorio con archivos .md.",
+                },
+                "collection": {
+                    "type": "string",
+                    "description": "Colección destino.",
+                    "default": "gx_docs",
+                },
+            },
+            "required": ["directory"],
+        },
+    ),
+]
+
+
+# Tool names allowed on the public internet-facing transport (read-only).
+PUBLIC_TOOL_NAMES = frozenset(t.name for t in READ_TOOLS)
+
+
 @server.list_tools()
 async def list_tools() -> list[Tool]:
-    """Define las tools disponibles para el cliente MCP."""
-    return [
-        Tool(
-            name="search_docs",
-            description=(
-                "Búsqueda híbrida (dense + BM25 + RRF) en la colección indicada "
-                "de documentación GeneXus/Bantotal. Devuelve los fragmentos más "
-                "relevantes con score. Si la colección está vacía, informa cuáles "
-                "tienen contenido para reintentar."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Consulta en lenguaje natural o palabras clave.",
-                    },
-                    "collection": {
-                        "type": "string",
-                        "enum": ["gx_docs", "bt_docs", "gx_syntax", "bt_apis"],
-                        "description": "Colección a buscar.",
-                        "default": "gx_docs",
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Cantidad de resultados a devolver.",
-                        "default": 5,
-                    },
-                    "snippet_chars": {
-                        "type": "integer",
-                        "description": (
-                            "Largo del fragmento por resultado. Subilo para ver la "
-                            "sintaxis completa; usá get_article para el doc entero."
-                        ),
-                        "default": 600,
-                    },
-                    "min_score": {
-                        "type": "number",
-                        "description": (
-                            "Piso de score RRF (rank-based, NO calibrado: no es "
-                            "probabilidad). Filtro grueso, no umbral de confianza."
-                        ),
-                    },
-                },
-                "required": ["query"],
-            },
-        ),
-        Tool(
-            name="get_article",
-            description=(
-                "Reensambla el documento COMPLETO a partir de sus chunks (orden "
-                "chunk_index). Usalo tras search_docs, con el article_id, cuando "
-                "el fragmento no alcanza para fundamentar sin alucinar."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "article_id": {
-                        "type": "string",
-                        "description": "ID de artículo (campo article_id/id de search_docs).",
-                    },
-                    "collection": {
-                        "type": "string",
-                        "description": "Colección donde está el artículo.",
-                        "default": "gx_docs",
-                    },
-                },
-                "required": ["article_id"],
-            },
-        ),
-        Tool(
-            name="get_document",
-            description=(
-                "Obtiene el contenido completo de un documento previamente "
-                "indexado, incluyendo su metadata y provenance."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "doc_id": {
-                        "type": "string",
-                        "description": "ID interno del documento en ChromaDB.",
-                    },
-                    "collection": {
-                        "type": "string",
-                        "description": "Colección donde está el documento.",
-                        "default": "gx_docs",
-                    },
-                },
-                "required": ["doc_id"],
-            },
-        ),
-        Tool(
-            name="verify_syntax",
-            description=(
-                "Verifica si una firma, método o comando de GeneXus/Bantotal "
-                "es válido contra el catálogo estructurado. "
-                "Devuelve VÁLIDO / INVÁLIDO / NO_VERIFICABLE con procedencia."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "snippet": {
-                        "type": "string",
-                        "description": "Código o snippet a verificar.",
-                    },
-                    "language": {
-                        "type": "string",
-                        "enum": ["gx", "bt_api"],
-                        "description": "Lenguaje/dialecto del snippet.",
-                        "default": "gx",
-                    },
-                    "version": {
-                        "type": "string",
-                        "description": "Versión de GeneXus (gx16, gx18).",
-                    },
-                },
-                "required": ["snippet"],
-            },
-        ),
-        Tool(
-            name="list_methods",
-            description=(
-                "Lista todos los métodos/propiedades conocidos de un objeto "
-                "GeneXus específico en el catálogo."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "object_type": {
-                        "type": "string",
-                        "description": "Tipo de objeto (Transaction, Procedure, etc.).",
-                    },
-                    "version": {
-                        "type": "string",
-                        "description": "Versión de GeneXus (gx16, gx18).",
-                    },
-                },
-                "required": ["object_type"],
-            },
-        ),
-        Tool(
-            name="add_from_url",
-            description=(
-                "Ingiere un artículo de la wiki GeneXus desde su URL. "
-                "Lo scrapea, clasifica, guarda en filesystem e indexa en ChromaDB."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "url": {
-                        "type": "string",
-                        "description": "URL completa del artículo wiki.",
-                    },
-                    "collection": {
-                        "type": "string",
-                        "enum": ["gx_docs", "gx_syntax"],
-                        "description": "Colección destino (sobreescribe clasificación automática si se indica).",
-                    },
-                },
-                "required": ["url"],
-            },
-        ),
-        Tool(
-            name="ingest_batch",
-            description=(
-                "Ingiere todos los archivos Markdown de un directorio local. "
-                "Útil para procesar el corpus Bantotal ya curado."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "directory": {
-                        "type": "string",
-                        "description": "Ruta al directorio con archivos .md.",
-                    },
-                    "collection": {
-                        "type": "string",
-                        "description": "Colección destino.",
-                        "default": "gx_docs",
-                    },
-                },
-                "required": ["directory"],
-            },
-        ),
-    ]
+    """Stdio (local/admin) transport lists every tool: read + write."""
+    return [*READ_TOOLS, *WRITE_TOOLS]
 
 
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Ejecuta una tool y devuelve el resultado."""
-    log.info(f"call_tool: {name} {arguments}")
+    """Stdio (local/admin) dispatch — every tool permitted."""
+    return await dispatch_tool(name, arguments)
+
+
+# Client-facing error text. Detail is logged server-side, never returned — the
+# public transport must not leak internal paths, SQL, or library internals.
+GENERIC_ERROR = "Error interno procesando la solicitud."
+
+
+async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
+    """Execute a tool by name. Shared by the stdio and public HTTP transports."""
+    # Log argument KEYS only — values may carry PII on now-public traffic.
+    log.info("call_tool: %s (args: %s)", name, sorted(arguments))
 
     if name == "search_docs":
         from src.vectorstore.retriever import hybrid_search
@@ -267,9 +292,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     f"{snippet}{truncated}\n"
                 )
             return [TextContent(type="text", text="\n".join(lines))]
-        except Exception as exc:
-            log.error(f"search_docs error: {exc}")
-            return [TextContent(type="text", text=f"Error en búsqueda: {exc}")]
+        except Exception:
+            log.exception("search_docs error")
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "get_document":
         from src.vectorstore.collections import get_document
@@ -290,8 +315,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     f"{doc.get('content', '')}",
                 )
             ]
-        except Exception as exc:
-            return [TextContent(type="text", text=f"Error: {exc}")]
+        except Exception:
+            log.exception("%s failed", name)
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "get_article":
         from src.vectorstore.collections import get_article
@@ -312,8 +338,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     f"{art.get('content', '')}",
                 )
             ]
-        except Exception as exc:
-            return [TextContent(type="text", text=f"Error: {exc}")]
+        except Exception:
+            log.exception("%s failed", name)
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "verify_syntax":
         from src.syntax_db.gx_repository import verify_syntax
@@ -324,8 +351,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             verdict = verify_syntax(snippet, language=lang, version=version)
             return [TextContent(type="text", text=str(verdict))]
-        except Exception as exc:
-            return [TextContent(type="text", text=f"Error: {exc}")]
+        except Exception:
+            log.exception("%s failed", name)
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "list_methods":
         from src.syntax_db.gx_repository import list_methods
@@ -342,8 +370,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     text="Métodos conocidos:\n" + "\n".join(f"- {m}" for m in methods),
                 )
             ]
-        except Exception as exc:
-            return [TextContent(type="text", text=f"Error: {exc}")]
+        except Exception:
+            log.exception("%s failed", name)
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "add_from_url":
         from scripts.scrape_wiki import scrape
@@ -367,9 +396,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     f"Saved: {result['md_path']}",
                 )
             ]
-        except Exception as exc:
-            log.error(f"add_from_url error: {exc}")
-            return [TextContent(type="text", text=f"Error: {exc}")]
+        except Exception:
+            log.exception("add_from_url error")
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "ingest_batch":
         return [
