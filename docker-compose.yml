@@ -1,4 +1,38 @@
 services:
+  # Public, internet-facing MCP endpoint (read-only tools) behind Traefik + TLS.
+  gx-rag-mcp:
+    build: .
+    image: gx-rag-mcp:latest
+    container_name: gx-rag-mcp
+    restart: unless-stopped
+    # Single worker: the rate-limit / auth-failure counters are per-process
+    # (in-memory). More than one worker multiplies the effective limits.
+    command: ["uvicorn", "src.http_server:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+    env_file: .env
+    networks:
+      - infra_gateway
+    volumes:
+      # rw: ChromaDB opens its SQLite read-write even for queries. Write SAFETY
+      # is enforced at the app layer (public transport exposes read-only tools).
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=infra_gateway"
+      - "traefik.http.routers.gxrag-mcp.rule=Host(`gxrag.wgsoft.com.co`)"
+      # entrypoint + certResolver names verified against the VPS Traefik and the
+      # convention already used by other services (magis, etc.).
+      - "traefik.http.routers.gxrag-mcp.entrypoints=websecure"
+      - "traefik.http.routers.gxrag-mcp.tls.certResolver=letsencrypt"
+      - "traefik.http.services.gxrag-mcp.loadbalancer.server.port=8080"
+
+  # Admin Ingestor API — NOT internet-exposed. No host port, no Traefik labels.
+  # Reach it for curation via an SSH tunnel:  ssh -L 8000:gx-rag-api:8000 vps
+  # (or add Traefik labels + a basic-auth middleware on a separate hostname).
   gx-rag-api:
     build: .
     image: gx-rag-api:latest
@@ -6,8 +40,6 @@ services:
     restart: unless-stopped
     networks:
       - infra_gateway
-    ports:
-      - "8000:8000"
     volumes:
       - ./data:/app/data
     healthcheck:
@@ -16,6 +48,8 @@ services:
       timeout: 10s
       retries: 3
 
+  # Curator UI — internal only (no host port, no Traefik labels). Served to
+  # curators through the SSH tunnel / private access, never to the internet.
   gx-rag-ui:
     build: ./frontend
     image: gx-rag-ui:latest

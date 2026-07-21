@@ -1,0 +1,30 @@
+# Secrets — never bake into an image layer.
+.env
+.env.*
+!.env.example
+
+# VCS / local tooling
+.git
+.gitignore
+.atl/
+
+# Python caches / local venv
+.venv
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Runtime data — bind-mounted at runtime, not part of the image.
+data/
+
+# Frontend build artifacts (frontend has its own build context)
+frontend/node_modules
+frontend/dist
+
+# Docs and tests — not needed at runtime.
+docs/
+tests/
+*.md
