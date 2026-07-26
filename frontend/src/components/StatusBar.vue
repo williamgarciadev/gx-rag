@@ -6,15 +6,15 @@
     </div>
     <div class="status-item">
       <span class="status-label">Artículos:</span>
-      <span class="status-value">{{ status?.scraped_articles ?? '—' }}</span>
+      <span class="status-value">{{ statusData?.scraped_articles ?? '—' }}</span>
     </div>
     <div class="status-item">
       <span class="status-label">Espacio libre:</span>
-      <span class="status-value">{{ status?.disk_free_gb ?? '—' }} GB</span>
+      <span class="status-value">{{ statusData?.disk_free_gb ?? '—' }} GB</span>
     </div>
     <div class="status-item">
       <span class="status-label">Total scraped:</span>
-      <span class="status-value">{{ formatBytes(status?.total_size_bytes ?? 0) }}</span>
+      <span class="status-value">{{ formatBytes(statusData?.total_size_bytes ?? 0) }}</span>
     </div>
   </div>
 </template>
