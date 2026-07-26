@@ -46,5 +46,31 @@ export function useApi() {
     return request(`/search?${params.toString()}`)
   }
 
-  return { health, status, scrape, scrapeGet, articles, search }
+  // ── SAC scraping jobs ──
+  async function sacScrape(params) {
+    return request('/sac/scrape', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    })
+  }
+
+  async function sacJob(jobId) {
+    return request(`/sac/jobs/${jobId}`)
+  }
+
+  async function sacCancel(jobId) {
+    return request(`/sac/jobs/${jobId}/cancel`, { method: 'POST' })
+  }
+
+  return {
+    health,
+    status,
+    scrape,
+    scrapeGet,
+    articles,
+    search,
+    sacScrape,
+    sacJob,
+    sacCancel,
+  }
 }

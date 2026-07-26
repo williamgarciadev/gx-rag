@@ -9,6 +9,7 @@
         </div>
         <nav class="nav">
           <span class="nav-item">Ingesta Wiki</span>
+          <span class="nav-item">Ingesta SAC</span>
           <span class="nav-item nav-soon">PDF Bantotal</span>
           <span class="nav-item nav-soon">XPZ</span>
         </nav>
@@ -22,6 +23,9 @@
         <ArticleList :articles="articles" />
       </div>
       <div class="content-full">
+        <SacPanel />
+      </div>
+      <div class="content-full">
         <SearchPanel />
       </div>
     </main>
@@ -33,6 +37,7 @@ import { ref, onMounted } from 'vue'
 import StatusBar from './components/StatusBar.vue'
 import ScrapeForm from './components/ScrapeForm.vue'
 import ArticleList from './components/ArticleList.vue'
+import SacPanel from './components/SacPanel.vue'
 import SearchPanel from './components/SearchPanel.vue'
 import { useApi } from './composables/useApi.js'
 
