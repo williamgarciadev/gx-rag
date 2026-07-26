@@ -16,13 +16,15 @@ SCRAPED_DIR = Path("data/scraped")
 SCRAPED_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def save_article(article: ScrapedArticle) -> tuple[Path, Path]:
+def save_article(article: ScrapedArticle, name: str | None = None) -> tuple[Path, Path]:
     """
     Guarda el artículo scrapeado como .md + .meta.json en data/scraped/.
+    `name` fuerza el nombre base del archivo (p. ej. "sac_61036"); si no se
+    pasa, se usa page_id o los primeros 12 chars del content_hash.
     Devuelve (md_path, meta_path).
     """
     meta = article.metadata
-    safe_name = meta.page_id or meta.content_hash[:12]
+    safe_name = name or meta.page_id or meta.content_hash[:12]
     base = SCRAPED_DIR / safe_name
 
     md_path = base.with_suffix(".md")
@@ -45,6 +47,7 @@ def index_article(article: ScrapedArticle) -> list[str]:
     Devuelve lista de chunk IDs insertados.
     """
     from src.vectorstore.indexer import index_article as _index
+
     meta = article.metadata
 
     chunk_ids = _index(

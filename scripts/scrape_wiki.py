@@ -38,15 +38,16 @@ log = logging.getLogger(__name__)
 # Data classes
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ArticleMetadata:
     url: str
     title: str
     page_id: str | None
-    genre: str          # "reference" | "guide"
-    destination: str    # "gx_syntax" | "gx_docs"
-    source_key: str     # normalized URL (domain-unified)
-    content_hash: str   # SHA256 of normalized raw text
+    genre: str  # "reference" | "guide"
+    destination: str  # "gx_syntax" | "gx_docs"
+    source_key: str  # normalized URL (domain-unified)
+    content_hash: str  # SHA256 of normalized raw text
     version_hint: str | None
     word_count: int
     scraped_at: str
@@ -62,6 +63,7 @@ class ScrapedArticle:
 # ─────────────────────────────────────────────────────────────────────────────
 # URL normalization
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def normalize_wiki_url(url: str) -> str:
     """
@@ -105,17 +107,41 @@ def extract_page_id(url: str) -> str | None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 _REF_INDICATORS = [
-    "syntax", "command", "property", "method", "object", "attribute",
-    "clause", "function", "operator", "event",
+    "syntax",
+    "command",
+    "property",
+    "method",
+    "object",
+    "attribute",
+    "clause",
+    "function",
+    "operator",
+    "event",
 ]
 _GUIDE_INDICATORS = [
-    "how to", "howto:", "tutorial", "guide", "example", "best practice",
-    "optimization", "performance", "tip", "trick", "considerations",
-    "walkthrough", "step by step",
+    "how to",
+    "howto:",
+    "tutorial",
+    "guide",
+    "example",
+    "best practice",
+    "optimization",
+    "performance",
+    "tip",
+    "trick",
+    "considerations",
+    "walkthrough",
+    "step by step",
 ]
 _TUTORIAL_PATTERNS = [
-    "step 1", "step 2", "step 3", "first, ", "adding ",
-    "## summary", "## the challenge", "the following steps",
+    "step 1",
+    "step 2",
+    "step 3",
+    "first, ",
+    "adding ",
+    "## summary",
+    "## the challenge",
+    "the following steps",
 ]
 _STOPWORDS_TITLE = ["category", "table of contents", "index", "home"]
 
@@ -142,7 +168,9 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
         ref += 5
     if any(t in tl for t in _STOPWORDS_TITLE):
         return "guide", "gx_docs"
-    if any(t in tl for t in ["how to", "howto:", "tutorial", "example", "optimization"]):
+    if any(
+        t in tl for t in ["how to", "howto:", "tutorial", "example", "optimization"]
+    ):
         guide += 3
 
     # Patrones de tutorial en el cuerpo (mayor peso: son indicador fuerte)
@@ -159,6 +187,7 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
 # ─────────────────────────────────────────────────────────────────────────────
 # HTML extraction
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def fetch_article(url: str, timeout: float = 45.0) -> httpx.Response:
     """Descarga un artículo wiki."""
@@ -178,12 +207,56 @@ def _decompose_safe(element: BeautifulSoup, tag) -> None:
         tag.decompose()
 
 
+# SAC (sac.genexus.com) noise: navigation chrome and hidden conditional
+# messages that pollute the article body. Exact ids are page-level (stable);
+# suffixes match the per-instance GeneXus web-component ids (W####<SUFFIX>).
+_SAC_NOISE_EXACT_IDS = ("TABLE6", "TABLAERRORES", "TABLACONTENIDO")
+_SAC_NOISE_ID_SUFFIXES = (
+    "LOGINTXT",  # "ingresando con tu CUENTA GeneXus" login nudge
+    "VOLVERALISTA",  # "VOLVER A LA LISTA"
+    "ERRORLNG",  # hidden "No hay traduccion"
+    "ERRORNOTEXIST",  # hidden "La busqueda no dio resultados"
+    "ERRORACCESSLVL",  # hidden "El SAC no se encuentra disponible"
+)
+
+
+def _clean_sac_content(contenido: BeautifulSoup) -> BeautifulSoup:
+    """Strip nav chrome and hidden messages from a SAC td#CONTENIDO block.
+
+    Removes the "Recuerda que … CUENTA GeneXus" login nudge, the
+    PRIMERA/ANTERIOR/SIGUIENTE/LAST pager, "VOLVER A LA LISTA", and the hidden
+    GeneXus conditional error divs. Keeps the report date, the "SAC #NNNNN"
+    title, Abstract, Descripción Detallada, Work Around and Productos.
+    """
+    for tag in contenido.find_all(["script", "style", "noscript", "iframe", "svg"]):
+        _decompose_safe(contenido, tag)
+
+    for eid in _SAC_NOISE_EXACT_IDS:
+        for tag in contenido.find_all(attrs={"id": eid}):
+            _decompose_safe(contenido, tag)
+
+    for tag in contenido.find_all(
+        attrs={"id": lambda x: x and str(x).endswith(_SAC_NOISE_ID_SUFFIXES)}
+    ):
+        _decompose_safe(contenido, tag)
+
+    return contenido
+
+
 def extract_main_content(soup: BeautifulSoup) -> BeautifulSoup:
     """
-    Extrae el contenido principal del artículo wiki.
-    Estrategia: buscar gx-content-placeholder, o MAINTABLE, o body.
-    Se eliminan solos los elementos ruidosos específicos, nunca contenedores padre.
+    Extrae el contenido principal del artículo wiki o SAC.
+
+    SAC:  td#CONTENIDO (cuerpo real del artículo, no el wrapper de filtros)
+    Wiki: gx-content-placeholder → MAINTABLE → body
+
+    Se eliminan solo los elementos ruidosos específicos, nunca contenedores padre.
     """
+    # SAC: el artículo real vive en td#CONTENIDO
+    contenido = soup.find("td", {"id": "CONTENIDO"})
+    if contenido:
+        return _clean_sac_content(contenido)
+
     # gx-content-placeholder contiene el cuerpo del artículo
     article = soup.find("div", {"class": "gx-content-placeholder"})
     if not article:
@@ -198,8 +271,12 @@ def extract_main_content(soup: BeautifulSoup) -> BeautifulSoup:
         _decompose_safe(article, tag)
 
     # Eliminar los divs de navegación específicos
-    for nid in ["TABLEFEEDBACK_MPAGE", "NEXTNODE_MPAGE",
-                "TABLERECENTLINKS_MPAGE", "TABLEINFO_MPAGE"]:
+    for nid in [
+        "TABLEFEEDBACK_MPAGE",
+        "NEXTNODE_MPAGE",
+        "TABLERECENTLINKS_MPAGE",
+        "TABLEINFO_MPAGE",
+    ]:
         for tag in article.find_all(attrs={"id": lambda x: x and nid in str(x)}):
             _decompose_safe(article, tag)
 
@@ -238,6 +315,7 @@ def html_to_markdown(html_content: str) -> str:
 # Content hashing
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def compute_hash(text: str) -> str:
     """SHA256 del texto normalizado."""
     return hashlib.sha256(text.strip().encode("utf-8")).hexdigest()
@@ -246,6 +324,7 @@ def compute_hash(text: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # Main scraper
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def scrape(url: str) -> ScrapedArticle:
     """Scrape completo de un artículo wiki."""
@@ -261,9 +340,12 @@ def scrape(url: str) -> ScrapedArticle:
     content_soup = extract_main_content(soup)
     raw_text = content_soup.get_text(separator="\n", strip=True)
 
-    # Extraer título: H1 → primer renglón del contenido → "Unknown"
+    # Extraer título: SAC (*SACTIT) → H1.WikiName → primer renglón → "Unknown"
+    sac_title = content_soup.find(id=lambda x: x and str(x).endswith("SACTIT"))
     h1 = soup.find("h1", {"class": "WikiName"})
-    if h1:
+    if sac_title and sac_title.get_text(strip=True):
+        title = sac_title.get_text(strip=True)
+    elif h1:
         title = h1.get_text(strip=True)
     elif raw_text:
         title = raw_text.split("\n")[0].strip()
@@ -311,10 +393,13 @@ def scrape(url: str) -> ScrapedArticle:
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def main():
     parser = argparse.ArgumentParser(description="Scrape GeneXus wiki article")
     parser.add_argument("url", help="URL del artículo wiki")
-    parser.add_argument("--output-dir", default="data/scraped", help="Directorio de salida")
+    parser.add_argument(
+        "--output-dir", default="data/scraped", help="Directorio de salida"
+    )
     args = parser.parse_args()
 
     article = scrape(args.url)
