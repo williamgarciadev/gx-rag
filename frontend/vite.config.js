@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://gx-rag-api:8000',
+        target: process.env.VITE_API_TARGET || 'http://gx-rag-api:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

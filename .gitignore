@@ -24,6 +24,9 @@ data/raw/
 .vscode/
 *.swp
 
+# Tooling caches
+.atl/
+
 # OS
 .DS_Store
 Thumbs.db
