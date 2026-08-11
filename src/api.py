@@ -165,20 +165,29 @@ def status():
     files = list(SCRAPED_DIR.glob("*.md")) if SCRAPED_DIR.exists() else []
     total_size = sum(f.stat().st_size for f in files)
 
-    from src.vectorstore.pg_collections import list_collections
+    # collection_counts() y no list_collections(): trae los nombres Y los conteos
+    # en una sola query (GROUP BY), y el tamaño del corpus es justo lo que la UI
+    # de curación necesita mostrar. Con dos llamadas eran dos consultas para la
+    # misma información.
+    from src.vectorstore.pg_collections import collection_counts
 
-    collections: list[str] = []
+    chunk_counts: dict[str, int] = {}
     store_error = None
     try:
-        collections = list_collections()
+        chunk_counts = dict(collection_counts())
     except Exception as exc:
         store_error = str(exc)
-        log.warning(f"/status: failed to list collections: {exc}")
+        log.warning(f"/status: failed to count collections: {exc}")
 
     stat = shutil.disk_usage(".")
     return {
         "scraped_articles": len(files),
-        "collections": collections,
+        "collections": sorted(chunk_counts),
+        # Chunks indexados por colección, y el total. `store_error` distingue
+        # "el store no tiene nada" de "no se pudo consultar el store": sin eso, un
+        # Postgres caído se ve igual que un corpus vacío.
+        "chunk_counts": chunk_counts,
+        "total_chunks": sum(chunk_counts.values()),
         "store_error": store_error,
         "total_size_bytes": total_size,
         "disk_free_gb": round(stat.free / BYTES_PER_GB, 1),

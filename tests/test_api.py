@@ -27,18 +27,26 @@ def test_health_returns_ok(client):
     assert response.json()["status"] == "ok"
 
 
-def test_status_lists_collections_on_success(client, monkeypatch):
+def test_status_reports_collections_and_chunk_counts(client, monkeypatch):
+    """La UI muestra el tamaño del corpus, así que /status tiene que darlo.
+
+    Antes sólo devolvía los NOMBRES de las colecciones, y la tarjeta de "docs
+    totales" del StatusBar leía un campo `chroma_total_docs` que la API nunca
+    devolvió: mostraba "—" para siempre.
+    """
     import src.vectorstore.pg_collections as pg_collections
 
     monkeypatch.setattr(
-        pg_collections, "list_collections", lambda: ["gx_docs", "gx_syntax"]
+        pg_collections, "collection_counts", lambda: [("gx_docs", 50063), ("bt_docs", 1122)]
     )
 
     response = client.get("/status")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["collections"] == ["gx_docs", "gx_syntax"]
+    assert body["collections"] == ["bt_docs", "gx_docs"]  # ordenadas
+    assert body["chunk_counts"] == {"gx_docs": 50063, "bt_docs": 1122}
+    assert body["total_chunks"] == 51185
     assert body["store_error"] is None
 
 
@@ -46,7 +54,7 @@ def test_status_surfaces_store_error_instead_of_swallowing_it(client, monkeypatc
     import src.vectorstore.pg_collections as pg_collections
 
     monkeypatch.setattr(
-        pg_collections, "list_collections", _raise(RuntimeError("postgres down"))
+        pg_collections, "collection_counts", _raise(RuntimeError("postgres down"))
     )
 
     response = client.get("/status")
@@ -55,8 +63,12 @@ def test_status_surfaces_store_error_instead_of_swallowing_it(client, monkeypatc
     assert response.status_code == 200
     body = response.json()
     assert body["collections"] == []
+    assert body["total_chunks"] == 0
     assert body["store_error"] is not None
     assert "postgres down" in body["store_error"]
+    # Un store caído NO puede leerse como "el corpus está vacío": son distintos, y
+    # es la distinción que la UI necesita para no mentirle al curador.
+    assert body["chunk_counts"] == {}
 
 
 def test_verify_returns_result_on_success(client, monkeypatch):
