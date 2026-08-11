@@ -6,6 +6,8 @@ import re
 import logging
 from typing import Literal
 
+from sqlalchemy import func
+
 from src.syntax_db.models import (
     BtApi,
     GxSyntax,
@@ -18,6 +20,85 @@ log = logging.getLogger(__name__)
 
 
 Verdict = Literal["VÁLIDO", "INVÁLIDO", "NO_VERIFICABLE"]
+
+
+# La wiki titula cada pagina "<Nombre> <que es>": "AddYears method", "Printer
+# rule". Nadie escribe eso en un procedure — escribe &fecha.AddYears(5). Estos
+# sufijos son el puente entre el codigo real y el nombre del articulo.
+_ENTRY_SUFFIXES = (
+    "method",
+    "property",
+    "function",
+    "rule",
+    "event",
+    "command",
+    "clause",
+    "object",
+    "attribute",
+)
+
+# &fecha.AddYears(5) -> AddYears   |   &col.Add(&item) -> Add
+_MEMBER_CALL = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+# &var.ResourceName (acceso a propiedad, sin parentesis)
+_MEMBER_ACCESS = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)")
+
+
+def _member_tokens(snippet: str) -> list[str]:
+    """Miembros invocados o accedidos en un snippet, del mas probable al menos.
+
+    Las llamadas van primero: en "&a.B(&c.D())" lo que se esta verificando es
+    normalmente la invocacion, no el objeto sobre el que se apoya.
+    """
+    vistos: list[str] = []
+    for rx in (_MEMBER_CALL, _MEMBER_ACCESS):
+        for m in rx.findall(snippet):
+            if m not in vistos:
+                vistos.append(m)
+    return vistos
+
+
+def _lookup_entry(session, nombres: list[str]) -> list:
+    """Entradas de gx_syntax que matchean alguno de `nombres`, mejor primero.
+
+    Prueba el nombre pelado y luego "<nombre> <sufijo>", sin distinguir
+    mayusculas: el corpus mezcla "AddItem method" con firmas que escriben
+    control.additem(...).
+
+    Los titulos de la wiki no son uniformes: ademas de "AddYears method" hay
+    "Add method - SDT Collection" y "Business Component Add method". Por eso,
+    si el nombre exacto no aparece, se buscan las variantes calificadas.
+
+    Devuelve una LISTA a proposito. Un mismo miembro puede existir con
+    semanticas distintas (Add sobre coleccion de SDT vs sobre coleccion de BC);
+    quedarse con la primera y callar el resto seria justo el tipo de respuesta
+    con falsa autoridad que este catalogo existe para evitar.
+    """
+    for base in nombres:
+        for nombre in [base] + [f"{base} {s}" for s in _ENTRY_SUFFIXES]:
+            n = nombre.lower()
+            exacta = (
+                session.query(GxSyntax)
+                .filter(func.lower(GxSyntax.name) == n)
+                .all()
+            )
+            if exacta:
+                return exacta
+            # "Add method - SDT Collection" / "Business Component Add method".
+            # El espacio en los patrones evita que "Add method" pesque
+            # "AddRange method".
+            calificadas = (
+                session.query(GxSyntax)
+                .filter(
+                    func.lower(GxSyntax.name).like(f"{n} %")
+                    | func.lower(GxSyntax.name).like(f"% {n}")
+                    | func.lower(GxSyntax.name).like(f"% {n} %")
+                )
+                .order_by(GxSyntax.name)
+                .all()
+            )
+            if calificadas:
+                return calificadas
+    return []
 
 
 def _normalize_token(snippet: str) -> str:
@@ -152,6 +233,17 @@ def verify_syntax(
     # Búsqueda exacta en nombre
     entry = session.query(GxSyntax).filter(GxSyntax.name == token).first()
 
+    # El snippet suele ser código, no el título de un artículo. Se intenta con
+    # los miembros invocados (&fecha.AddYears(5) → AddYears) y, si el snippet no
+    # tiene punto, con el token pelado — así "AddYears" encuentra "AddYears
+    # method" en vez de caer en la rama de similitud y responder INVÁLIDO.
+    otras: list[str] = []
+    if not entry:
+        matches = _lookup_entry(session, _member_tokens(snippet) or [token])
+        if matches:
+            entry = matches[0]
+            otras = [m.name for m in matches[1:]]
+
     if entry:
         # NOTE: version filtering is not enforced yet — version_since is not a
         # normalized/comparable format, so we surface the catalog version and
@@ -165,15 +257,27 @@ def verify_syntax(
         _log_verdict(
             "verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source
         )
-        return {
+        ambiguo = (
+            f" Ojo: el catálogo tiene {len(otras) + 1} entradas para este miembro "
+            f"({', '.join(otras)}); se devuelve la primera."
+            if otras
+            else ""
+        )
+        resultado = {
             "verdict": "VÁLIDO",
             "name": entry.name,
             "object_type": entry.object_type,
             "signature": entry.signature,
             "version": entry.version_since,
             "source": entry.source,
-            "notes": f"Válido según {entry.source} ({entry.object_type}){version_note}",
+            "notes": (
+                f"Válido según {entry.source} ({entry.object_type})"
+                f"{version_note}{ambiguo}"
+            ),
         }
+        if otras:
+            resultado["otras_entradas"] = otras
+        return resultado
 
     # Buscar por similaridad en nombre
     similar = (

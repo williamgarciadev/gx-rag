@@ -57,6 +57,77 @@ def test_promote_candidate_makes_verify_syntax_valid(temp_db):
     assert verdict["source"] == "wiki"
 
 
+def _promote(cr, name, object_type="Method", raw="x"):
+    """Alta rápida de una entrada ya curada en el catálogo."""
+    return cr.promote_candidate(
+        cr.store_candidate(name=name, object_type=object_type, signature={"raw": raw})
+    )
+
+
+def test_verify_syntax_resolves_a_code_snippet(temp_db):
+    """El caso de uso real: verificar código, no el título de un artículo.
+
+    La wiki titula "AddYears method"; nadie escribe eso en un procedure. Si
+    verify_syntax solo entendiera el título, el catálogo curado no se usaría
+    nunca en el flujo que importa.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddYears method", raw="Date | DateTime.AddYears( Numeric-expression )")
+
+    for snippet in ("&fecha.AddYears(5)", "AddYears", "AddYears method"):
+        assert verify_syntax(snippet)["verdict"] == "VÁLIDO", snippet
+
+
+def test_verify_syntax_reports_every_entry_for_an_ambiguous_member(temp_db):
+    """Add existe sobre colección de SDT y sobre colección de BC.
+
+    Devolver una sola y callar la otra es exactamente la falsa autoridad que
+    este catálogo existe para evitar.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "Add method - SDT Collection", raw="&VarBasedOnSDTCollection.Add( &Item )")
+    _promote(cr, "Business Component Add method", raw="&varBasedOnBCCollection.add( &bc )")
+
+    r = verify_syntax("&col.Add(&item)")
+
+    assert r["verdict"] == "VÁLIDO"
+    assert r["otras_entradas"], "la segunda entrada tiene que salir a la luz"
+    assert {r["name"], *r["otras_entradas"]} == {
+        "Add method - SDT Collection",
+        "Business Component Add method",
+    }
+
+
+def test_verify_syntax_does_not_invent_a_match_for_a_made_up_method(temp_db):
+    """Un método inventado NO puede dar VÁLIDO.
+
+    Con el catálogo incompleto la respuesta honesta es NO_VERIFICABLE: el
+    sistema no tiene la entrada, y eso no es lo mismo que afirmar que no existe.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddYears method", raw="Date | DateTime.AddYears( Numeric-expression )")
+
+    for inventado in ("&fecha.AddCenturies(1)", "AddWeeks method"):
+        assert verify_syntax(inventado)["verdict"] != "VÁLIDO", inventado
+
+
+def test_verify_syntax_does_not_confuse_a_prefix_with_a_member(temp_db):
+    """"Add" no puede resolver a "AddRange method" por ser prefijo suyo."""
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddRange method", raw="&c1.AddRange(&c2)")
+
+    assert verify_syntax("&col.Add(&item)")["verdict"] != "VÁLIDO"
+    assert verify_syntax("&c1.AddRange(&c2)")["verdict"] == "VÁLIDO"
+
+
 def test_store_candidate_dedups_and_increments_hit_count(temp_db):
     from src.syntax_db import candidate_repository as cr
 
