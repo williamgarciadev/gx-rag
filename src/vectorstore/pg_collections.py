@@ -105,3 +105,18 @@ def list_collections() -> list[str]:
     with get_pool().connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT DISTINCT collection FROM chunks ORDER BY collection")
         return [r[0] for r in cur.fetchall()]
+
+
+def collection_counts() -> list[tuple[str, int]]:
+    """Colecciones con su cantidad de chunks, la mas poblada primero.
+
+    Alimenta el hint de search_docs cuando una busqueda no devuelve nada: la
+    causa mas comun es haber apuntado a una coleccion vacia. Con ChromaDB esto
+    era un N+1 (listar y despues contar una por una); aca es un GROUP BY.
+    """
+    with get_pool().connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT collection, count(*) FROM chunks "
+            "GROUP BY collection ORDER BY count(*) DESC"
+        )
+        return [(r[0], r[1]) for r in cur.fetchall()]

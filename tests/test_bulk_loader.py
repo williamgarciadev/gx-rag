@@ -124,45 +124,72 @@ def test_load_dump_tallies_index_statuses():
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-class _FakeCol:
-    def __init__(self, existing):
-        self._existing = existing
-        self.deleted = None
+class _FakeCursor:
+    def __init__(self, conn):
+        self._conn = conn
 
-    def get(self, where=None, include=None):
-        return self._existing
+    def __enter__(self):
+        return self
 
-    def delete(self, ids=None):
-        self.deleted = ids
+    def __exit__(self, *exc):
+        return False
+
+    def execute(self, sql, params=None):
+        self._conn.sentencias.append(" ".join(sql.split()))
+
+    def fetchone(self):
+        # Única consulta que lee: el content_hash del artículo. None = no existe.
+        return self._conn.fila
 
 
-class _FakeClient:
-    def __init__(self, col):
-        self._col = col
+class _FakeConn:
+    """Conexión mínima con la forma que usa pg_indexer: with pool.connection()
+    as conn, luego with conn.cursor() as cur."""
 
-    def get_or_create_collection(self, name):
-        return self._col
+    def __init__(self, fila):
+        self.fila = fila
+        self.sentencias: list[str] = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def cursor(self):
+        return _FakeCursor(self)
+
+
+class _FakePool:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def connection(self):
+        return self._conn
 
 
 @pytest.fixture
 def _indexer(monkeypatch):
-    from src.vectorstore import indexer
+    """pg_indexer con index_article mockeado: acá se prueba la DECISIÓN
+    (skipped/reindexed/indexed), no el embedding ni el SQL."""
+    from src.vectorstore import pg_indexer
 
     calls = []
     monkeypatch.setattr(
-        indexer, "index_article", lambda *a, **k: calls.append((a, k)) or ["id_c0"]
+        pg_indexer, "index_article", lambda *a, **k: calls.append((a, k)) or ["id_c0"]
     )
-    return indexer, calls
+    return pg_indexer, calls
 
 
-def _wire_client(monkeypatch, indexer, col):
-    monkeypatch.setattr(indexer, "get_client", lambda: _FakeClient(col))
+def _wire_pool(monkeypatch, indexer, fila):
+    conn = _FakeConn(fila)
+    monkeypatch.setattr(indexer, "get_pool", lambda: _FakePool(conn))
+    return conn
 
 
 def test_reindex_skips_when_hash_unchanged(_indexer, monkeypatch):
     indexer, calls = _indexer
-    col = _FakeCol({"ids": ["a_c0"], "metadatas": [{"content_hash": "H"}]})
-    _wire_client(monkeypatch, indexer, col)
+    conn = _wire_pool(monkeypatch, indexer, fila=("H",))
 
     status = indexer.reindex_if_changed(
         "a", "t", "content", "src", "guide", "url", "H", collection="gx_docs"
@@ -170,27 +197,26 @@ def test_reindex_skips_when_hash_unchanged(_indexer, monkeypatch):
 
     assert status == "skipped"
     assert calls == []  # never re-embedded
-    assert col.deleted is None
+    assert not any("DELETE" in s for s in conn.sentencias)
 
 
 def test_reindex_reindexes_when_hash_differs(_indexer, monkeypatch):
     indexer, calls = _indexer
-    col = _FakeCol({"ids": ["a_c0", "a_c1"], "metadatas": [{"content_hash": "OLD"}]})
-    _wire_client(monkeypatch, indexer, col)
+    conn = _wire_pool(monkeypatch, indexer, fila=("OLD",))
 
     status = indexer.reindex_if_changed(
         "a", "t", "content", "src", "guide", "url", "NEW", collection="gx_docs"
     )
 
     assert status == "reindexed"
-    assert col.deleted == ["a_c0", "a_c1"]  # stale chunks removed first
+    assert any("DELETE" in s for s in conn.sentencias)  # stale chunks removed first
     assert len(calls) == 1
 
 
 def test_reindex_indexes_when_absent(_indexer, monkeypatch):
+    """Sin fila previa no hay nada que borrar: se indexa y listo."""
     indexer, calls = _indexer
-    col = _FakeCol({"ids": [], "metadatas": []})
-    _wire_client(monkeypatch, indexer, col)
+    conn = _wire_pool(monkeypatch, indexer, fila=None)
 
     status = indexer.reindex_if_changed(
         "a", "t", "content", "src", "guide", "url", "H", collection="gx_docs"
@@ -198,4 +224,6 @@ def test_reindex_indexes_when_absent(_indexer, monkeypatch):
 
     assert status == "indexed"
     assert len(calls) == 1
-    assert col.deleted is None
+    assert not any("DELETE" in s for s in conn.sentencias)
+
+

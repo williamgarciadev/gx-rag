@@ -147,7 +147,7 @@ def load_dump(
     catalog. `index_fn`/`hash_fn` are injectable for testing.
     """
     if index_fn is None:
-        from src.vectorstore.indexer import reindex_if_changed
+        from src.vectorstore.pg_indexer import reindex_if_changed
 
         index_fn = reindex_if_changed
     if hash_fn is None:

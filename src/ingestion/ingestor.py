@@ -44,7 +44,7 @@ def index_article(article: ScrapedArticle) -> list[str]:
     Indexa el artículo en ChromaDB.
     Devuelve lista de chunk IDs insertados.
     """
-    from src.vectorstore.indexer import index_article as _index
+    from src.vectorstore.pg_indexer import index_article as _index
     meta = article.metadata
 
     chunk_ids = _index(

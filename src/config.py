@@ -10,6 +10,8 @@ MIN_API_KEY_LENGTH = 32
 
 
 class VectorStoreConfig(BaseSettings):
+    # El store vive en Postgres (GXRAG_DSN). `path` quedó solo para
+    # scripts/migrate_chroma_to_pg.py, que lee el ChromaDB de origen.
     path: Path = Path("data/chroma")
     embedding_model: str = "intfloat/multilingual-e5-large"
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"

@@ -188,7 +188,7 @@ def test_repeated_auth_failures_are_throttled():
 
 def test_public_tool_error_does_not_leak_exception_detail(mcp_client, monkeypatch):
     """A tool failure must NOT return raw exception text to public callers (H1)."""
-    import src.vectorstore.retriever as retriever
+    import src.vectorstore.pg_retriever as retriever
 
     secret = "/srv/secret/path/creds.db"
     monkeypatch.setattr(

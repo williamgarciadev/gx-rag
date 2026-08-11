@@ -160,26 +160,26 @@ def scrape_get(url: Annotated[str, Query(description="URL del artículo wiki")] 
 @app.get("/status", tags=["ingestion"])
 def status():
     """
-    Estado del scraper: artículos guardados, chunks en ChromaDB, espacio en disco.
+    Estado del scraper: artículos guardados, colecciones indexadas, espacio en disco.
     """
     files = list(SCRAPED_DIR.glob("*.md")) if SCRAPED_DIR.exists() else []
     total_size = sum(f.stat().st_size for f in files)
 
-    from src.vectorstore.chroma_client import get_client
+    from src.vectorstore.pg_collections import list_collections
 
-    collections = []
-    chroma_error = None
+    collections: list[str] = []
+    store_error = None
     try:
-        collections = [c.name for c in get_client().list_collections()]
+        collections = list_collections()
     except Exception as exc:
-        chroma_error = str(exc)
-        log.warning(f"/status: failed to list ChromaDB collections: {exc}")
+        store_error = str(exc)
+        log.warning(f"/status: failed to list collections: {exc}")
 
     stat = shutil.disk_usage(".")
     return {
         "scraped_articles": len(files),
-        "chroma_collections": collections,
-        "chroma_error": chroma_error,
+        "collections": collections,
+        "store_error": store_error,
         "total_size_bytes": total_size,
         "disk_free_gb": round(stat.free / BYTES_PER_GB, 1),
     }
@@ -225,9 +225,9 @@ def search(
     top_k: Annotated[int, Query(description="Resultados", ge=1, le=20)] = 5,
 ):
     """
-    Búsqueda híbrida en ChromaDB. Proxy para MCP wrapper.
+    Búsqueda híbrida (pgvector + tsvector). Proxy para MCP wrapper.
     """
-    from src.vectorstore.retriever import hybrid_search
+    from src.vectorstore.pg_retriever import hybrid_search
 
     results = hybrid_search(q, collection=collection, top_k=top_k)
     return {"results": results, "count": len(results)}
@@ -241,7 +241,7 @@ def get_document(
     """
     Obtiene contenido completo de un documento por ID.
     """
-    from src.vectorstore.collections import get_document
+    from src.vectorstore.pg_collections import get_document
 
     doc = get_document(doc_id, collection=collection)
     if not doc:
@@ -257,7 +257,7 @@ def get_article(
     """
     Reensambla un artículo completo a partir de sus chunks (orden chunk_index).
     """
-    from src.vectorstore.collections import get_article
+    from src.vectorstore.pg_collections import get_article
 
     art = get_article(article_id, collection=collection)
     if not art:

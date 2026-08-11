@@ -280,8 +280,8 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
     log.info("call_tool: %s (args: %s)", name, sorted(arguments))
 
     if name == "search_docs":
-        from src.vectorstore.retriever import hybrid_search
-        from src.vectorstore.chroma_client import get_client
+        from src.vectorstore.pg_retriever import hybrid_search
+        from src.vectorstore.pg_collections import collection_counts
 
         q = arguments.get("query", "")
         col = arguments.get("collection", "gx_docs")
@@ -294,10 +294,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                 # Guide the caller to a collection that actually has content.
                 populated = []
                 try:
-                    for c in get_client().list_collections():
-                        n = c.count()
-                        if n:
-                            populated.append(f"{c.name} ({n} chunks)")
+                    populated = [f"{n} ({c} chunks)" for n, c in collection_counts()]
                 except Exception:
                     pass
                 hint = (
@@ -327,7 +324,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "get_document":
-        from src.vectorstore.collections import get_document
+        from src.vectorstore.pg_collections import get_document
 
         doc_id = arguments.get("doc_id", "")
         collection = arguments.get("collection", "gx_docs")
@@ -350,7 +347,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "get_article":
-        from src.vectorstore.collections import get_article
+        from src.vectorstore.pg_collections import get_article
 
         article_id = arguments.get("article_id", "")
         collection = arguments.get("collection", "gx_docs")

@@ -20,16 +20,6 @@ def _raise(exc):
     return _fn
 
 
-class _FakeCollection:
-    def __init__(self, name):
-        self.name = name
-
-
-class _FakeChromaClient:
-    def list_collections(self):
-        return [_FakeCollection("gx_docs"), _FakeCollection("gx_syntax")]
-
-
 def test_health_returns_ok(client):
     response = client.get("/health")
 
@@ -38,23 +28,25 @@ def test_health_returns_ok(client):
 
 
 def test_status_lists_collections_on_success(client, monkeypatch):
-    import src.vectorstore.chroma_client as chroma_client
+    import src.vectorstore.pg_collections as pg_collections
 
-    monkeypatch.setattr(chroma_client, "get_client", lambda: _FakeChromaClient())
+    monkeypatch.setattr(
+        pg_collections, "list_collections", lambda: ["gx_docs", "gx_syntax"]
+    )
 
     response = client.get("/status")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["chroma_collections"] == ["gx_docs", "gx_syntax"]
-    assert body["chroma_error"] is None
+    assert body["collections"] == ["gx_docs", "gx_syntax"]
+    assert body["store_error"] is None
 
 
-def test_status_surfaces_chroma_error_instead_of_swallowing_it(client, monkeypatch):
-    import src.vectorstore.chroma_client as chroma_client
+def test_status_surfaces_store_error_instead_of_swallowing_it(client, monkeypatch):
+    import src.vectorstore.pg_collections as pg_collections
 
     monkeypatch.setattr(
-        chroma_client, "get_client", _raise(RuntimeError("chroma down"))
+        pg_collections, "list_collections", _raise(RuntimeError("postgres down"))
     )
 
     response = client.get("/status")
@@ -62,9 +54,9 @@ def test_status_surfaces_chroma_error_instead_of_swallowing_it(client, monkeypat
     # Endpoint must still answer, but the failure must be visible — not silent.
     assert response.status_code == 200
     body = response.json()
-    assert body["chroma_collections"] == []
-    assert body["chroma_error"] is not None
-    assert "chroma down" in body["chroma_error"]
+    assert body["collections"] == []
+    assert body["store_error"] is not None
+    assert "postgres down" in body["store_error"]
 
 
 def test_verify_returns_result_on_success(client, monkeypatch):
@@ -116,7 +108,7 @@ def test_methods_returns_500_on_error(client, monkeypatch):
 
 
 def test_documents_accepts_id_query_param_and_returns_doc(client, monkeypatch):
-    import src.vectorstore.collections as collections
+    import src.vectorstore.pg_collections as collections
 
     monkeypatch.setattr(
         collections,
@@ -132,7 +124,7 @@ def test_documents_accepts_id_query_param_and_returns_doc(client, monkeypatch):
 
 
 def test_documents_returns_404_when_missing(client, monkeypatch):
-    import src.vectorstore.collections as collections
+    import src.vectorstore.pg_collections as collections
 
     monkeypatch.setattr(
         collections, "get_document", lambda doc_id, collection="gx_docs": None
@@ -144,7 +136,7 @@ def test_documents_returns_404_when_missing(client, monkeypatch):
 
 
 def test_article_reassembles_and_returns_whole_doc(client, monkeypatch):
-    import src.vectorstore.collections as collections
+    import src.vectorstore.pg_collections as collections
 
     monkeypatch.setattr(
         collections,
@@ -165,7 +157,7 @@ def test_article_reassembles_and_returns_whole_doc(client, monkeypatch):
 
 
 def test_article_returns_404_when_missing(client, monkeypatch):
-    import src.vectorstore.collections as collections
+    import src.vectorstore.pg_collections as collections
 
     monkeypatch.setattr(
         collections, "get_article", lambda article_id, collection="gx_docs": None

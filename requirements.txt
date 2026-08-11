@@ -11,9 +11,11 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 
 # Vector store
-chromadb>=1.5
+# chromadb y rank-bm25 salieron: el denso lo hace pgvector y el lexico
+# tsvector/GIN, ambos dentro de Postgres. scripts/migrate_chroma_to_pg.py sigue
+# necesitando chromadb, pero es una herramienta de una sola vez — se instala a
+# mano el dia que haya que re-migrar, no en cada deploy.
 sentence-transformers>=2.0
-rank-bm25>=0.2
 langchain-text-splitters>=0.2
 
 # Scraper / parsing
