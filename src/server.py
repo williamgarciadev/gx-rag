@@ -46,12 +46,22 @@ server = Server(APP_NAME)
 # ─── Tools ────────────────────────────────────────────────────────────────────
 
 
+# Colecciones que el store puede contener. Fuente ÚNICA: alimenta el enum de las
+# read tools Y el chequeo de runtime, porque el SDK no valida el inputSchema — un
+# `gx_doc` mal escrito llegaba al SQL, no matcheaba nada y volvía como "Sin
+# resultados", que el agente lee como evidencia sobre el CORPUS y no sobre su
+# propio argumento.
+KNOWN_COLLECTIONS = ("gx_docs", "bt_docs", "gx_syntax", "bt_apis")
+
+
 # Read-only tools — safe for the public internet-facing transport.
 READ_TOOLS: list[Tool] = [
     Tool(
         name="search_docs",
         description=(
-            "Búsqueda híbrida (dense + BM25 + RRF) sobre documentación indexada. "
+            "Búsqueda híbrida sobre documentación indexada: denso (pgvector, "
+            "e5-large) + léxico full-text (tsvector con config es_simple — sin "
+            "stemming, insensible a tildes), fusionados con RRF. "
             "Devuelve fragmentos con score y PROCEDENCIA (url, article_id, hash): "
             "cita la url, no el fragmento suelto. Si la colección está vacía, "
             "informa cuáles tienen contenido.\n"
@@ -68,8 +78,10 @@ READ_TOOLS: list[Tool] = [
             "tiene decenas de miles de chunks y el ranking mezcla fuentes, así que "
             "un tema presente puede no entrar en los primeros 3. Antes de afirmar "
             "una ausencia, subí top_k y reformulá con términos del dominio.\n"
-            "bt_docs / bt_apis (Bantotal) pueden estar vacías: si lo están, la "
-            "respuesta te dice qué colecciones tienen contenido.\n"
+            "ESTADO DEL CORPUS (medido 2026-08-11): gx_docs ~50.000 chunks; "
+            "bt_docs ~1.100 (manual funcional Bantotal, en español); gx_syntax 26; "
+            "bt_apis VACÍA. Si pegás en una vacía, la respuesta te dice cuáles "
+            "tienen contenido.\n"
             "Un fragmento recuperado NO valida una firma: recuperar ≠ verificar."
         ),
         inputSchema={
@@ -81,7 +93,7 @@ READ_TOOLS: list[Tool] = [
                 },
                 "collection": {
                     "type": "string",
-                    "enum": ["gx_docs", "bt_docs", "gx_syntax", "bt_apis"],
+                    "enum": list(KNOWN_COLLECTIONS),
                     "description": "Colección a buscar.",
                     "default": "gx_docs",
                 },
@@ -125,6 +137,7 @@ READ_TOOLS: list[Tool] = [
                 },
                 "collection": {
                     "type": "string",
+                    "enum": list(KNOWN_COLLECTIONS),
                     "description": "Colección donde está el artículo.",
                     "default": "gx_docs",
                 },
@@ -135,19 +148,27 @@ READ_TOOLS: list[Tool] = [
     Tool(
         name="get_document",
         description=(
-            "Obtiene el contenido completo de un documento previamente "
-            "indexado, incluyendo su metadata y provenance."
+            "Devuelve UN fragmento (chunk) por su id, con su metadata y "
+            "procedencia. Un chunk son ~800 caracteres: es un pedazo del "
+            "artículo, NO el artículo.\n"
+            "🔴 Para el documento entero usá get_article con el article_id. Si "
+            "tratás este fragmento como el artículo completo, vas a concluir que "
+            "lo que no está en él no existe."
         ),
         inputSchema={
             "type": "object",
             "properties": {
                 "doc_id": {
                     "type": "string",
-                    "description": "ID interno del documento en ChromaDB.",
+                    "description": (
+                        "ID del chunk — el campo doc_id que devuelve search_docs. "
+                        "Ojo: no es el article_id (ese va a get_article)."
+                    ),
                 },
                 "collection": {
                     "type": "string",
-                    "description": "Colección donde está el documento.",
+                    "enum": list(KNOWN_COLLECTIONS),
+                    "description": "Colección donde está el chunk.",
                     "default": "gx_docs",
                 },
             },
@@ -178,7 +199,10 @@ READ_TOOLS: list[Tool] = [
             "Es distinto de search_docs, que RECUPERA prosa: acá hay veredicto "
             "contra catálogo cerrado. Cada token no encontrado se registra en la "
             "cola de curación (con hit_count), así que preguntar sirve incluso "
-            "cuando la respuesta es 'no sé'."
+            "cuando la respuesta es 'no sé'.\n"
+            "TAMAÑO REAL DEL CATÁLOGO (medido 2026-08-11): 59 entradas de GeneXus "
+            "(Method, Event, Command, Rule, Property) y el catálogo bt_apis está "
+            "VACÍO — con language='bt_api' hoy sólo puede salir NO_VERIFICABLE."
         ),
         inputSchema={
             "type": "object",
@@ -190,12 +214,21 @@ READ_TOOLS: list[Tool] = [
                 "language": {
                     "type": "string",
                     "enum": ["gx", "bt_api"],
-                    "description": "Lenguaje/dialecto del snippet.",
+                    "description": (
+                        "Lenguaje/dialecto del snippet. 'bt_api' consulta el "
+                        "catálogo de endpoints Bantotal, que está vacío."
+                    ),
                     "default": "gx",
                 },
                 "version": {
                     "type": "string",
-                    "description": "Versión de GeneXus (gx16, gx18).",
+                    "description": (
+                        "Versión de GeneXus (gx16, gx18). NO filtra ni discrimina: "
+                        "el catálogo no registra versión en ninguna entrada, así que "
+                        "un VÁLIDO no prueba que la firma sea la de esa versión. Se "
+                        "acepta para que quede en la auditoría y la respuesta lo "
+                        "aclara."
+                    ),
                 },
             },
             "required": ["snippet"],
@@ -204,24 +237,36 @@ READ_TOOLS: list[Tool] = [
     Tool(
         name="list_methods",
         description=(
-            "Lista los métodos/propiedades de un objeto GeneXus QUE ESTÁN EN EL "
-            "CATÁLOGO.\n"
+            "Lista las entradas del CATÁLOGO para un object_type.\n"
             "🔴 'Sin resultados' significa 'no hay nada catalogado para ese "
             "object_type', NO 'ese objeto no tiene métodos'. El catálogo está "
             "incompleto, así que una lista vacía —o parcial— es lo normal. "
             "Nunca la presentes como el conjunto completo de métodos de un objeto "
-            "ni concluyas de su ausencia que un método no existe."
+            "ni concluyas de su ausencia que un método no existe.\n"
+            "🔴 EL object_type NO ES EL TIPO DE OBJETO GENEXUS. Es la categoría de "
+            "la entrada catalogada, y se compara exacto. Valores reales (medido "
+            "2026-08-11): Method, Event, Command, Rule, Property. Pedir "
+            "'Transaction' o 'Procedure' devuelve vacío porque no son categorías "
+            "del catálogo, no porque no haya nada. La respuesta vacía te lista "
+            "los valores disponibles."
         ),
         inputSchema={
             "type": "object",
             "properties": {
                 "object_type": {
                     "type": "string",
-                    "description": "Tipo de objeto (Transaction, Procedure, etc.).",
+                    "description": (
+                        "Categoría de la entrada, exacta: Method | Event | Command "
+                        "| Rule | Property."
+                    ),
                 },
                 "version": {
                     "type": "string",
-                    "description": "Versión de GeneXus (gx16, gx18).",
+                    "description": (
+                        "Versión de GeneXus (gx16, gx18). NO filtra ni discrimina: "
+                        "ninguna entrada del catálogo tiene versión registrada, así "
+                        "que filtrar devolvería vacío siempre. Se ignora al consultar."
+                    ),
                 },
             },
             "required": ["object_type"],
@@ -361,6 +406,24 @@ def _verdict_guidance(verdict: object) -> str:
         key,
         "→ Veredicto no reconocido: tratalo como NO concluyente y verificá contra "
         "la KB real o la wiki oficial.",
+    )
+
+
+def _reject_unknown_collection(collection: str) -> str | None:
+    """Mensaje de rechazo si la colección no existe; None si es válida.
+
+    Se chequea en el handler porque el SDK NO valida el enum del inputSchema. Sin
+    esto, un nombre mal escrito viaja al SQL, no matchea nada y vuelve como "Sin
+    resultados" / "no encontrado" — indistinguible de una ausencia real, que es
+    justo la lectura que el agente propaga aguas abajo.
+    """
+    if collection in KNOWN_COLLECTIONS:
+        return None
+    return (
+        f"Colección desconocida '{collection}'. "
+        f"Válidas: {', '.join(KNOWN_COLLECTIONS)}.\n"
+        "Esto NO dice nada sobre el corpus: se rechazó el argumento ANTES de "
+        "consultar el store. Corregí el nombre y repetí la llamada."
     )
 
 
@@ -514,6 +577,10 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         k = arguments.get("top_k", 5)
         snippet_chars = arguments.get("snippet_chars", 600)
         min_score = arguments.get("min_score")
+        # Antes de embeddear: rechazar acá evita además pagar la carga de e5-large
+        # (~2.2 GB en frío) por un argumento que ya sabemos inválido.
+        if rejection := _reject_unknown_collection(col):
+            return [TextContent(type="text", text=rejection)]
         try:
             results = hybrid_search(q, collection=col, top_k=k, min_score=min_score)
             if not results:
@@ -554,17 +621,32 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
 
         doc_id = arguments.get("doc_id", "")
         collection = arguments.get("collection", "gx_docs")
+        if rejection := _reject_unknown_collection(collection):
+            return [TextContent(type="text", text=rejection)]
         try:
             doc = get_document(doc_id, collection=collection)
             if not doc:
-                return [TextContent(type="text", text="Documento no encontrado.")]
+                return [
+                    TextContent(
+                        type="text",
+                        text=(
+                            f"No hay ningún chunk con id '{doc_id}' en "
+                            f"'{collection}'.\n"
+                            "Verificá que sea un doc_id de search_docs (id de "
+                            "CHUNK) y no un article_id — ese va a get_article."
+                        ),
+                    )
+                ]
             return [
                 TextContent(
                     type="text",
-                    text=f"# {doc['title']}\n\n"
+                    # Rotulado como fragmento: sin esto el agente lee 800 chars y
+                    # concluye que el articulo entero dice solo eso.
+                    text=f"# {doc['title']} — FRAGMENTO (1 chunk, no el artículo)\n\n"
                     f"**Fuente:** {doc.get('source', '')}\n"
                     f"**Colección:** {doc.get('collection', '')}\n"
-                    f"**Hash:** {doc.get('content_hash', '')}\n\n"
+                    f"**Hash:** {doc.get('content_hash', '')}\n"
+                    f"_Para el documento completo: get_article con su article_id._\n\n"
                     f"{doc.get('content', '')}",
                 )
             ]
@@ -577,6 +659,8 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
 
         article_id = arguments.get("article_id", "")
         collection = arguments.get("collection", "gx_docs")
+        if rejection := _reject_unknown_collection(collection):
+            return [TextContent(type="text", text=rejection)]
         try:
             art = get_article(article_id, collection=collection)
             if not art:
@@ -611,13 +695,19 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "list_methods":
-        from src.syntax_db.gx_repository import list_methods
+        from src.syntax_db.gx_repository import list_methods, list_object_types
 
         obj_type = arguments.get("object_type", "")
         version = arguments.get("version")
         try:
             methods = list_methods(obj_type, version=version)
             if not methods:
+                # Los object_type REALES, consultados al catálogo. Antes acá se
+                # sugerían 'Transaction' y 'Procedure', que no tienen una sola
+                # fila: la tool mandaba al agente a repetir la consulta con un
+                # valor que garantiza vacío, y el segundo vacío ya se lee como
+                # "el catálogo no sabe nada de esto".
+                disponibles = ", ".join(list_object_types()) or "(catálogo vacío)"
                 return [
                     TextContent(
                         type="text",
@@ -626,9 +716,9 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                             "Esto NO significa que ese objeto no tenga métodos: el "
                             "catálogo está incompleto y una lista vacía es lo normal. "
                             "No concluyas de esta respuesta que un método no existe — "
-                            "verificá contra un objeto real de la KB o la wiki oficial. "
-                            "Y revisá el object_type: se compara exacto "
-                            "(p. ej. 'Transaction', 'Procedure')."
+                            "verificá contra un objeto real de la KB o la wiki oficial.\n"
+                            f"object_type disponibles en el catálogo: {disponibles}. "
+                            "Se compara exacto."
                         ),
                     )
                 ]

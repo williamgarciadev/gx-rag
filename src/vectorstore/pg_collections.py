@@ -9,12 +9,9 @@ vez de traer las filas y ordenarlas en Python.
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from src.vectorstore.pg_client import get_pool
-
-log = logging.getLogger(__name__)
 
 _DOCUMENT_SQL = """
     SELECT chunk_id, content, title, source, url, content_hash, collection
@@ -38,14 +35,18 @@ _ARTICLE_SQL = """
 
 
 def get_document(doc_id: str, collection: str = "gx_docs") -> dict[str, Any] | None:
-    """Obtiene un chunk por su id. None si no existe."""
-    try:
-        with get_pool().connection() as conn, conn.cursor() as cur:
-            cur.execute(_DOCUMENT_SQL, {"chunk_id": doc_id, "collection": collection})
-            row = cur.fetchone()
-    except Exception as exc:
-        log.error("get_document error: %s", exc)
-        return None
+    """Obtiene un chunk por su id. None si no existe.
+
+    None significa UNA sola cosa: no hay tal fila. Los errores del motor PROPAGAN
+    a proposito. Antes se capturaban y se devolvia None, y como None es tambien
+    como se escribe "no existe", una caida de Postgres se le presentaba al agente
+    como "documento no encontrado" — una afirmacion de inexistencia que nadie
+    verifico. El llamador ya distingue: dispatch_tool lo convierte en error
+    redactado y la API admin en 500.
+    """
+    with get_pool().connection() as conn, conn.cursor() as cur:
+        cur.execute(_DOCUMENT_SQL, {"chunk_id": doc_id, "collection": collection})
+        row = cur.fetchone()
 
     if row is None:
         return None
@@ -66,16 +67,15 @@ def get_article(article_id: str, collection: str = "gx_docs") -> dict[str, Any] 
 
     search_docs y get_document trabajan a nivel de chunk; un agente que necesita
     fundamentar una respuesta quiere el documento entero.
+
+    Los errores del motor propagan, por el mismo motivo que en get_document: None
+    tiene que significar "no hay tal articulo" y nada mas.
     """
-    try:
-        with get_pool().connection() as conn, conn.cursor() as cur:
-            cur.execute(
-                _ARTICLE_SQL, {"article_id": article_id, "collection": collection}
-            )
-            row = cur.fetchone()
-    except Exception as exc:
-        log.error("get_article error: %s", exc)
-        return None
+    with get_pool().connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            _ARTICLE_SQL, {"article_id": article_id, "collection": collection}
+        )
+        row = cur.fetchone()
 
     # La agregacion siempre devuelve una fila: sin chunks, count(*) es 0.
     if row is None or row[5] == 0:
