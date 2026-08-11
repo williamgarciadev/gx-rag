@@ -101,7 +101,10 @@ def _reciprocal_rank_fusion(*rankings: list[str]) -> dict[str, float]:
     """Fuse ranked id lists into a single id -> RRF score map."""
     fused: dict[str, float] = {}
     for ranking in rankings:
-        for rank, doc_id in enumerate(ranking):
+        # start=1: el rank de RRF es 1-based en la literatura, y es lo que
+        # produce el ROW_NUMBER() de pg_retriever. Con start=0 los scores de
+        # los dos retrievers no eran comparables entre si.
+        for rank, doc_id in enumerate(ranking, start=1):
             fused[doc_id] = fused.get(doc_id, 0.0) + 1.0 / (RRF_K + rank)
     return fused
 

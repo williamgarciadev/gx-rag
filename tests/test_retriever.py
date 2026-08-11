@@ -28,11 +28,15 @@ class _FakeCollection:
     def count(self):
         return len(self._docs)
 
-    def get(self, include=None):
+    def get(self, include=None, limit=None, offset=0):
+        # Paginado real: _get_all() escanea en paginas y corta cuando una vuelve
+        # vacia. Un fake que ignore limit/offset devolveria siempre la coleccion
+        # entera y colgaria ese while para siempre.
+        page = self._docs[offset:] if limit is None else self._docs[offset : offset + limit]
         return {
-            "ids": [d[0] for d in self._docs],
-            "documents": [d[1] for d in self._docs],
-            "metadatas": [d[2] for d in self._docs],
+            "ids": [d[0] for d in page],
+            "documents": [d[1] for d in page],
+            "metadatas": [d[2] for d in page],
         }
 
     def query(self, query_embeddings, n_results, include):
@@ -144,6 +148,23 @@ def test_bm25_rescues_document_dense_missed(monkeypatch):
 
     # Hybrid value: the lexically-relevant doc surfaces even though dense missed it.
     assert "b" in ids
+
+
+def test_get_all_concatenates_pages(monkeypatch):
+    # _get_all() existe porque un col.get() sin limite desborda el limite de
+    # variables SQL del backend de Chroma. Con el page size real (5000) los demas
+    # tests entran en una sola pagina y nunca ejercitan el bucle: se baja a 2
+    # para forzar varias vueltas y comprobar que se concatenan en orden.
+    monkeypatch.setattr(retriever, "_GET_PAGE_SIZE", 2)
+    docs = [(f"d{i}", f"texto {i}", {"id": f"d{i}", "title": "", "source": ""})
+            for i in range(5)]
+    col = _FakeCollection(docs, dense_order=[])
+
+    ids, texts, metas = retriever._get_all(col)
+
+    assert ids == [f"d{i}" for i in range(5)]  # 3 paginas: 2 + 2 + 1
+    assert texts == [f"texto {i}" for i in range(5)]
+    assert len(metas) == 5
 
 
 def test_bm25_index_rebuilds_when_count_changes(monkeypatch):
