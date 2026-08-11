@@ -102,8 +102,8 @@ dense AS (
 | 16 | `pymupdf` y `structlog` declarados con **cero imports** | `requirements.txt`; `rg` sin resultados | peso de imagen e instalación | nulo |
 | 17 | Config muerta: `chunk_size/overlap`, `reranker_model`, `default_version`, `SyntaxDBConfig.path` | `config.py:17-23,50` vs `pg_indexer.py:24-25` | cambiar la config no cambia nada | nulo |
 | 18 | `.pyc` huérfanos de los módulos Chroma borrados | `src/vectorstore/__pycache__/` | ruido | nulo |
-| 19 | `StatusBar.vue` lee `chroma_collections`/`chroma_total_docs` inexistentes | `StatusBar.vue:25,49` vs `api.py:179-185` | dos tarjetas muestran "—" siempre | bajo |
-| 20 | Chips de filtro del frontend no filtran (itera `results`, no `filteredResults`) | `SearchPanel.vue` | filtros decorativos | bajo |
+| 19 | ✅ **RESUELTO — y era MÁS GRAVE de lo diagnosticado.** No eran los campos `chroma_*`: era una **colisión de nombres**. `const { health, status } = useApi()` importa una FUNCIÓN `status`, y el template leía `status?.scraped_articles` → `undefined` siempre. Eran **5 de 6 tarjetas** en "—", no dos | `StatusBar.vue` (script vs template) | la UI de curación era una pantalla de guiones | bajo |
+| 20 | ✅ **RESUELTO** — el template iteraba `results` con `filteredResults` computado y sin usar | `SearchPanel.vue:97` vs `:209` | chips decorativos | bajo |
 
 ### Hallazgos de la auditoría de interfaz (2026-08-11)
 
@@ -122,9 +122,25 @@ lee como una **ausencia verificada**.
 | 27 | **`verify_syntax(language="bt_api")` no puede dar `VÁLIDO` jamás** y no lo declaraba | `bt_apis`: **0 filas** medidas | el agente planifica con una capacidad de verificación que no existe | ✅ **RESUELTO** (declarado) |
 | 28 | **`search_docs` carga e5-large (~2.2 GB) ANTES de validar sus argumentos** | `server.py` embebe la query antes de mirar `collection`; el crash de torch al testearlo lo expuso | una llamada con argumento inválido paga el arranque en frío completo | ✅ **RESUELTO** para `collection` (se rechaza antes de embeddear); el resto de la validación temprana queda pendiente |
 | 29 | **`sql/001-chunks-schema.sql` declara `tsv` con config `'simple'`** mientras `pg_retriever` consulta con `'es_simple'` | `001:50-52` vs `pg_retriever.py:46`; la base viva ya está en `es_simple` porque corrió el `002` | **un install fresco que corra solo el 001 queda incoherente con el retriever**: o revienta (config inexistente) o pierde la mitad léxica | 🔲 documentado, NO tocado |
-| 30 | **`/discover?source=wiki` es inalcanzable**: la URL tiene caracteres chinos | `api.py:323` → `https://wiki.genexus.com/广场/wiki?{query}` | capacidad declarada que falla siempre, en el camino de crecimiento de corpus | 🔲 documentado, NO tocado |
+| 30 | 🔴 **RE-CLASIFICADO (peor de lo pensado): `/discover` NO FUNCIONA CON NINGUNA FUENTE.** No es una URL corrupta que se arregle. **Medido 2026-08-11**: `wiki` devuelve **0 links** con id numérico parseable (con la URL de `广场` *y* con `commwiki/servlet/wiki`, las dos), y `sac` responde **404**. La wiki no expone un buscador HTML que este parser pueda leer | `api.py:322-327`; medido con curl contra las 5 URLs candidatas | **capacidad declarada que no existe**, en el camino de crecimiento de corpus. Arreglar la URL NO alcanza | 🔲 **DECISIÓN**: declarar la limitación o quitar la fuente. Requiere investigar cómo buscar en la wiki programáticamente (sitemap, API, otro markup) |
 | 31 | **`/verify` HTTP devuelve `str(dict)`**, no JSON, y **sin** `_VERDICT_GUIDANCE` | `api.py:268-280` vs `server.py:598-612` | la superficie anti-alucinación es asimétrica entre transportes (dup. de #12) | 🔲 documentado, NO tocado |
 | 32 | **`bt_docs` no está en `WRITABLE_COLLECTIONS`** aunque el CLI ya escribió ahí 1.122 chunks | `server.py:236` vs `bt_docs` poblado por `scripts/ingest_dump.py --collection bt_docs` | `ingest_batch` rechaza una colección legítima: el MCP no puede ingerir Bantotal | 🔲 **DECISIÓN HUMANA**: es política de crecimiento de corpus |
+| 33 | **La procedencia de `bt_docs` no es citable**: los hits traen `C:\Users\wigam\...\*.txt`, la ruta del disco de quien lo ingirió | `bulk_loader.parse_text_files` → `url=str(path.resolve())`; visto en una respuesta real de producción | el agente consumidor recibe una fuente que **no existe y no puede verificar**, contra la regla de citar la url | 🔲 **DECISIÓN**: exige URL canónica + reindexar `bt_docs` |
+| 34 | **`DiscoverPanel.vue` (300 líneas) existe pero no se porta** | rescatado del VPS en el scratchpad; consume `/discover` y `/scrape` | portarlo hoy sería desplegar una UI que **no puede funcionar**, porque #30 está muerto. Además traía una IP de docker hardcodeada (`172.18.0.12:8000`) y `http` desde una página `https` (mixed content) | 🔲 bloqueado por #30 |
+| 35 | **Los builds del frontend no son reproducibles** | `frontend/Dockerfile:4-5`: `COPY package.json` **sin** el lock, y `npm install` | `vue: ^3.4.0` resuelve a cualquier 3.x; dos builds del mismo commit pueden diferir | 🔲 barato: `COPY package*.json` + `npm ci` (el lock ya está versionado) |
+
+### ⚠️ Corrección de un diagnóstico propio (2026-08-11)
+
+Afirmé que el deploy había hecho **retroceder el frontend**, porque el diff del VPS
+mostraba 946 inserciones en 7 archivos. **Era falso, y la lección importa:** ese
+diff era contra el HEAD **viejo** del VPS (`3229fd8`), y ese mismo trabajo ya
+estaba en `vps-produccion`. Comparados byte a byte, `App.vue`, `SearchPanel.vue`,
+`StatusBar.vue`, `ScrapeForm.vue`, `ArticleList.vue` e `index.html` son
+**idénticos** — el diff aparente era **CRLF vs LF** (Windows vs Linux).
+
+Lo único realmente ausente era `DiscoverPanel.vue` (#34). Moraleja: un `diff`
+contra la base equivocada no mide ausencia, y `diff --strip-trailing-cr` es
+obligatorio al comparar un árbol de Linux con uno de Windows.
 
 ---
 
