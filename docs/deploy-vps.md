@@ -98,6 +98,44 @@ Además `vps-produccion` **no existe en el remoto** (solo hay `main` y
 `feat/hybrid-retrieval-and-api-hardening`) y la rama local **no tiene upstream**:
 "hacer push" acá significa **crear una rama nueva en GitHub**, no actualizar una.
 
+### ⛔ Bloqueo MÁS DE FONDO: el VPS no tiene el store Postgres
+
+Antes que la rama, falta la infraestructura. Medido el 2026-08-11:
+
+| Verificación | Resultado |
+|---|---|
+| Módulos en `gx-rag-mcp` | `chroma_client.py`, `collections.py`, `indexer.py`, `retriever.py` — **ningún `pg_*`** |
+| `GXRAG_DSN` en el contenedor | **no definida** |
+| Corpus que sirve hoy | **ChromaDB, 461 MB** en `data/chroma` (+ 2 backups `chroma.bak-*`) |
+| Contenedor Postgres | `postgres-main` (`postgres:16-alpine`), up 10 días, **sin puerto publicado** |
+| **Extensión `vector`** | **NI DISPONIBLE**: `pg_available_extensions where name='vector'` devuelve vacío |
+| Base / rol `gxrag` | **no existen** (bases: `banco_contactar_db`, `gxapp_db`, `magis`, `postgres`, `wgsoft`; rol `gxapp_user`) |
+
+O sea: **el endpoint público sirve la versión ChromaDB + BM25**, y desplegar esta
+rama ahí no es difícil, es **imposible** en el estado actual. `pg_client.get_pool()`
+lanza `RuntimeError` al arrancar sin `GXRAG_DSN` (a propósito, `open=True`), y aun
+definiéndola, `CREATE EXTENSION vector` falla porque la extensión no está en esa
+imagen.
+
+Lo que haría falta, en orden, y **nada de esto es un rebuild**:
+
+1. **pgvector en el VPS**: imagen `pgvector/pgvector:pg16` o compilar la extensión
+   en `postgres-main`. ⚠️ Ese motor es **compartido** con `banco_contactar_db`,
+   `magis` y `gxapp_db` — tocarlo es riesgo para otras apps. **Decisión humana.**
+2. Rol + base `gxrag`, y correr `sql/001` **y** `sql/002` en ese orden (ver el
+   gotcha del final: con solo el 001 la mitad léxica queda incoherente).
+3. **Reindexar el corpus**: los 461 MB de Chroma no migran solos. Hay
+   `scripts/migrate_chroma_to_pg.py`, pero implica re-embeddear ~51k chunks con
+   e5-large **en el VPS** (CPU y ~2.2 GB de RAM por proceso).
+4. Recién entonces, el `up -d --build`.
+
+> **Corolario para las descripciones de las tools:** los conteos de corpus NO se
+> hardcodean en el texto de una tool. El dev tiene ~50k chunks en Postgres y el
+> VPS un ChromaDB sin `bt_docs`: un número en la descripción se despliega a los
+> dos y es falso en uno. Los tamaños son hechos de runtime y ya viajan en la
+> respuesta vacía vía `collection_counts()`. Hay un test que lo impide
+> (`test_no_description_hardcodes_a_corpus_size`).
+
 ### ⛔ Reconciliar las dos ramas es DECISIÓN HUMANA — no la tome un agente
 
 Hay trabajo no publicado en los dos lados, así que cualquier camino puede perder

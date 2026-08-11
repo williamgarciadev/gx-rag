@@ -78,10 +78,12 @@ READ_TOOLS: list[Tool] = [
             "tiene decenas de miles de chunks y el ranking mezcla fuentes, así que "
             "un tema presente puede no entrar en los primeros 3. Antes de afirmar "
             "una ausencia, subí top_k y reformulá con términos del dominio.\n"
-            "ESTADO DEL CORPUS (medido 2026-08-11): gx_docs ~50.000 chunks; "
-            "bt_docs ~1.100 (manual funcional Bantotal, en español); gx_syntax 26; "
-            "bt_apis VACÍA. Si pegás en una vacía, la respuesta te dice cuáles "
-            "tienen contenido.\n"
+            "QUÉ COLECCIONES HAY: gx_docs (wiki GeneXus + SAC + WorkWithPlus), "
+            "bt_docs (documentación Bantotal), gx_syntax, bt_apis. **CUÁLES "
+            "tienen contenido y cuánto depende del deployment, así que no lo "
+            "asumas de esta descripción**: cualquiera puede estar vacía, y cuando "
+            "una búsqueda no devuelve nada la respuesta te informa los conteos "
+            "reales, consultados en ese momento.\n"
             "Un fragmento recuperado NO valida una firma: recuperar ≠ verificar."
         ),
         inputSchema={
@@ -200,9 +202,11 @@ READ_TOOLS: list[Tool] = [
             "contra catálogo cerrado. Cada token no encontrado se registra en la "
             "cola de curación (con hit_count), así que preguntar sirve incluso "
             "cuando la respuesta es 'no sé'.\n"
-            "TAMAÑO REAL DEL CATÁLOGO (medido 2026-08-11): 59 entradas de GeneXus "
-            "(Method, Event, Command, Rule, Property) y el catálogo bt_apis está "
-            "VACÍO — con language='bt_api' hoy sólo puede salir NO_VERIFICABLE."
+            "El catálogo es CHICO y curado a mano (decenas de entradas, no miles), "
+            "y su tamaño depende del deployment: por eso NO_VERIFICABLE es la "
+            "respuesta esperada. El catálogo de endpoints Bantotal (`bt_apis`) "
+            "suele estar vacío, y mientras lo esté `language='bt_api'` sólo puede "
+            "devolver NO_VERIFICABLE — usá `list_methods` para ver qué hay."
         ),
         inputSchema={
             "type": "object",
@@ -244,11 +248,10 @@ READ_TOOLS: list[Tool] = [
             "Nunca la presentes como el conjunto completo de métodos de un objeto "
             "ni concluyas de su ausencia que un método no existe.\n"
             "🔴 EL object_type NO ES EL TIPO DE OBJETO GENEXUS. Es la categoría de "
-            "la entrada catalogada, y se compara exacto. Valores reales (medido "
-            "2026-08-11): Method, Event, Command, Rule, Property. Pedir "
-            "'Transaction' o 'Procedure' devuelve vacío porque no son categorías "
-            "del catálogo, no porque no haya nada. La respuesta vacía te lista "
-            "los valores disponibles."
+            "la entrada catalogada, y se compara exacto: Method, Event, Command, "
+            "Rule, Property. Pedir 'Transaction' o 'Procedure' devuelve vacío "
+            "porque no son categorías del catálogo, no porque no haya nada. La "
+            "respuesta vacía lista las categorías que existen en este deployment."
         ),
         inputSchema={
             "type": "object",

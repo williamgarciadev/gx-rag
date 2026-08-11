@@ -51,6 +51,23 @@ def test_no_description_names_a_store_or_engine_we_removed(tool):
     assert "bm25" not in text
 
 
+@pytest.mark.parametrize("tool", srv.READ_TOOLS, ids=lambda t: t.name)
+def test_no_description_hardcodes_a_corpus_size(tool):
+    """A count in a description is a claim about ONE deployment.
+
+    Measured 2026-08-11: the VPS serves a ChromaDB corpus with no `bt_docs` at
+    all, while the dev box has ~50k chunks in Postgres. A description saying
+    "gx_docs ~50.000 chunks; bt_docs ~1.100" ships to both and is false in one of
+    them — the same class of lie this file exists to prevent, and it slipped in
+    while fixing the others. Sizes are runtime facts: `collection_counts()`
+    already reports them in the empty response, where they are true when read.
+    """
+    import re
+
+    thousands = re.findall(r"\d+[.,]\d{3}\b", tool.description or "")
+    assert not thousands, f"{tool.name} hardcodea un conteo: {thousands}"
+
+
 def test_search_docs_names_the_actual_lexical_engine():
     text = _read_tool("search_docs").description
     assert "tsvector" in text
