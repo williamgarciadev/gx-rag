@@ -42,11 +42,19 @@ class CandidateDraft:
     source_doc_id: str | None
 
 
-def _detect_object_type(content: str) -> str:
-    low = content.lower()
-    for kw, label in _OBJECT_TYPES:
-        if kw in low:
-            return label
+def _detect_object_type(title: str, content: str) -> str:
+    """Clasifica el candidato, dando prioridad al titulo sobre el cuerpo.
+
+    El titulo de la wiki nombra la clase de entrada de forma explicita ("Day
+    method", "Printer rule"), mientras que el cuerpo menciona muchas categorias
+    de paso. Mirando solo el cuerpo, "AddLines method" salia clasificado como
+    Property porque esa palabra aparecia antes en la prosa.
+    """
+    for source in (title, content):
+        low = (source or "").lower()
+        for kw, label in _OBJECT_TYPES:
+            if kw in low:
+                return label
     return "Unknown"
 
 
@@ -81,7 +89,7 @@ def extract_candidates(docs: Iterable) -> list[CandidateDraft]:
         drafts.append(
             CandidateDraft(
                 name=title,
-                object_type=_detect_object_type(content),
+                object_type=_detect_object_type(title, content),
                 category=None,
                 signature=signature,
                 description=content[:200],
