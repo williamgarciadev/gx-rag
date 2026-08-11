@@ -192,29 +192,104 @@ Ojo: en el VPS ya hay `.env.bak-rotacion-20260811-095403` y `.env.bak-restore-10
 o sea que hubo al menos una rotación y un restore manual. **Antes de tocar el
 `.env`, hacé un backup más** — y no los traigas a otra máquina: son secretos.
 
-### Procedimiento, una vez reconciliadas las ramas
+### Procedimiento REAL — ejecutado y verificado el 2026-08-11
+
+Esto no es un plan: es lo que se corrió, con los tiempos medidos. Cinco cosas que
+el procedimiento "obvio" daba por sentadas resultaron **falsas** en este VPS, y
+están marcadas 🔴 porque cada una cortó el deploy a mitad de camino.
+
+**1. Levantar el store dedicado** (una sola vez):
 
 ```bash
-ssh vps2-tunel                    # 173.249.49.68, usuario gga
-# (host alternativo: vps2 — mismo server, usuario geo, puerto 54022)
-
-cd /home/admin/.openclaw/workspace/gx-bt-rag-mcp
-# El dir es de `admin`, así que git corre bajo sudo y se queja de ownership.
-# El flag va por comando, para NO ensuciar la config global del VPS:
-sudo git -c safe.directory=$PWD status --short     # tiene que estar LIMPIO antes
-
-sudo git -c safe.directory=$PWD pull origin <la-rama-que-se-haya-acordado>
-
-# `gga` tiene sudo passwordless pero NO está en el grupo docker → sudo docker.
-sudo docker compose up -d --build
-
-# Verificar salud desde el host (puerto interno del contenedor).
-sudo docker compose exec gx-rag-mcp curl -fs http://localhost:8080/health
-# -> {"status":"ok"}
-
-# Verificar que el endpoint público sigue cerrado sin key.
-curl -s -o /dev/null -w '%{http_code}\n' https://gxrag.wgsoft.com.co/mcp/   # 401
+# Password generada EN el VPS, nunca en el transcript de nadie.
+PGPASS=$(openssl rand -hex 24)
+sudo docker run -d --name gx-rag-pg --network infra_gateway --restart unless-stopped \
+  -e POSTGRES_USER=gxrag -e POSTGRES_PASSWORD="$PGPASS" -e POSTGRES_DB=gxrag \
+  -v gx-rag-pgdata:/var/lib/postgresql/data \
+  --health-cmd 'pg_isready -U gxrag -d gxrag' --health-interval 15s \
+  pgvector/pgvector:pg16
+umask 077; printf 'GXRAG_DSN=postgresql://gxrag:%s@gx-rag-pg:5432/gxrag\n' "$PGPASS" > ~/gx-rag-dsn.txt
 ```
+
+Verificado ahí mismo: `create extension vector` → **0.8.6**, y el operador `<=>`
+responde.
+
+**2. NO hace falta correr `sql/001` ni `sql/002`.** 🔴 El plan decía que sí. Un
+`pg_dump` completo **ya trae** `EXTENSION unaccent`, `EXTENSION vector`, la
+`TEXT SEARCH CONFIGURATION es_simple` y los índices. Correr el `001` encima sería
+además reintroducir su config `'simple'` (hallazgo #29). El deploy nace coherente
+sin tocar nada.
+
+**3. Dump y restore** — 51.211 chunks, **239 MB** comprimido:
+
+```bash
+# Local (Windows: pg_dump NO está en el PATH; está en Program Files\PostgreSQL\16\bin).
+pg_dump -Fc --no-owner --no-privileges -d "$GXRAG_DSN" -f gxrag.dump    # 1m09s
+scp gxrag.dump vps2-tunel:~/                                            # 1m27s
+
+# 🔴 `pg_restore -j` NO funciona leyendo de stdin ("parallel restore from standard
+# input is not supported"): hay que pasar el archivo, así que se copia adentro.
+sudo docker cp ~/gxrag.dump gx-rag-pg:/tmp/
+sudo docker exec gx-rag-pg pg_restore --no-owner --no-privileges -j2 \
+     -U gxrag -d gxrag /tmp/gxrag.dump                                  # 2m24s
+sudo docker exec gx-rag-pg rm -f /tmp/gxrag.dump
+```
+
+Compatibilidad que hay que chequear **antes**: local **16.2** → VPS **16.14**
+(misma major) y pgvector **0.8.6 en los dos lados**. Con un local en 17 el dump no
+restauraría, y se descubriría a mitad de camino.
+
+**4. Agregar el DSN al `.env`** — ver la sección de keys de más arriba:
+
+```bash
+# 🔴 TODO lo que toque el .env va DENTRO de sudo. El glob y el redirect `<` los
+# expande el shell SIN sudo y dan "Permission denied" (el dir es de `admin`).
+# Con `set -e` eso corta el script justo antes del append, sin escribir nada.
+sudo bash -c 'cd <dir>; cp -a .env .env.bak-predeploy-$(date +%s);
+  grep -q "^GXRAG_DSN=" .env || echo "GXRAG_DSN=..." >> .env;
+  grep -q "^GXRAG_PG_PASSWORD=" .env || echo "GXRAG_PG_PASSWORD=..." >> .env;
+  grep -c "^GX_PUBLIC_API_KEYS=" .env'    # -> 1, las keys intactas
+```
+
+`GXRAG_PG_PASSWORD` hace falta además del DSN: el compose la exige con `:?` para
+que el contenedor no arranque nunca con password vacía.
+
+**5. Traer el código: con `git bundle`, no con `git pull`.** 🔴 El VPS **no tiene
+credenciales de GitHub** y el repo es privado: `fetch` muere con
+`could not read Username for 'https://github.com'`. Poner un token en el VPS es
+peor. Un bundle lleva los commits **preservando la historia**, sin red ni
+credenciales, y como el VPS ya tenía la base común pesa **0.2 MB**:
+
+```bash
+# Local — sólo lo que el VPS no tiene:
+git bundle create gxrag-vps.bundle ^<base-comun> vps-produccion
+git bundle verify gxrag-vps.bundle
+scp gxrag-vps.bundle vps2-tunel:~/
+
+# VPS (el dir es de `admin`, de ahí el safe.directory por comando):
+sudo bash -c 'cd <dir>; G="git -c safe.directory=$PWD";
+  $G stash push -u -m "pre-deploy";                       # reversible, no reset --hard
+  $G fetch ~/gxrag-vps.bundle "refs/heads/vps-produccion:refs/remotes/origin/vps-produccion";
+  $G checkout -B vps-produccion refs/remotes/origin/vps-produccion;
+  chown -R admin:admin .git'                              # git corrió como root
+```
+
+🔴 El `chown` final no es opcional: sin él, `.git` queda con objetos de root y el
+agente que opera el repo como `admin` no puede volver a usarlo.
+
+**6. Build y arranque — servicios EXPLÍCITOS:**
+
+```bash
+sudo docker compose build gx-rag-mcp gx-rag-api gx-rag-ui
+sudo docker compose up -d --no-deps gx-rag-mcp gx-rag-api gx-rag-ui
+```
+
+🔴 **Nombrá los servicios.** Un `up -d` pelado intenta gestionar también
+`gx-rag-pg`, que se creó con `docker run` y no tiene labels de compose → choca por
+nombre y, peor, invita a borrarlo. Nombrándolos, el store queda fuera del
+alcance del comando. (Adoptarlo con compose es una ventana de mantenimiento
+aparte: `docker rm -f gx-rag-pg` y dejar que compose lo recree — el volumen
+`gx-rag-pgdata` persiste, así que el corpus sobrevive.)
 
 ⚠️ Ojo con `up -d --build`: `gx-rag-api` y `gx-rag-ui` hoy corren **fuera** de este
 compose (sin labels, del 2026-07-25). El comando los **recrea** según este
