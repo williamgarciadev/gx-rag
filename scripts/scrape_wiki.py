@@ -180,18 +180,26 @@ def _decompose_safe(element: BeautifulSoup, tag) -> None:
 
 def extract_main_content(soup: BeautifulSoup) -> BeautifulSoup:
     """
-    Extrae el contenido principal del artículo wiki.
-    Estrategia: buscar gx-content-placeholder, o MAINTABLE, o body.
+    Extrae el contenido principal del artículo wiki o SAC.
+
+    Wiki:        → gx-content-placeholder → MAINTABLE → body
+    SAC:         → td#CONTENIDO (contiene el artículo real, no el wrapper de filtros)
+
     Se eliminan solos los elementos ruidosos específicos, nunca contenedores padre.
     """
-    # gx-content-placeholder contiene el cuerpo del artículo
-    article = soup.find("div", {"class": "gx-content-placeholder"})
-    if not article:
-        article = soup.find("div", {"id": "MAINTABLE"})
-    if not article:
-        article = soup.body
-    if not article:
-        return soup
+    # ── SAC: el artículo real está en td#CONTENIDO ──
+    contenido_td = soup.find("td", {"id": "CONTENIDO"})
+    if contenido_td:
+        article = contenido_td
+    else:
+        # ── Wiki: gx-content-placeholder → MAINTABLE → body ──
+        article = soup.find("div", {"class": "gx-content-placeholder"})
+        if not article:
+            article = soup.find("div", {"id": "MAINTABLE"})
+        if not article:
+            article = soup.body
+        if not article:
+            return soup
 
     # Eliminar ruido hijos del artículo
     for tag in article.find_all(["script", "style", "noscript", "iframe", "svg"]):
@@ -199,7 +207,8 @@ def extract_main_content(soup: BeautifulSoup) -> BeautifulSoup:
 
     # Eliminar los divs de navegación específicos
     for nid in ["TABLEFEEDBACK_MPAGE", "NEXTNODE_MPAGE",
-                "TABLERECENTLINKS_MPAGE", "TABLEINFO_MPAGE"]:
+                "TABLERECENTLINKS_MPAGE", "TABLEINFO_MPAGE",
+                "SacsContainerDiv"]:  # SAC: contenedor de lista, no del artículo individual
         for tag in article.find_all(attrs={"id": lambda x: x and nid in str(x)}):
             _decompose_safe(article, tag)
 
@@ -321,7 +330,43 @@ def main():
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_name = article.metadata.page_id or article.metadata.content_hash[:12]
+    # SAC articles: extract numeric article_id from URL path (last path segment before ;;
+    # e.g. .../O:24345;; → 24345. Falls back to content_hash[:12] for wiki.
+    # Extract numeric article_id from URL — two patterns:
+    # 1) PortalParm=S:178:...:O:60933 or path segment O:61672
+    # 2) Article_id is the segment that follows "O:" in the PortalParm or path
+    import urllib.parse
+    parsed = urllib.parse.urlparse(args.url)
+    article_id_from_url = None
+    # Try PortalParm query param first
+    portal = urllib.parse.parse_qs(parsed.query).get('PortalParm', [''])[0]
+    if portal:
+        # Find "O:<digits>" in the PortalParm value (format: S:178:...:O:60933)
+        parts = portal.split(':')
+        for i in range(len(parts) - 1, -1, -1):
+            p = parts[i].strip().rstrip(';').strip()
+            if p.isdigit():
+                if i > 0 and parts[i - 1].strip().rstrip(';').strip() == 'O':
+                    article_id_from_url = p
+                    break
+    if not article_id_from_url:
+        # Fallback: search the raw query string and path for O:<digits> pattern
+        search_in = urllib.parse.unquote(parsed.query + parsed.path)
+        # Match pattern O:number (with possible ; suffixes)
+        import re
+        # GeneXus URLs encode ":" as "%3B" or "%3b" and separate ID with ","
+        # Normalize: decode all URL-encoded chars, replace separators with ':'
+        # This turns "S%3b178%3b94%3b...O%3b,61176%3b%3b" → "S:178:94:...:O:61176:"
+        search_decoded = search_in.replace('%3B', ':').replace('%3b', ':').replace(';', ':').replace(',', ':')
+        # Collapse any sequence of multiple colons into one (e.g. O::61176 → O:61176)
+        search_decoded = re.sub(r':+', ':', search_decoded)
+        # Now find the article_id — pattern "O:<digits>" (SAC), "data=<digits>" (websac), etc.
+        for pattern in (r'O:(\d+)', r'data=(\d+)', r'id=(\d+)'):
+            m = re.search(pattern, search_decoded)
+            if m:
+                article_id_from_url = m.group(1)
+                break
+    safe_name = article_id_from_url or article.metadata.page_id or article.metadata.content_hash[:12]
     base = out_dir / safe_name
 
     md_path = base.with_suffix(".md")

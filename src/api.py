@@ -56,7 +56,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 class ScrapeResponse(BaseModel):
     url: str
     title: str
-    page_id: str
+    page_id: str | None
     genre: str
     destination: str
     source_key: str
@@ -292,3 +292,77 @@ def list_methods(
 
     methods = list_methods(object_type, version=version or None)
     return {"methods": methods, "count": len(methods)}
+
+# ─── Discovery endpoint ────────────────────────────────────────────────────────
+import re as _re
+import httpx as _httpx
+from bs4 import BeautifulSoup as _BeautifulSoup
+
+
+@app.get("/discover", tags=["discovery"])
+def discover(
+    source: Annotated[str, Query(description="Fuente: wiki | sac")] = "wiki",
+    query: Annotated[str, Query(description="Tema o query a buscar")] = "",
+    max_urls: Annotated[int, Query(description="Máximo de URLs", ge=1, le=100)] = 50,
+):
+    """
+    Descubre URLs de artículos en wiki.genexus.com o sac.genexus.com por tema.
+    Usa httpx interno (el contenedor puede alcanzar la wiki).
+    """
+    if not query:
+        raise HTTPException(status_code=400, detail="query es requerido")
+
+    log.info(f"/discover source={source} query={query}")
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; gx-bt-rag-mcp/0.1)",
+        "Accept": "text/html",
+    }
+
+    if source == "wiki":
+        fetch_url = f"https://wiki.genexus.com/广场/wiki?{query}"
+    elif source == "sac":
+        fetch_url = f"https://sac.genexus.com/frontend.search.aspx?q={query}"
+    else:
+        raise HTTPException(status_code=400, detail="source debe ser 'wiki' o 'sac'")
+
+    try:
+        with _httpx.Client(timeout=30.0) as client:
+            resp = client.get(fetch_url, headers=headers, follow_redirects=True)
+            resp.raise_for_status()
+    except Exception as exc:
+        log.error(f"/discover: falló fetch {fetch_url}: {exc}")
+        raise HTTPException(status_code=502, detail=f"No se pudo acceder a {source}: {exc}")
+
+    soup = _BeautifulSoup(resp.text, "html.parser")
+    urls = []
+    seen = set()
+
+    if source == "wiki":
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if "servlet/wiki" not in href and "wiki.genexus.com" not in href:
+                continue
+            full = href if href.startswith("http") else f"https://wiki.genexus.com{href}"
+            nums = _re.findall(r"\?(\d+)", full)
+            if nums and full not in seen:
+                seen.add(full)
+                title = a.get_text(strip=True) or f"Article {nums[0]}"
+                urls.append({"url": full, "title": title, "page_id": nums[0]})
+
+    elif source == "sac":
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if "scrmain" not in href:
+                continue
+            full = href if href.startswith("http") else f"https://sac.genexus.com/{href}"
+            nums = _re.findall(r",(\d+);", full)
+            if full not in seen:
+                seen.add(full)
+                title = a.get_text(strip=True) or "SAC Article"
+                article_id = nums[0] if nums else "unknown"
+                urls.append({"url": full, "title": title, "article_id": article_id})
+
+    urls = urls[:max_urls]
+    log.info(f"/discover: {len(urls)} URLs para '{query}' en {source}")
+    return {"source": source, "query": query, "count": len(urls), "urls": urls}

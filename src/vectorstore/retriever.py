@@ -18,6 +18,10 @@ log = logging.getLogger(__name__)
 
 RRF_K = 60  # standard Reciprocal Rank Fusion damping constant
 CANDIDATE_POOL = 30  # candidates pulled from each retriever before fusion
+# Page size for full-collection scans. ChromaDB's backend binds SQL variables
+# per row, so a single unbounded col.get() over a large collection overflows
+# SQLite's variable limit ("too many SQL variables"). Fetch in pages instead.
+_GET_PAGE_SIZE = 5000
 
 # Cache: collection name -> (doc_count, bm25_index, ids, docs, metas).
 # Rebuilt when the collection's document count changes.
@@ -29,6 +33,32 @@ def _tokenize(text: str) -> list[str]:
     return re.findall(r"\w+", text.lower())
 
 
+def _get_all(col) -> tuple[list[str], list[str], list[dict]]:
+    """Fetch a whole collection's ids/documents/metadatas via paged reads.
+
+    An unbounded col.get() overflows the backend's SQL variable limit once the
+    collection grows large, so scan it in fixed-size pages and concatenate.
+    """
+    ids: list[str] = []
+    docs: list[str] = []
+    metas: list[dict] = []
+    offset = 0
+    while True:
+        page = col.get(
+            include=["documents", "metadatas"],
+            limit=_GET_PAGE_SIZE,
+            offset=offset,
+        )
+        page_ids = page.get("ids") or []
+        if not page_ids:
+            break
+        ids.extend(page_ids)
+        docs.extend(page.get("documents") or [])
+        metas.extend(page.get("metadatas") or [])
+        offset += _GET_PAGE_SIZE
+    return ids, docs, metas
+
+
 def _get_bm25(col):
     """Build (and cache) a BM25 index over the whole collection."""
     name = col.name
@@ -37,10 +67,7 @@ def _get_bm25(col):
     if cached and cached[0] == count:
         return cached[1], cached[2], cached[3], cached[4]
 
-    data = col.get(include=["documents", "metadatas"])
-    ids = data.get("ids", []) or []
-    docs = data.get("documents", []) or []
-    metas = data.get("metadatas", []) or []
+    ids, docs, metas = _get_all(col)
     bm25 = BM25Okapi([_tokenize(d) for d in docs]) if docs else None
 
     _bm25_cache[name] = (count, bm25, ids, docs, metas)

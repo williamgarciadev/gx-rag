@@ -3,16 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gx-bt-rag — Gestión de Corpus</title>
+    <title>gx-rag · Búsqueda Semántica GeneXus</title>
+    <meta name="description" content="Búsqueda semántica híbrida sobre documentación Wiki y SAC de GeneXus — dense + BM25 + RRF" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>" />
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; }
-      a { color: #60a5fa; }
-      code { background: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 0.875em; }
+      #app-loading {
+        display: flex; align-items: center; justify-content: center;
+        height: 100vh; flex-direction: column; gap: 16px;
+        color: #64748b; font-size: 0.875rem;
+      }
+      #app-loading .loader {
+        width: 32px; height: 32px;
+        border: 3px solid #2d3348;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app"><div id="app-loading"><div class="loader"></div>Cargando gx-rag…</div></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
