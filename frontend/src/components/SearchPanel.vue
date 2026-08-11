@@ -237,13 +237,20 @@ async function copySnippet(text) {
 async function loadCollections() {
   try {
     const s = await status()
-    collections.value = s.chroma_collections || []
+    // `s.collections`, NO `s.chroma_collections`: ese campo no existe desde que el
+    // store es Postgres, y el `|| []` lo convertía en "no hay colecciones" sin que
+    // nada fallara. Resultado: el <select> quedaba VACÍO y el fallback del catch
+    // nunca se ejecutaba, porque no había excepción que capturar. Un default
+    // silencioso que hace indistinguible "campo ausente" de "lista vacía".
+    collections.value = s.collections || []
     if (collections.value.length && !collection.value) {
       collection.value = collections.value[0]
     }
   } catch (e) {
+    // Sólo para fallo de RED. Si la API respondió pero el store está caído, viene
+    // store_error y el StatusBar lo muestra: no se inventan colecciones ahí.
     console.error('Failed to load collections', e)
-    collections.value = ['gx_docs', 'gx_syntax', 'bt_docs']
+    collections.value = ['gx_docs', 'bt_docs', 'gx_syntax']
   }
 }
 
