@@ -128,6 +128,16 @@ lee como una **ausencia verificada**.
 | 33 | **La procedencia de `bt_docs` no es citable**: los hits traen `C:\Users\wigam\...\*.txt`, la ruta del disco de quien lo ingirió | `bulk_loader.parse_text_files` → `url=str(path.resolve())`; visto en una respuesta real de producción | el agente consumidor recibe una fuente que **no existe y no puede verificar**, contra la regla de citar la url | 🔲 **DECISIÓN**: exige URL canónica + reindexar `bt_docs` |
 | 34 | **`DiscoverPanel.vue` (300 líneas) existe pero no se porta** | rescatado del VPS en el scratchpad; consume `/discover` y `/scrape` | portarlo hoy sería desplegar una UI que **no puede funcionar**, porque #30 está muerto. Además traía una IP de docker hardcodeada (`172.18.0.12:8000`) y `http` desde una página `https` (mixed content) | 🔲 bloqueado por #30 |
 | 35 | **Los builds del frontend no son reproducibles** | `frontend/Dockerfile:4-5`: `COPY package.json` **sin** el lock, y `npm install` | `vue: ^3.4.0` resuelve a cualquier 3.x; dos builds del mismo commit pueden diferir | 🔲 barato: `COPY package*.json` + `npm ci` (el lock ya está versionado) |
+| 36 | ✅ **RESUELTO — el `<select>` de colecciones del buscador estaba VACÍO.** Tercer lugar con el campo muerto, y no estaba en ninguna tabla: `loadCollections()` leía `s.chroma_collections` | `SearchPanel.vue:240` | no se podía elegir dónde buscar. **Y el `\|\| []` es la causa de que nadie lo notara**: convierte "el campo no existe" en "no hay colecciones", así que la promesa nunca rechaza y el fallback del `catch` —que existía para esto— jamás se ejecutaba | bajo |
+
+> **Cómo apareció #36, que es la lección transferible:** no leyendo el código, sino
+> **grepeando el bundle JS ya servido por nginx**. Tras desplegar #19 y #20, el
+> asset todavía contenía una ocurrencia de `chroma_collections` que no correspondía
+> a nada de lo corregido. Es la regla de verificación independiente del
+> `PROMPT-auditoria-agente.md` §20 aplicada al frontend: **el artefacto desplegado
+> es la fuente de verdad, no el archivo fuente**. Ojo con `grep -c` sobre un bundle
+> minificado: es UNA sola línea, así que cuenta 1 aunque haya cien ocurrencias —
+> hay que usar `grep -o | wc -l`.
 
 ### ⚠️ Corrección de un diagnóstico propio (2026-08-11)
 
