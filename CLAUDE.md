@@ -101,10 +101,12 @@ Flujo de datos:
    reranker (`cross-encoder/ms-marco-MiniLM-L-6-v2`) está **declarado en `config.py` y no usado por
    ningún módulo**: es English-trained y el corpus es español, diferido hasta decidir un modelo
    multilingüe.
-6. **Valida** (`src/syntax_db/`): catálogo **SQLite** en `data/syntax.db` (SQLAlchemy).
-   `gx_repository.verify_syntax()` da veredicto binario — match exacto → `VÁLIDO`, match solo difuso →
-   `INVÁLIDO`, nada parecido → `NO_VERIFICABLE`. Todo veredicto se loguea; los near-miss van a
-   `missing_methods` con `hit_count` para curación humana.
+6. **Valida** (`src/syntax_db/`): catálogo curado vía SQLAlchemy. **Vive en Postgres si `GXRAG_DSN`
+   está definida, y cae a SQLite (`data/syntax.db`) si no** (`models.py:113-140`) — o sea que en este
+   entorno vive en Postgres, no en el archivo. `gx_repository.verify_syntax()` da veredicto binario —
+   match exacto → `VÁLIDO`, match solo difuso → `INVÁLIDO`, nada parecido o **snippet sin tokens** →
+   `NO_VERIFICABLE`. Todo veredicto se loguea; los near-miss van a `missing_methods` con `hit_count`
+   para curación humana.
 
 > **Principio de dos capas contra la alucinación (regla de diseño — no mezclarlas):** el retrieval
 > (Postgres, difuso, con score) **mitiga** la alucinación; la validación (`syntax.db`, catálogo
@@ -138,6 +140,28 @@ con el `forbid` que trae pydantic-settings por defecto, cualquier clave ajena ro
 - **Después de una escritura, verificá el estado por una vía independiente del valor de retorno.**
   El retorno de una tool no describe el store: para probar pertenencia usá una lectura determinista
   (`get_article` por colección), no una búsqueda por ranking.
+- **Cada fix lleva un test que falla SIN el fix.** Un test que solo pasa después no demuestra que
+  proteja el bug original.
+
+## Git Flow y trabajo concurrente
+
+**En este repo trabajan varios agentes en paralelo, y ya hubo colisión real**: el 2026-08-11
+`src/vectorstore/pg_retriever.py` quedó en disputa entre dos agentes (documentado en
+`docs/PLAN-optimizacion.md`, sección "Trabajo en paralelo"). Por eso:
+
+- **Antes de editar, siempre**: `git status` + `git log --oneline -3`. Un working tree sucio es
+  trabajo de otro agente: **se integra, no se pisa.** Si el HEAD cambió respecto de lo que dice el
+  plan que estás ejecutando, revalidá sus `archivo:línea` antes de tocar nada.
+- **Declarás la franja que tomás** en la tabla de coordinación de `docs/PLAN-optimizacion.md`, y la
+  leés antes para elegir una que no choque. Las fases están cortadas para minimizar colisión.
+- **Ramas**: se trabaja sobre `vps-produccion`. `main` es la rama de PR — no se commitea ahí directo.
+- **Commits atómicos**: un fix + su test = un commit. Formato conventional commits, en imperativo.
+  Sin `Co-Authored-By` ni ninguna atribución de IA.
+- **Nunca commitear ni pushear sin pedido explícito del usuario.**
+- **Nunca versionar datos**: `data/syntax.db` (binario mutable, con telemetría real de validación) ni
+  `data/scraped_sac/` (1002 archivos). Diffs opacos y conflictos irresolubles.
+- **Reiniciar el MCP no es automático**: el proceso conserva el código viejo en memoria, así que un
+  cambio se verifica por MCP recién después de reconectar el server.
 
 ## Known Gotchas
 
@@ -148,8 +172,21 @@ con el `forbid` que trae pydantic-settings por defecto, cualquier clave ajena ro
   WorkWithPlus (`docs.workwithplus.com`). GeneXus tiene un pattern nativo *Work With for Web* y WWP
   (DVelop) es otro producto: una query sobre "el pattern" devuelve los dos entremezclados. **Filtrá
   por procedencia (la url del hit), no por presencia.**
-- **`bt_docs` y `bt_apis` están vacías** (2026-08-11): Bantotal todavía sin cubrir. `search_docs`
+- **Estado del corpus, medido 2026-08-11**: `gx_docs` 50.063 chunks · `bt_docs` **1.122** (manual
+  funcional Bantotal, en español — ya NO está vacía) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
   avisa qué colecciones tienen contenido cuando pegás en una vacía.
+- **El catálogo del validador (`gx_syntax`, SQL) tiene 59 entradas y `version_since` NULL en las 59.**
+  No es un accidente de los datos: `promote_candidate` —la única vía al catálogo— lo escribe
+  hardcodeado en `None` (`candidate_repository.py:94`). Por eso **`version` no filtra** en
+  `verify_syntax` ni en `list_methods`: filtrar garantizaba una lista vacía, que el agente leía como
+  "ese objeto no tiene métodos". Las tools lo declaran explícitamente.
+- **`object_type` NO es el tipo de objeto GeneXus.** Los valores reales del catálogo son `Method`(34),
+  `Event`(9), `Command`(8), `Rule`(6), `Property`(2) — **no hay `Transaction` ni `Procedure`**. Pedir
+  esos dos devuelve vacío por taxonomía equivocada, no por falta de datos.
+- **El `tsv` de la base viva usa la config `es_simple`** (= `simple` + `unaccent`, ver
+  `sql/002-unaccent-tsv.sql`), y `pg_retriever` consulta con esa misma config. ⚠️ Pero
+  `sql/001-chunks-schema.sql` todavía declara `'simple'`: **un install fresco que corra solo el 001
+  queda incoherente con el retriever**. Hay que aplicar los `sql/0*.sql` en orden.
 - 🔴 **Un mismo artículo entra con DOS identidades según el camino de ingesta**, y eso rompe la
   idempotencia: `add_from_url` normaliza el `source_key` (`normalize_wiki_url`) y el dump usa la URL
   cruda. Como `reindex_if_changed` deduplica por `source_key`, **un artículo ya ingerido por dump se

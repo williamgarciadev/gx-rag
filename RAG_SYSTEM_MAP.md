@@ -29,8 +29,11 @@ Puntos centrales:
   las tools son el prompt").
 - **Vector store: PostgreSQL + pgvector + tsvector** (migrado desde
   ChromaDB + BM25 en commit `c4fb609`). Una sola tabla `chunks` con índice
-  HNSW (coseno) y GIN (full-text). Corpus real: ~50.056 chunks en `gx_docs`,
-  26 en `gx_syntax` (VERIFIED, `sql/001-chunks-schema.sql:6`).
+  HNSW (coseno) y GIN (full-text). Corpus real medido contra la base el
+  **2026-08-11**: `gx_docs` **50.063** · `bt_docs` **1.122** · `gx_syntax` **26** ·
+  `bt_apis` **0** (VERIFIED, `SELECT collection, count(*) FROM chunks GROUP BY 1`).
+  El `tsv` de la base viva usa la config **`es_simple`** (`sql/002-unaccent-tsv.sql`),
+  no la `'simple'` que todavía declara el `001` — ver §17.
 - **Retrieval híbrido real**: denso (e5-large, 1024 dims) + léxico (tsvector,
   `ts_rank_cd`), fusionados con **RRF k=60 en una sola query SQL**
   (`src/vectorstore/pg_retriever.py:30-59`).
@@ -621,6 +624,29 @@ Son tests de **correctitud mecánica y contratos**, no de calidad de ranking.
 
 *(Ninguna detectada de corrección/pérdida de datos. El reindexado es
 transaccional y el transporte público está bien blindado.)*
+
+### Resuelto por la auditoría de interfaz (2026-08-11)
+
+Detalle completo, con la medición de cada uno, en la tabla #21–#32 de
+`docs/PLAN-optimizacion.md`. Todos tenían test que falla sin el fix; suite 109 passed.
+
+| Issue | Era | VERIFIED por |
+|---|---|---|
+| `list_methods(version=…)` devolvía vacío siempre | filtraba `version_since`, NULL en las 59 filas por construcción (`candidate_repository.py:94`) | `list_methods('Method', version='gx18')`: 0 → 34 contra el catálogo real |
+| `list_methods` sugería `object_type` inexistentes | "Transaction"/"Procedure": 0 filas cada uno | `SELECT DISTINCT object_type`: Command, Event, Method, Property, Rule |
+| `verify_syntax` fabricaba `INVÁLIDO` sin token | `name LIKE '%%'` matchea todo | reproducido con `""`, `"do"`, `"if else"` |
+| `verify_syntax(version=…)` no declaraba que no gatea | nota solo si `version_since` difería | test de la nota en el `VÁLIDO` |
+| `get_document` prometía el documento completo | devuelve 1 chunk (~800 chars) | contrato de `_DOCUMENT_SQL` |
+| Colección mal escrita se leía como ausencia | el SDK no valida el enum del inputSchema | `KNOWN_COLLECTIONS` + rechazo previo al embedding |
+| Error de DB disfrazado de 404 | `except → None` en `pg_collections` | ahora propaga; test con `get_pool` que lanza |
+
+### Nueva, sin resolver
+
+| Issue | Evidencia | Impacto | Sugerencia |
+|---|---|---|---|
+| `sql/001` declara `tsv` con config `'simple'` y el retriever consulta `'es_simple'` | `001:50-52` vs `pg_retriever.py:46` | un install fresco que corra **solo** el 001 revienta o pierde la mitad léxica del RRF | actualizar el 001 para que un install nuevo nazca coherente |
+| `/discover?source=wiki` inalcanzable | `api.py:323`: `https://wiki.genexus.com/广场/wiki?{query}` | capacidad declarada que falla siempre, en el camino de crecimiento de corpus | corregir la URL de búsqueda de la wiki |
+| `bt_docs` fuera de `WRITABLE_COLLECTIONS` | `server.py:236` vs `bt_docs` con 1.122 chunks cargados por CLI | `ingest_batch` rechaza una colección legítima | **decisión humana**: es política de corpus |
 
 ### High
 

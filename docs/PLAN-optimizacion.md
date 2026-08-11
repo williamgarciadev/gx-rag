@@ -92,9 +92,9 @@ dense AS (
 | 6 | Embedding serializado a **literal de texto** (~10 KB/fila) | `pg_indexer.py:58-60`, `pg_retriever.py:98` | ancho de banda y parseo en ingesta masiva | medio (adaptador binario) |
 | 7 | `executemany` fila a fila para el upsert de chunks | `pg_indexer.py:108` | ingesta de lote lenta (501 artículos SAC pendientes) | medio |
 | 8 | Modelo e5-large carga **perezoso** en la 1ª query | `embeddings.py:16-22` | el primer agente que consulta paga el arranque en frío | nulo (pre-warm) |
-| 9 | Error de DB en `get_document`/`get_article` se disfraza de 404 | `pg_collections.py:46-48` | **mentira de interfaz**: caída de Postgres se lee como "no existe" | bajo |
-| 10 | `search_docs` le dice al agente que el motor léxico es **BM25** | `server.py:54`; motor real tsvector | el prompt del consumidor miente | nulo |
-| 11 | `get_document` describe `doc_id` como "ID interno en **ChromaDB**" | `server.py:146` | ídem | nulo |
+| 9 | ✅ **RESUELTO** — Error de DB en `get_document`/`get_article` se disfrazaba de 404 | `pg_collections.py:46-48` | **mentira de interfaz**: caída de Postgres se leía como "no existe" | bajo |
+| 10 | ✅ **RESUELTO** — `search_docs` le decía al agente que el motor léxico es **BM25** | `server.py:54`; motor real tsvector | el prompt del consumidor mentía | nulo |
+| 11 | ✅ **RESUELTO** — `get_document` describía `doc_id` como "ID interno en **ChromaDB**" | `server.py:146` | ídem | nulo |
 | 12 | `/verify` HTTP devuelve veredicto **sin** `_VERDICT_GUIDANCE` | `api.py:268` vs `server.py:598-612` | superficie anti-alucinación asimétrica entre transportes | bajo |
 | 13 | `scripts/ingest_dump.py` **escribe por defecto** (`--dry-run` opt-in) | `ingest_dump.py:103` vs `server.py:395` | gate humano invertido respecto de la tool MCP | bajo |
 | 14 | `data/syntax.db` **trackeado en git**, binario mutable con telemetría real | `git ls-files data/`; 32K→45K en el diff | diffs opacos, conflictos irresolubles, snippets de usuario versionados | bajo |
@@ -104,6 +104,27 @@ dense AS (
 | 18 | `.pyc` huérfanos de los módulos Chroma borrados | `src/vectorstore/__pycache__/` | ruido | nulo |
 | 19 | `StatusBar.vue` lee `chroma_collections`/`chroma_total_docs` inexistentes | `StatusBar.vue:25,49` vs `api.py:179-185` | dos tarjetas muestran "—" siempre | bajo |
 | 20 | Chips de filtro del frontend no filtran (itera `results`, no `filteredResults`) | `SearchPanel.vue` | filtros decorativos | bajo |
+
+### Hallazgos de la auditoría de interfaz (2026-08-11)
+
+Salieron de auditar **contrato de tool contra estado real de los datos** — no de leer el código
+solo. Ninguno estaba en la tabla de arriba, y los tres primeros producían una respuesta que el agente
+lee como una **ausencia verificada**.
+
+| # | Hallazgo | Evidencia (medida) | Costo real | Estado |
+|---|---|---|---|---|
+| 21 | **`list_methods(version=…)` devolvía vacío SIEMPRE.** Filtraba `version_since == version` y ninguna entrada tiene versión | `gx_repository.py:312-320`; catálogo real: **59 filas, 59 con NULL**; y `promote_candidate` —única vía al catálogo— hardcodea `version_since=None` (`candidate_repository.py:94`), así que es inalcanzable por construcción | el agente pasa `version` porque el schema lo invita y recibe "Sin entradas catalogadas" → **alucinación en negativo** | ✅ **RESUELTO** |
+| 22 | **`list_methods` ofrecía `object_type` que no existen.** La descripción y el mensaje de vacío daban "Transaction, Procedure" como ejemplos | medido: `Method` 34, `Event` 9, `Command` 8, `Rule` 6, `Property` 2 — **cero Transaction, cero Procedure** | un ejemplo que garantiza vacío es peor que ninguno: el segundo vacío se lee como "el catálogo no sabe nada" | ✅ **RESUELTO** |
+| 23 | **`verify_syntax` fabricaba `INVÁLIDO` para un snippet sin tokens.** `_normalize_token("do")` → `""`, y la rama de similitud armaba `name LIKE '%%'`, que matchea TODAS las filas | `gx_repository.py:283-288`; reproducido con `""`, `"do"`, `"if else"`, `"return true"` | **veredicto negativo FABRICADO** con 5 sugerencias arbitrarias, en la tool que existe para no fabricar veredictos | ✅ **RESUELTO** |
+| 24 | **`verify_syntax(version=…)` no gateaba el veredicto y no lo decía.** La nota de versión solo salía si `version_since` difería, y es NULL siempre | `gx_repository.py:247-255` | un `VÁLIDO` de versión indeterminada presentado como confirmado = una de las 4 formas de alucinar de `docs/gx-bt-rag-calidad-y-no-alucinacion.md §1` | ✅ **RESUELTO** |
+| 25 | **`get_document` prometía "el contenido completo de un documento"** y devuelve UN chunk de ~800 chars (el `doc_id` es un `chunk_id`) | `server.py:135-156` vs `pg_collections.py:19-23` | el agente lee un fragmento como el artículo entero y concluye que lo que no está en él no existe | ✅ **RESUELTO** |
+| 26 | **Una colección mal escrita se leía como ausencia.** El SDK no valida el `enum` del `inputSchema`, así que `gx_doc` llegaba al SQL y volvía "Sin resultados" | `server.py` handlers de `search_docs`/`get_article`/`get_document` | el agente lo lee como evidencia sobre el CORPUS, no sobre su propio argumento | ✅ **RESUELTO** |
+| 27 | **`verify_syntax(language="bt_api")` no puede dar `VÁLIDO` jamás** y no lo declaraba | `bt_apis`: **0 filas** medidas | el agente planifica con una capacidad de verificación que no existe | ✅ **RESUELTO** (declarado) |
+| 28 | **`search_docs` carga e5-large (~2.2 GB) ANTES de validar sus argumentos** | `server.py` embebe la query antes de mirar `collection`; el crash de torch al testearlo lo expuso | una llamada con argumento inválido paga el arranque en frío completo | ✅ **RESUELTO** para `collection` (se rechaza antes de embeddear); el resto de la validación temprana queda pendiente |
+| 29 | **`sql/001-chunks-schema.sql` declara `tsv` con config `'simple'`** mientras `pg_retriever` consulta con `'es_simple'` | `001:50-52` vs `pg_retriever.py:46`; la base viva ya está en `es_simple` porque corrió el `002` | **un install fresco que corra solo el 001 queda incoherente con el retriever**: o revienta (config inexistente) o pierde la mitad léxica | 🔲 documentado, NO tocado |
+| 30 | **`/discover?source=wiki` es inalcanzable**: la URL tiene caracteres chinos | `api.py:323` → `https://wiki.genexus.com/广场/wiki?{query}` | capacidad declarada que falla siempre, en el camino de crecimiento de corpus | 🔲 documentado, NO tocado |
+| 31 | **`/verify` HTTP devuelve `str(dict)`**, no JSON, y **sin** `_VERDICT_GUIDANCE` | `api.py:268-280` vs `server.py:598-612` | la superficie anti-alucinación es asimétrica entre transportes (dup. de #12) | 🔲 documentado, NO tocado |
+| 32 | **`bt_docs` no está en `WRITABLE_COLLECTIONS`** aunque el CLI ya escribió ahí 1.122 chunks | `server.py:236` vs `bt_docs` poblado por `scripts/ingest_dump.py --collection bt_docs` | `ingest_batch` rechaza una colección legítima: el MCP no puede ingerir Bantotal | 🔲 **DECISIÓN HUMANA**: es política de crecimiento de corpus |
 
 ---
 
@@ -142,10 +163,44 @@ Orden por relación impacto/riesgo:
 
 ### Fase 3 — Correcciones de interfaz (baratas, tocan no-alucinación)
 
-- #9: distinguir error de DB de "no encontrado" en `pg_collections.py`. Hoy una caída de Postgres le dice al agente "ese documento no existe" — es alucinar en negativo por la vía de infraestructura.
-- #12: que `/verify` HTTP devuelva la misma guía de veredicto que MCP.
-- #13: invertir el default de `scripts/ingest_dump.py` para que la rama segura sea la que sale por omisión, igual que `ingest_batch`.
-- #19, #20: los dos bugs vivos del frontend.
+✅ **EJECUTADA EN PARTE el 2026-08-11** (auditoría de interfaz). Aplicado con un test que falla sin el fix en cada caso — suite completa **109 passed** (piso previo: 82):
+
+| Hallazgo | Qué cambió | Archivos |
+|---|---|---|
+| #21 | `list_methods` deja de filtrar por `version`; el parámetro se declara **no-filtrante** en el schema. Medido contra el catálogo real: `list_methods('Method', version='gx18')` pasó de **0 a 34** entradas | `gx_repository.py`, `server.py` |
+| #22 | Nueva `list_object_types()`; la respuesta vacía lista la taxonomía REAL consultada al catálogo, y la descripción nombra `Transaction`/`Procedure` como **trampa**, no como ejemplo válido | `gx_repository.py`, `server.py` |
+| #23 | Guarda temprana: token vacío → `NO_VERIFICABLE` sin consultar. Y piso `MIN_SIMILARITY_TOKEN = 3` antes de la rama de similitud: con 1-2 chars el `LIKE` matchea cualquier cosa, así que el `INVÁLIDO` que salía de ahí era ruido con forma de veredicto | `gx_repository.py` |
+| #24 | Cuando llega `version` y la entrada no tiene `version_since`, la nota lo declara: el veredicto **no discrimina versiones** y no prueba que la firma sea la de esa versión | `gx_repository.py`, `server.py` |
+| #25 / #11 | `get_document` se describe **y se rotula en la respuesta** como FRAGMENTO (1 chunk), y apunta a `get_article` para el documento entero | `server.py` |
+| #26 / #28 | `KNOWN_COLLECTIONS` como fuente única (enum + chequeo de runtime, misma técnica que `WRITABLE_COLLECTIONS`) y rechazo explícito **antes** de embeddear | `server.py` |
+| #10 / #27 | Descripciones sincronizadas con la realidad medida: motor léxico `tsvector`/`es_simple` (no BM25), conteos por colección, y `bt_apis` declarada vacía | `server.py` |
+| #9 | `pg_collections` deja **propagar** el error del motor: `None` vuelve a significar una sola cosa ("no hay tal fila"), y una caída de Postgres ya no se presenta como una inexistencia | `pg_collections.py` |
+
+Pendiente de Fase 3, sin tocar: **#31** (`/verify` sin guidance ni JSON, era #12), **#13** (default invertido del CLI), **#19** y **#20** (bugs del frontend), **#29** (`sql/001` con config `'simple'`) y **#30** (`/discover` roto).
+
+### Clasificación de los requisitos de `docs/` (§22 de `PROMPT-auditoria-agente.md`)
+
+Los docs de `docs/` describen **qué se quería**; esta tabla dice contra qué quedó. Priorizados los requisitos de no-alucinación, que son los que el prompt de auditoría manda mirar primero.
+
+| Requisito | Documento | Estado | Evidencia |
+|---|---|---|---|
+| `verify_syntax` distingue VÁLIDO / INVÁLIDO / NO_VERIFICABLE | `calidad §2` | **IMPLEMENTADO** | `gx_repository.py:216+`; `_VERDICT_GUIDANCE` prescribe cómo NO leer cada veredicto |
+| No "alucinar en negativo" (no decir inválido sobre algo válido no catalogado) | `calidad §1` | **IMPLEMENTADO** (era PARCIAL) | era la falla #23: un snippet sin tokens salía `INVÁLIDO`. Corregido, con test |
+| No dar una firma de la **versión equivocada** (GX16 vs GX18) | `calidad §1` | **PARCIAL** | el veredicto no está gateado por versión y hoy no puede estarlo: `version_since` es NULL en las 59 filas por construcción (#21). La interfaz ahora **lo declara** en vez de fingir; gatear de verdad exige normalizar y poblar `version_since` (datos + curación humana) |
+| Registrar cada veredicto para auditoría (Riesgo/Cumplimiento) | `calidad §6` | **IMPLEMENTADO** | `validation_log`, escrito en todo camino de veredicto |
+| Feedback loop de método faltante priorizado por frecuencia | `calidad §5` | **IMPLEMENTADO** | `missing_methods` con `hit_count`; `syntax_candidates` + `promote_candidate` como gate humano |
+| Conjunto de evaluación con métricas (precisión, recall, tasa de falso INVÁLIDO, mala atribución) | `calidad §4` | **AUSENTE** | sin set de relevancia etiquetado; declarado en `sql/001-chunks-schema.sql:49` y en `RAG_SYSTEM_MAP.md §16` (CRITICAL). **Bloquea** toda decisión de ranking |
+| Jerarquía de autoridad XPZ de la KB > wiki > manual instalador | `calidad §3` | **AUSENTE** | no hay ingesta de XPZ ni campo de precedencia que se consulte al resolver (`kb_scope` existe y no se usa) |
+| Dos capas separadas: retrieval mitiga, validación corta | `README §Principios` | **IMPLEMENTADO** | almacenes distintos por diseño; escrito como regla dura en `CLAUDE.md` |
+| Gate humano para el crecimiento del corpus | `crecimiento-controlado` | **IMPLEMENTADO** en MCP / **PARCIAL** en CLI | `server.py:392` (`dry_run=True` por defecto) vs `ingest_dump.py:103` (`--dry-run` opt-in, #13) |
+| Tool `search_cross(query_gx, query_bt)` y colección `cross_ref` | `mcp-stack §4`, `§3` | **AUSENTE** | no existen; `CollectionsConfig.cross_ref` declarada sin implementación |
+| Tool `get_signature(method, object_type, version)` | `mcp-stack §4` | **PARCIAL** | la función existe (`gx_repository.get_signature`) pero **no está expuesta como tool MCP** |
+| `snippet_mode` y `version` en `search_docs` | `mcp-stack §4` | **AUSENTE** | el retrieval no filtra por metadata más allá de `collection`; hay `snippet_chars`, que no es lo mismo |
+| Reranker cross-encoder | `mcp-stack §2` | **DESCARTADO A PROPÓSITO** | documentado en `CLAUDE.md` y `RAG_SYSTEM_MAP.md §5.2`: modelo English-trained sobre corpus español, diferido hasta tener uno multilingüe y un set etiquetado |
+| ChromaDB como vector DB | `mcp-stack §2` | **DESCARTADO A PROPÓSITO** | reemplazado por Postgres+pgvector en `c4fb609` |
+| Catálogo poblado desde XPZ de la KB (`scripts/ingest_xpz.py`) | `docs/CLAUDE.md` | **AUSENTE** | el script no existe; el catálogo se puebla desde la wiki vía `extractor.py` + curación humana |
+| `structlog` en cada tool de validación | `docs/CLAUDE.md` | **AUSENTE** | declarado en `requirements.txt`, cero imports (#16) |
+| `ruff` / `mypy` en el flujo de calidad | `docs/CLAUDE.md` | **AUSENTE** | sin config de ninguno de los dos, y no hay `pyproject.toml` |
 
 ### Fase 4 — Prompt de bootstrap nuevo
 
@@ -202,29 +257,18 @@ Marcar el bootstrap viejo como derogado donde viva.
 
 ---
 
-## Estado del working tree al momento de escribir este plan
+## Estado del working tree
 
-⚠️ **Leer antes de tocar nada — hay trabajo sin commitear que puede colisionar.**
+✅ **RESUELTO (2026-08-11, auditoría de interfaz).** El snapshot que decía este plan ya no aplica:
+todo aquel trabajo está **commiteado** y el working tree quedó **limpio**. HEAD `c5b69fa`
+(`feat(bt-docs): ingesta del manual funcional Bantotal y busqueda lexica en espanol`), rama
+`vps-produccion`. `RAG_SYSTEM_MAP.md`, `docs/PROMPT-auditoria-agente.md` y `sql/002-unaccent-tsv.sql`
+**ya están trackeados** — donde este documento diga "sin trackear", está desactualizado.
 
-```
- M data/syntax.db              (binario, 32K → 45K)
- M scripts/ingest_dump.py      (+79)
- M src/ingestion/bulk_loader.py (+151)
- M src/server.py               (+342)
- M src/vectorstore/pg_indexer.py (+7)
- M src/vectorstore/pg_retriever.py (+5)   ← trabajo en paralelo, ver sección ⚠️
- M tests/conftest.py           (+19)
- M tests/test_bulk_loader.py   (+95)
-?? RAG_SYSTEM_MAP.md
-?? data/scraped_sac/           (1002 archivos, 2.9 MB)
-?? docs/PROMPT-auditoria-agente.md
-?? sql/002-unaccent-tsv.sql              ← trabajo en paralelo, ver sección ⚠️
-?? tests/test_server_write_tools.py
-```
+Igual **corré `git status` al retomar**: hay varios agentes trabajando en paralelo (ver la regla de
+Git Flow en `CLAUDE.md`). Un working tree sucio es trabajo de otro: se integra, no se pisa.
 
-Es un **snapshot**, no un estado estable: hay otro agente trabajando. Correr `git status` al retomar.
-
-Ese diff **ya arregla mentiras de interfaz reales** y no hay que rehacerlo:
+Aquel diff **ya arreglaba mentiras de interfaz reales** y no hay que rehacerlo:
 
 - `add_from_url` declaraba `collection` en su schema y el handler **nunca lo leía** — reportaba
   escribir donde el llamador pedía y escribía donde clasificaba (`server.py:655-670`).
@@ -233,14 +277,13 @@ Ese diff **ya arregla mentiras de interfaz reales** y no hay que rehacerlo:
 - `ingest_batch` era un stub con descripción que prometía la capacidad; ahora está implementado con
   `dry_run=True` por defecto (`server.py:367`).
 
-**Recomendación: correr `pytest` y commitear esto en commits atómicos ANTES de Fase 0**, para que el
-baseline se mida sobre una base estable y no sobre un working tree en movimiento. Si se decide
-medir igual, dejarlo dicho explícitamente en `docs/BASELINE-perf.md`.
+✅ Hecho: está commiteado y la suite quedó en verde, así que el baseline de Fase 0 ya se puede medir
+sobre una base estable.
 
-## ⚠️ Trabajo en paralelo YA aplicado sobre `pg_retriever.py` (2026-08-11)
+## ⚠️ Trabajo en paralelo aplicado sobre `pg_retriever.py` (2026-08-11) — ya commiteado
 
-Otro agente entró a `src/vectorstore/pg_retriever.py` **después** de escrito este plan. Su cambio
-está sin commitear y hay que integrarlo, no pisarlo:
+Otro agente entró a `src/vectorstore/pg_retriever.py` **después** de escrito este plan. Su cambio ya
+está en HEAD (`c5b69fa`); hay que construir encima, no pisarlo:
 
 - **`sql/002-unaccent-tsv.sql`** (nuevo): crea la config `es_simple` = `simple` + `unaccent` y
   reescribe la columna generada `chunks.tsv`. Guard por `pg_get_expr` para no reescribir 51k filas
@@ -262,8 +305,8 @@ sumar `bt_docs` en español. Verificado que los identificadores Bantotal siguen 
 2. **La urgencia de #1 sube**: `unaccent` ensancha el match set léxico, y ese CTE calcula
    `ts_rank_cd` sobre *todas* las filas que matchean antes de aplicar el `LIMIT`.
 3. El baseline de Fase 0 debe medirse **después** de aplicar `sql/002`, o los números no comparan.
-4. El corpus creció: `RAG_SYSTEM_MAP.md` documenta 50.056 chunks en `gx_docs` + 26 en `gx_syntax`;
-   ahora hay `bt_docs` (~51k filas en total según el 002). Revalidar los conteos.
+4. El corpus creció. ✅ **Conteos revalidados el 2026-08-11 contra el Postgres real**: `gx_docs`
+   **50.063** · `bt_docs` **1.122** · `gx_syntax` **26** · `bt_apis` **0**. Total 51.211 chunks.
 
 ## Coordinación entre agentes en paralelo
 
@@ -275,6 +318,7 @@ Las fases están cortadas para minimizar colisión de archivos. Si trabajan dos 
 | Fase 1 (peso muerto) | `.gitignore`, `requirements.txt`, `src/config.py`, `src/server.py` (solo strings 54 y 146) | Fase 2 en `config.py` si se cablea chunking |
 | Fase 2 (perf) | `pg_retriever.py`, `embeddings.py`, `pg_indexer.py` | 🔴 **`pg_retriever.py` está EN DISPUTA** — ver sección de arriba |
 | Fase 3 (interfaz) | `pg_collections.py`, `api.py`, `ingest_dump.py`, `frontend/` | nadie |
+| ✅ Auditoría de interfaz (2026-08-11, **cerrada**) | `src/syntax_db/gx_repository.py`, `src/server.py` (descripciones + handlers de lectura), `src/vectorstore/pg_collections.py`, `tests/test_interface_contract.py` (nuevo), `tests/test_syntax_catalog.py` | 🔴 tocó `server.py`, que Fase 1 también toca (ahí eran "solo los strings 54 y 146" — ya están corregidos, revalidar líneas) |
 | Fase 4 (bootstrap) | `docs/BOOTSTRAP-agente.md` (nuevo) | nadie |
 
 **Fase 3 y Fase 4 son las más seguras para tomar en paralelo**: no tocan ningún archivo de Fase 0/1/2.
