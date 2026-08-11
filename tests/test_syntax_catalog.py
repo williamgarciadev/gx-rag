@@ -14,6 +14,12 @@ pytestmark = pytest.mark.unit
 def temp_db(tmp_path, monkeypatch):
     from src.syntax_db import models
 
+    # Defensa en profundidad. Con solo sembrar el singleton no alcanzaba: el
+    # .env de la raiz define GXRAG_DSN, get_engine() lo priorizaba sobre el path
+    # recibido y los tests escribian en la base REAL. Ahora el argumento explicito
+    # gana (models.get_engine), y ademas se saca la variable del entorno para que
+    # un descuido futuro no vuelva a apuntar a produccion.
+    monkeypatch.delenv("GXRAG_DSN", raising=False)
     monkeypatch.setattr(models, "_engine", None)
     models.get_engine(tmp_path / "test.db")  # seed the singleton to the temp DB
     yield

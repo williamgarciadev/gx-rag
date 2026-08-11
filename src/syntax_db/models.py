@@ -2,6 +2,7 @@
 Modelos SQLAlchemy para la Syntax DB (SQLite).
 """
 
+import os
 from datetime import datetime
 from sqlalchemy import (
     Column,
@@ -106,16 +107,39 @@ class SyntaxCandidate(Base):
 _engine = None
 
 
-def get_engine(db_path: str | Path = "data/syntax.db"):
+DEFAULT_SQLITE_PATH = "data/syntax.db"
+
+
+def get_engine(db_path: str | Path | None = None):
+    """Devuelve el engine. Un db_path explicito gana; si no, manda GXRAG_DSN.
+
+    Con GXRAG_DSN definido y sin db_path, el catalogo de sintaxis vive en la
+    misma base que los chunks: un solo motor, un solo backup, y las consultas
+    pueden cruzar catalogo y corpus. Sin la variable cae a SQLite.
+
+    OJO con la precedencia: antes el DSN ganaba SIEMPRE y el db_path recibido se
+    descartaba en silencio. Los tests pasaban un SQLite temporal creyendo que
+    aislaban y terminaban escribiendo en la base real (se detecto cuando un
+    assert de 1 candidato encontro 816). Un argumento explicito es mas
+    especifico que una variable de entorno: ahora gana el argumento.
+    """
     global _engine
     if _engine is None:
-        path = Path(db_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        _engine = create_engine(f"sqlite:///{path}", echo=False)
+        dsn = None if db_path is not None else os.environ.get("GXRAG_DSN")
+        if dsn:
+            # SQLAlchemy asume psycopg2 con el esquema pelado; en este proyecto
+            # el driver instalado es psycopg3.
+            if dsn.startswith("postgresql://"):
+                dsn = dsn.replace("postgresql://", "postgresql+psycopg://", 1)
+            _engine = create_engine(dsn, echo=False)
+        else:
+            path = Path(db_path if db_path is not None else DEFAULT_SQLITE_PATH)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            _engine = create_engine(f"sqlite:///{path}", echo=False)
         Base.metadata.create_all(_engine)
     return _engine
 
 
-def get_session(db_path: str | Path = "data/syntax.db"):
+def get_session(db_path: str | Path | None = None):
     engine = get_engine(db_path)
     return Session(engine)
