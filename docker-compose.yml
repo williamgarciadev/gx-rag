@@ -1,4 +1,38 @@
 services:
+  # Vector store DEDICADO a gx-rag. Deliberadamente NO se reusa el `postgres-main`
+  # del VPS: ese motor lo comparten banco_contactar_db, magis y gxapp_db, no trae
+  # pgvector, y meterle una extensión sería poner en riesgo tres bases de
+  # producción ajenas para ahorrar un contenedor.
+  #
+  # Sin puerto publicado: sólo alcanzable por la red interna, igual que
+  # `postgres-main`. El DSN usa el nombre del servicio como host.
+  #
+  # ⚠️ En el VPS este contenedor se creó a mano con `docker run` (2026-08-11) para
+  # no gatillar un `compose up` que habría recreado gx-rag-api/ui de paso. Como no
+  # tiene labels de compose, el primer `docker compose up -d` va a fallar con
+  # "container name already in use": hay que `docker rm -f gx-rag-pg` ANTES y
+  # dejar que compose lo cree. **El volumen gx-rag-pgdata persiste**, así que los
+  # datos y el corpus indexado sobreviven a ese reemplazo.
+  gx-rag-pg:
+    image: pgvector/pgvector:pg16
+    container_name: gx-rag-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gxrag
+      POSTGRES_DB: gxrag
+      # Sin default a propósito: si falta, el contenedor no arranca en vez de
+      # quedar con una password vacía.
+      POSTGRES_PASSWORD: ${GXRAG_PG_PASSWORD:?definí GXRAG_PG_PASSWORD en .env}
+    networks:
+      - infra_gateway
+    volumes:
+      - gx-rag-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gxrag -d gxrag"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
   # Public, internet-facing MCP endpoint (read-only tools) behind Traefik + TLS.
   gx-rag-mcp:
     build: .
@@ -64,3 +98,9 @@ services:
 networks:
   infra_gateway:
     external: true
+
+volumes:
+  # El corpus indexado vive acá, NO en la imagen. Sobrevive a un `docker rm` del
+  # contenedor, que es lo que hace posible reemplazar el gx-rag-pg creado a mano
+  # por el que gestione compose sin perder los datos.
+  gx-rag-pgdata:
