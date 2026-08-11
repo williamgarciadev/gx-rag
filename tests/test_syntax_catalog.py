@@ -217,3 +217,100 @@ def test_verify_bt_api_routes_to_bt_apis_table(temp_db):
     assert verify_syntax("GetBalance", language="bt_api")["verdict"] == "VÁLIDO"
     # ... while the default gx language does NOT find it in the empty GxSyntax table.
     assert verify_syntax("GetBalance", language="gx")["verdict"] == "NO_VERIFICABLE"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# `version` no puede fabricar una lista vacía
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_list_methods_ignores_version_because_the_catalog_has_none(temp_db):
+    """Filtrar por `version` garantizaba CERO resultados, siempre.
+
+    No es que los datos "hoy" tengan version_since en NULL: promote_candidate
+    —la UNICA via al catalogo— lo escribe hardcodeado en None
+    (candidate_repository.py:94). Medido sobre el catalogo real: 59 filas, las 59
+    con NULL. El agente pasaba `version` porque el schema lo invitaba y recibia
+    "Sin entradas catalogadas", que leia como "ese objeto no tiene metodos":
+    alucinacion en negativo por la via del filtro.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import list_methods
+
+    _promote(cr, "AddYears method", object_type="Method")
+
+    assert list_methods("Method") == ["AddYears method"]
+    assert list_methods("Method", version="gx18") == ["AddYears method"]
+
+
+def test_list_object_types_reports_the_real_taxonomy(temp_db):
+    """La respuesta vacia tiene que nombrar los object_type que EXISTEN.
+
+    La descripcion de la tool daba "Transaction, Procedure" como ejemplos y el
+    catalogo real no tiene ninguno de los dos (medido: Method 34, Event 9,
+    Command 8, Rule 6, Property 2). Un ejemplo que garantiza cero resultados es
+    peor que ningun ejemplo.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import list_object_types
+
+    _promote(cr, "AddYears method", object_type="Method")
+    _promote(cr, "Default", object_type="Rule")
+
+    assert list_object_types() == ["Method", "Rule"]
+
+
+def test_valido_declares_that_it_is_not_version_gated(temp_db):
+    """Un VALIDO sin aclarar la version es una firma de version indeterminada.
+
+    docs/gx-bt-rag-calidad-y-no-alucinacion.md §1 cuenta "dar una firma de la
+    version equivocada" como alucinar. El veredicto NO esta gateado por version,
+    asi que tiene que decirlo donde el agente concluye.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddYears method", object_type="Method")
+
+    r = verify_syntax("&fecha.AddYears(5)", version="gx18")
+
+    assert r["verdict"] == "VÁLIDO"
+    assert "gx18" in r["notes"]
+    assert "no discrimina" in r["notes"]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Un snippet sin tokens no puede producir un veredicto negativo
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("snippet", ["", "   ", "do", "if else", "return true"])
+def test_verify_syntax_never_fabricates_invalido_without_a_token(temp_db, snippet):
+    """`_normalize_token` filtra stopwords: "do" queda en "".
+
+    Con el token vacio la rama de similitud ejecutaba `name LIKE '%%'`, que
+    matchea TODAS las filas, y devolvia INVALIDO con 5 sugerencias arbitrarias.
+    Un veredicto negativo FABRICADO, en la tool cuyo unico trabajo es no hacer eso.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddYears method", object_type="Method")
+    _promote(cr, "Default", object_type="Rule")
+
+    assert verify_syntax(snippet)["verdict"] == "NO_VERIFICABLE", snippet
+
+
+def test_a_token_too_short_to_compare_is_not_an_accusation(temp_db):
+    """La similitud se calcula con `LIKE '%<token[:8]>%'`.
+
+    Con dos caracteres ese patron matchea cualquier cosa que los contenga
+    ("Ad" pesca "AddYears", pero tambien pescaria "Load"), asi que el INVALIDO
+    que sale de ahi no es informacion: es ruido con forma de veredicto.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddYears method", object_type="Method")
+
+    assert verify_syntax("Ad")["verdict"] == "NO_VERIFICABLE"

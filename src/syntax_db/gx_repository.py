@@ -22,6 +22,14 @@ log = logging.getLogger(__name__)
 Verdict = Literal["VÁLIDO", "INVÁLIDO", "NO_VERIFICABLE"]
 
 
+# Largo minimo de token para que la rama de similitud tenga derecho a acusar.
+# Esa rama compara con `name LIKE '%<token[:8]>%'`, asi que con 1-2 caracteres el
+# patron matchea cualquier entrada que los contenga ("Ad" pesca "AddYears", pero
+# tambien "Load") y el INVALIDO que sale de ahi no es informacion: es ruido con
+# forma de veredicto. Por debajo del piso la respuesta honesta es "no se".
+MIN_SIMILARITY_TOKEN = 3
+
+
 # La wiki titula cada pagina "<Nombre> <que es>": "AddYears method", "Printer
 # rule". Nadie escribe eso en un procedure — escribe &fecha.AddYears(5). Estos
 # sufijos son el puente entre el codigo real y el nombre del articulo.
@@ -224,6 +232,23 @@ def verify_syntax(
     """
     token = _normalize_token(snippet)
 
+    # Sin token no hay nada que verificar, y hay que cortar ACA. Mas abajo la
+    # rama de similitud arma `name LIKE '%%'`, que matchea TODAS las filas: un
+    # snippet de puras stopwords ("do", "if else") volvia como INVALIDO con cinco
+    # sugerencias arbitrarias. Un veredicto negativo fabricado, justo en la tool
+    # que existe para no fabricar veredictos.
+    if not token:
+        _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
+        return {
+            "verdict": "NO_VERIFICABLE",
+            "reason": (
+                "El snippet no dejó ningún token verificable (quedó vacío tras "
+                "descartar palabras genéricas del lenguaje). No se consultó el "
+                "catálogo: esto no dice nada sobre la construcción."
+            ),
+            "token": token,
+        }
+
     # bt_api snippets are verified against the BtApi catalog, NOT GxSyntax.
     if language == "bt_api":
         return _verify_bt_api(snippet, token, version)
@@ -245,11 +270,21 @@ def verify_syntax(
             otras = [m.name for m in matches[1:]]
 
     if entry:
-        # NOTE: version filtering is not enforced yet — version_since is not a
-        # normalized/comparable format, so we surface the catalog version and
-        # flag a mismatch in notes, but do not gate the verdict on it.
+        # El veredicto NO esta gateado por version, y hay que DECIRLO donde el
+        # agente concluye. version_since no tiene formato normalizado y, peor, la
+        # unica via al catalogo (promote_candidate) lo escribe hardcodeado en None
+        # (candidate_repository.py:94): medido, las 59 filas del catalogo real
+        # estan en NULL. Callarlo convierte este VALIDO en una firma de version
+        # indeterminada presentada como confirmada, que es una de las cuatro
+        # formas de alucinar que define docs/gx-bt-rag-calidad-y-no-alucinacion.md.
         version_note = ""
-        if version and entry.version_since and version != entry.version_since:
+        if version and not entry.version_since:
+            version_note = (
+                f" OJO: el catálogo no registra versión para esta entrada, así que "
+                f"este veredicto no discrimina versiones — NO es evidencia de que la "
+                f"firma sea la de {version}. Confirmalo contra un objeto real de la KB."
+            )
+        elif version and version != entry.version_since:
             version_note = (
                 f" (versión pedida {version}; catálogo indica {entry.version_since})"
             )
@@ -279,12 +314,16 @@ def verify_syntax(
             resultado["otras_entradas"] = otras
         return resultado
 
-    # Buscar por similaridad en nombre
+    # Buscar por similaridad en nombre — solo si el token da para comparar.
     similar = (
-        session.query(GxSyntax)
-        .filter(GxSyntax.name.like(f"%{token[:8]}%"))
-        .limit(5)
-        .all()
+        (
+            session.query(GxSyntax)
+            .filter(GxSyntax.name.like(f"%{token[:8]}%"))
+            .limit(5)
+            .all()
+        )
+        if len(token) >= MIN_SIMILARITY_TOKEN
+        else []
     )
 
     session.close()
@@ -310,14 +349,45 @@ def verify_syntax(
 
 
 def list_methods(object_type: str, version: str | None = None) -> list[str]:
-    """Lista todos los métodos de un tipo de objeto."""
+    """Lista las entradas catalogadas para un object_type.
+
+    `version` se acepta y NO se usa para filtrar, a propósito. Filtrar por
+    `version_since` garantizaba una lista vacía: no es que los datos "hoy" estén
+    en NULL, es que `promote_candidate` —la única vía al catálogo— lo escribe
+    hardcodeado en None (candidate_repository.py:94). Medido sobre el catálogo
+    real: 59 filas, las 59 en NULL. Y una lista vacía acá la lee el agente como
+    "ese objeto no tiene métodos", así que el filtro producía exactamente la
+    alucinación en negativo que este módulo existe para evitar.
+
+    Cuando el catálogo tenga versión normalizada, esto vuelve a filtrar; hasta
+    entonces la interfaz declara que el parámetro no discrimina.
+    """
     session = get_session()
     query = session.query(GxSyntax.name).filter(GxSyntax.object_type == object_type)
-    if version:
-        query = query.filter(GxSyntax.version_since == version)
     results = [r[0] for r in query.distinct().all()]
     session.close()
     return results
+
+
+def list_object_types() -> list[str]:
+    """Los object_type que EXISTEN en el catálogo, ordenados.
+
+    Alimenta la respuesta vacía de `list_methods`: sin esto, la tool sugería
+    "Transaction" y "Procedure", que no tienen ni una fila (medido: Method 34,
+    Event 9, Command 8, Rule 6, Property 2). Un ejemplo que garantiza cero
+    resultados es peor que ningún ejemplo — manda al agente a concluir que el
+    catálogo está vacío cuando lo que estaba mal era la taxonomía sugerida.
+    """
+    session = get_session()
+    rows = (
+        session.query(GxSyntax.object_type)
+        .filter(GxSyntax.object_type.isnot(None))
+        .distinct()
+        .order_by(GxSyntax.object_type)
+        .all()
+    )
+    session.close()
+    return [r[0] for r in rows]
 
 
 def get_signature(
