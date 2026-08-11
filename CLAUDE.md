@@ -158,6 +158,11 @@ con el `forbid` que trae pydantic-settings por defecto, cualquier clave ajena ro
 - **Commits atómicos**: un fix + su test = un commit. Formato conventional commits, en imperativo.
   Sin `Co-Authored-By` ni ninguna atribución de IA.
 - **Nunca commitear ni pushear sin pedido explícito del usuario.**
+- **Un push NO despliega.** Los tres servicios del compose usan `build: .`, así que el código va
+  horneado en la imagen: hasta que alguien haga `docker compose up -d --build` en el VPS, el endpoint
+  público sigue sirviendo el código anterior — **incluidas las descripciones de tools viejas, que son
+  el prompt del agente consumidor**. Procedimiento y verificación en
+  `docs/deploy-vps.md` → "Actualizar un deploy que ya está corriendo".
 - **Nunca versionar datos**: `data/syntax.db` (binario mutable, con telemetría real de validación) ni
   `data/scraped_sac/` (1002 archivos). Diffs opacos y conflictos irresolubles.
 - **Reiniciar el MCP no es automático**: el proceso conserva el código viejo en memoria, así que un
