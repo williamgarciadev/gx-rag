@@ -157,6 +157,41 @@ código. Las opciones, con su costo:
 el endpoint público sigue sirviendo el código pre-auditoría — con las
 descripciones viejas, que son el prompt del agente consumidor.
 
+### 🔑 Las API keys NO se regeneran — requisito explícito
+
+Los clientes MCP ya configurados tienen que **seguir funcionando con la misma
+key**. Eso sale gratis si se respeta una sola cosa:
+
+> ⛔ **NO corras `cp .env.example .env` en el VPS.** Es el paso 1 del bootstrap de
+> más arriba, pensado para una instalación NUEVA: sobre un deploy existente
+> **pisa `GX_PUBLIC_API_KEYS` y revoca a todos los clientes en el acto.**
+
+El `.env` está gitignored, así que un `pull` o un `up -d --build` **no lo tocan**:
+las keys sobreviven solas. Para el deploy con Postgres, lo único que hay que hacer
+es **agregar** la variable que falta, sin reescribir el archivo:
+
+```bash
+# APPEND, nunca sobrescribir. Verificá antes que no exista ya:
+grep -q '^GXRAG_DSN=' .env || echo 'GXRAG_DSN=postgresql://gxrag:<pass>@<host>:5432/gxrag' | sudo tee -a .env
+
+# Y confirmá que las keys siguen ahí (sin imprimirlas):
+grep -c '^GX_PUBLIC_API_KEYS=' .env      # -> 1
+```
+
+Verificación después del rebuild, con una key existente: si devuelve 200, la key
+sigue viva; un 401 significa que se pisó el `.env`.
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://gxrag.wgsoft.com.co/mcp/ \
+  -H "Authorization: Bearer <key-de-siempre>" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+Ojo: en el VPS ya hay `.env.bak-rotacion-20260811-095403` y `.env.bak-restore-102440`,
+o sea que hubo al menos una rotación y un restore manual. **Antes de tocar el
+`.env`, hacé un backup más** — y no los traigas a otra máquina: son secretos.
+
 ### Procedimiento, una vez reconciliadas las ramas
 
 ```bash
