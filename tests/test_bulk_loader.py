@@ -175,8 +175,10 @@ def _indexer(monkeypatch):
     from src.vectorstore import pg_indexer
 
     calls = []
+    # Se parchea _write_chunks, no index_article: reindex_if_changed escribe por
+    # ahí para compartir la conexión (y evitar el deadlock del DELETE + INSERT).
     monkeypatch.setattr(
-        pg_indexer, "index_article", lambda *a, **k: calls.append((a, k)) or ["id_c0"]
+        pg_indexer, "_write_chunks", lambda *a, **k: calls.append((a, k)) or ["id_c0"]
     )
     return pg_indexer, calls
 

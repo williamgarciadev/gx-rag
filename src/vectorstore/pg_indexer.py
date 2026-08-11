@@ -53,7 +53,8 @@ def _vector_literal(values) -> str:
     return "[" + ",".join(f"{float(v):.7g}" for v in values) + "]"
 
 
-def index_article(
+def _write_chunks(
+    conn,
     article_id: str,
     title: str,
     content: str,
@@ -61,9 +62,16 @@ def index_article(
     genre: str,
     url: str,
     content_hash: str,
-    collection: str = "gx_docs",
+    collection: str,
 ) -> list[str]:
-    """Indexa un articulo. Devuelve los ids de chunk insertados."""
+    """Chunkea, embebe y escribe usando la conexion RECIBIDA.
+
+    Recibe la conexion en vez de pedirsela al pool porque reindex_if_changed
+    necesita que el DELETE de los chunks viejos y este INSERT vivan en la misma
+    transaccion. Con una conexion propia el INSERT se quedaba esperando el lock
+    que tomo el DELETE de la otra: deadlock, y el pool agotandose de a una
+    conexion por reindexado.
+    """
     chunks = _splitter.split_text(content)
     if not chunks:
         log.warning("sin chunks para %s", article_id)
@@ -89,11 +97,29 @@ def index_article(
         for i in range(len(chunks))
     ]
 
-    with get_pool().connection() as conn, conn.cursor() as cur:
+    with conn.cursor() as cur:
         cur.executemany(_UPSERT_SQL, rows)
 
     log.info("indexados %d chunks de %s en %s", len(chunks), article_id, collection)
     return chunk_ids
+
+
+def index_article(
+    article_id: str,
+    title: str,
+    content: str,
+    source: str,
+    genre: str,
+    url: str,
+    content_hash: str,
+    collection: str = "gx_docs",
+) -> list[str]:
+    """Indexa un articulo. Devuelve los ids de chunk insertados."""
+    with get_pool().connection() as conn:
+        return _write_chunks(
+            conn, article_id, title, content, source, genre, url,
+            content_hash, collection,
+        )
 
 
 def reindex_if_changed(
@@ -126,19 +152,24 @@ def reindex_if_changed(
             return "skipped"
 
         if row is not None:
-            # Borrado + alta en la misma transaccion: el articulo nunca queda
-            # a medias aunque el proceso muera aca en el medio.
+            # Borrado + alta en la MISMA conexion y la misma transaccion: el
+            # articulo nunca queda a medias aunque el proceso muera aca en el
+            # medio. Llamar a index_article() en este punto pedia una segunda
+            # conexion al pool que se quedaba esperando el lock del DELETE de
+            # esta: deadlock garantizado en cada reindexado.
             with conn.cursor() as cur:
                 cur.execute(
                     "DELETE FROM chunks WHERE article_id = %s AND collection = %s",
                     (article_id, collection),
                 )
-            index_article(
-                article_id, title, content, source, genre, url, content_hash, collection
+            _write_chunks(
+                conn, article_id, title, content, source, genre, url,
+                content_hash, collection,
             )
             return "reindexed"
 
-    index_article(
-        article_id, title, content, source, genre, url, content_hash, collection
-    )
-    return "indexed"
+        _write_chunks(
+            conn, article_id, title, content, source, genre, url,
+            content_hash, collection,
+        )
+        return "indexed"
