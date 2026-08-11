@@ -14,7 +14,7 @@
       <div class="stat-icon stat-docs">📄</div>
       <div class="stat-body">
         <span class="stat-label">Artículos</span>
-        <span class="stat-value">{{ status?.scraped_articles ?? '—' }}</span>
+        <span class="stat-value">{{ statusData?.scraped_articles ?? '—' }}</span>
       </div>
     </div>
 
@@ -22,7 +22,7 @@
       <div class="stat-icon stat-collections">🗂️</div>
       <div class="stat-body">
         <span class="stat-label">Colecciones</span>
-        <span class="stat-value">{{ (status?.chroma_collections || []).length || '—' }}</span>
+        <span class="stat-value" :title="collectionsDetail">{{ collectionsCount }}</span>
       </div>
     </div>
 
@@ -30,7 +30,7 @@
       <div class="stat-icon stat-disk">💾</div>
       <div class="stat-body">
         <span class="stat-label">Espacio libre</span>
-        <span class="stat-value">{{ status?.disk_free_gb ?? '—' }} GB</span>
+        <span class="stat-value">{{ statusData?.disk_free_gb ?? '—' }} GB</span>
       </div>
     </div>
 
@@ -38,34 +38,70 @@
       <div class="stat-icon stat-size">📊</div>
       <div class="stat-body">
         <span class="stat-label">Total scrapeado</span>
-        <span class="stat-value">{{ formatBytes(status?.total_size_bytes ?? 0) }}</span>
+        <span class="stat-value">{{ formatBytes(statusData?.total_size_bytes ?? 0) }}</span>
       </div>
     </div>
 
     <div class="stat-card">
       <div class="stat-icon stat-chunks">🧩</div>
       <div class="stat-body">
-        <span class="stat-label">Docs totales</span>
-        <span class="stat-value">{{ status?.chroma_total_docs ? status.chroma_total_docs.toLocaleString() : '—' }}</span>
+        <span class="stat-label">Chunks indexados</span>
+        <span class="stat-value" :class="{ 'text-red': storeError }" :title="collectionsDetail">
+          {{ chunksLabel }}
+        </span>
       </div>
     </div>
   </div>
+
+  <!-- Un store caído no puede pasar por "corpus vacío": si /status trae
+       store_error, se dice, en vez de mostrar ceros y guiones. -->
+  <p v-if="storeError" class="store-error">
+    ⚠️ No se pudo consultar el store: {{ storeError }}
+  </p>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useApi } from '../composables/useApi.js'
 
-const { health, status } = useApi()
+// `fetchStatus` y no `status`: el composable exporta una FUNCIÓN llamada `status`,
+// y en <script setup> todo binding queda visible en el template. El template usaba
+// `status?.scraped_articles`, que resolvía a la función y daba undefined SIEMPRE —
+// cinco de las seis tarjetas mostraban "—" pasara lo que pasara. Los datos viven
+// en statusData; renombrar la función es lo que rompe la colisión.
+const { health, status: fetchStatus } = useApi()
 const apiOk = ref(false)
 const statusData = ref(null)
 const POLL = 30000
+
+const storeError = computed(() => statusData.value?.store_error || null)
+
+const collectionsCount = computed(() => {
+  const cols = statusData.value?.collections
+  return cols?.length || '—'
+})
+
+// Los conteos por colección, para el tooltip: "gx_docs: 50.063 · bt_docs: 1.122".
+const collectionsDetail = computed(() => {
+  const counts = statusData.value?.chunk_counts
+  if (!counts || !Object.keys(counts).length) return ''
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `${k}: ${v.toLocaleString()}`)
+    .join(' · ')
+})
+
+const chunksLabel = computed(() => {
+  if (storeError.value) return 'error'
+  const total = statusData.value?.total_chunks
+  return total ? total.toLocaleString() : '—'
+})
 
 let timer = null
 
 async function load() {
   try {
-    const [h, s] = await Promise.all([health(), status()])
+    const [h, s] = await Promise.all([health(), fetchStatus()])
     apiOk.value = h.status === 'ok'
     statusData.value = s
   } catch {
@@ -80,15 +116,9 @@ function formatBytes(b) {
   return (b / 1_048_576).toFixed(1) + ' MB'
 }
 
-function formatCounts(counts) {
-  if (!counts) return '—'
-  try {
-    const entries = typeof counts === 'string' ? JSON.parse(counts) : counts
-    return Object.entries(entries).map(([k, v]) => `${k}: ${v}`).join(' · ')
-  } catch { return '—' }
-}
-
-defineExpose({ status: statusData })
+// formatCounts() y defineExpose({ status: statusData }) se fueron: la primera la
+// reemplaza collectionsDetail, y el expose no lo consumía nadie (App.vue monta
+// <StatusBar /> sin ref).
 
 onMounted(() => { load(); timer = setInterval(load, POLL) })
 onUnmounted(() => clearInterval(timer))
@@ -162,6 +192,16 @@ onUnmounted(() => clearInterval(timer))
 }
 .text-green { color: #22c55e; }
 .text-red { color: #ef4444; }
+
+.store-error {
+  margin: -16px 0 24px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.8125rem;
+}
 
 @media (max-width: 640px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }

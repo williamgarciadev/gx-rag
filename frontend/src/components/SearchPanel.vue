@@ -86,15 +86,26 @@
     <div v-if="searched" class="results-section">
       <div class="results-header">
         <p class="results-summary">
-          <strong>{{ results.length }}</strong> resultado{{ results.length !== 1 ? 's' : '' }}
+          <strong>{{ filteredResults.length }}</strong> resultado{{ filteredResults.length !== 1 ? 's' : '' }}
+          <span v-if="hiddenByFilter" class="summary-hidden">
+            (de {{ results.length }} recuperados; {{ hiddenByFilter }} oculto{{ hiddenByFilter !== 1 ? 's' : '' }} por el filtro de fuente)
+          </span>
           <span v-if="lastQuery" class="summary-query">· «{{ lastQuery }}»</span>
           <span class="summary-collection">· {{ formatCollection(lastCollection) }}</span>
         </p>
+        <!-- Dos vacíos distintos, y confundirlos es mentirle al curador: que la
+             búsqueda no devuelva nada NO es lo mismo que que el filtro de fuente
+             esconda lo que sí devolvió. -->
         <p v-if="!results.length" class="empty-state">Sin resultados para esta consulta. Probá con otros términos o cambiá la colección.</p>
+        <p v-else-if="!filteredResults.length" class="empty-state">
+          La consulta devolvió {{ results.length }} resultado{{ results.length !== 1 ? 's' : '' }}, pero el filtro de fuente los oculta todos. Activá otra fuente para verlos.
+        </p>
       </div>
 
       <ol class="results-list">
-        <li v-for="(r, i) in results" :key="i" class="result-card">
+        <!-- filteredResults, no results: los chips de fuente ya calculaban el
+             filtro y el template lo ignoraba, así que eran decorativos. -->
+        <li v-for="(r, i) in filteredResults" :key="i" class="result-card">
           <div class="card-header">
             <div class="card-meta">
               <span class="card-rank">#{{ i + 1 }}</span>
@@ -203,6 +214,8 @@ function toggleSource(key) {
   if (idx === -1) activeSources.value.push(key)
   else if (activeSources.value.length > 1) activeSources.value.splice(idx, 1)
 }
+
+const hiddenByFilter = computed(() => results.value.length - filteredResults.value.length)
 
 const filteredResults = computed(() => {
   return results.value.filter(r => {
