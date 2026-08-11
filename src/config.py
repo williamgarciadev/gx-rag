@@ -31,7 +31,13 @@ class CollectionsConfig(BaseSettings):
 
 
 class Config(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="GX_", env_file=".env")
+    # extra="ignore": el .env es de toda la app, no solo de Config. Ahi viven
+    # GXRAG_DSN (lo leen pg_client y syntax_db via os.environ) y HF_HUB_DISABLE_XET
+    # (lo lee huggingface_hub). Con el "forbid" que trae BaseSettings por defecto,
+    # cualquier clave que no sea un campo de esta clase rompe el import entero.
+    model_config = SettingsConfigDict(
+        env_prefix="GX_", env_file=".env", extra="ignore"
+    )
 
     vectorstore: VectorStoreConfig = VectorStoreConfig()
     syntax_db: SyntaxDBConfig = SyntaxDBConfig()
