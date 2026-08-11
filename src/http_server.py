@@ -45,7 +45,12 @@ from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
-from src.server import PUBLIC_TOOL_NAMES, READ_TOOLS, dispatch_tool
+from src.server import (
+    PUBLIC_TOOL_NAMES,
+    READ_TOOLS,
+    dispatch_tool,
+    register_tools,
+)
 
 log = logging.getLogger(__name__)
 
@@ -119,12 +124,7 @@ def build_public_server() -> Server:
     """
     public = Server("gx-bt-rag-mcp")
 
-    @public.list_tools()
-    async def list_public_tools() -> list[Tool]:
-        return list(READ_TOOLS)
-
-    @public.call_tool()
-    async def call_public_tool(name: str, arguments: dict) -> list[TextContent]:
+    async def guarded_dispatch(name: str, arguments: dict) -> list[TextContent]:
         if name not in PUBLIC_TOOL_NAMES:
             log.warning("Blocked non-public tool on HTTP transport: %s", name)
             return [
@@ -134,6 +134,10 @@ def build_public_server() -> Server:
                 )
             ]
         return await dispatch_tool(name, arguments)
+
+    # Solo READ_TOOLS se listan, y guarded_dispatch vuelve a chequear al invocar:
+    # la lista es la cara visible, el guard es el que realmente cierra la puerta.
+    register_tools(public, READ_TOOLS, guarded_dispatch)
 
     return public
 

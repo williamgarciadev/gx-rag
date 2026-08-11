@@ -7,9 +7,18 @@ GeneXus y Bantotal, con capa de validación contra SQLite.
 
 import logging
 
+from collections.abc import Awaitable, Callable, Sequence
+
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import (
+    CallToolRequestParams,
+    CallToolResult,
+    ListToolsResult,
+    PaginatedRequestParams,
+    TextContent,
+    Tool,
+)
 
 # Logging
 logging.basicConfig(
@@ -227,16 +236,37 @@ WRITE_TOOLS: list[Tool] = [
 PUBLIC_TOOL_NAMES = frozenset(t.name for t in READ_TOOLS)
 
 
-@server.list_tools()
-async def list_tools() -> list[Tool]:
-    """Stdio (local/admin) transport lists every tool: read + write."""
-    return [*READ_TOOLS, *WRITE_TOOLS]
+ToolDispatcher = Callable[[str, dict], Awaitable[list[TextContent]]]
 
 
-@server.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Stdio (local/admin) dispatch — every tool permitted."""
-    return await dispatch_tool(name, arguments)
+def register_tools(
+    srv: Server,
+    tools: Sequence[Tool],
+    dispatch: ToolDispatcher,
+) -> None:
+    """Cablea tools/list y tools/call en `srv`.
+
+    mcp 2.0 elimino los decoradores @server.list_tools()/@server.call_tool() en
+    favor de add_request_handler(method, params_type, handler), donde el handler
+    recibe (contexto, params ya validados) y devuelve el Result completo en vez
+    de la lista pelada.
+
+    Se centraliza aca porque hay dos servidores que exponen el mismo par de
+    handlers con distinta politica: el de stdio (read + write) y el publico
+    (read-only, en http_server.build_public_server). Duplicar el cableado en
+    ambos era el camino a que uno quede desincronizado.
+    """
+
+    async def _list(_ctx, _params: PaginatedRequestParams) -> ListToolsResult:
+        return ListToolsResult(tools=list(tools))
+
+    async def _call(_ctx, params: CallToolRequestParams) -> CallToolResult:
+        # arguments es opcional en el protocolo; los dispatchers esperan un dict.
+        content = await dispatch(params.name, params.arguments or {})
+        return CallToolResult(content=list(content))
+
+    srv.add_request_handler("tools/list", PaginatedRequestParams, _list)
+    srv.add_request_handler("tools/call", CallToolRequestParams, _call)
 
 
 # Client-facing error text. Detail is logged server-side, never returned — the
@@ -411,6 +441,12 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
 
     else:
         return [TextContent(type="text", text=f"Tool '{name}' no implementada.")]
+
+
+# El cableado va aca, despues de dispatch_tool: register_tools recibe la funcion
+# ya definida. Con los decoradores esto quedaba arriba porque el cuerpo del
+# handler resolvia el nombre recien al invocarse.
+register_tools(server, [*READ_TOOLS, *WRITE_TOOLS], dispatch_tool)
 
 
 # ─── Entry point ──────────────────────────────────────────────────────────────
