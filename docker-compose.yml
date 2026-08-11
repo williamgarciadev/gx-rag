@@ -72,6 +72,11 @@ services:
     image: gx-rag-api:latest
     container_name: gx-rag-api
     restart: unless-stopped
+    # env_file hace falta acá también, no sólo en el MCP: la API admin lee el
+    # store (get_pool) y el catálogo de sintaxis, y los dos resuelven por
+    # GXRAG_DSN. Sin esto /status reporta store_error y /search revienta —
+    # silenciosamente hasta que alguien abre la UI.
+    env_file: .env
     networks:
       - infra_gateway
     volumes:
