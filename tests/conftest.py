@@ -11,7 +11,7 @@ from src.api import app
 # ─── PostgreSQL de integración ────────────────────────────────────────────────
 
 TEST_SCHEMA = "gxrag_test"
-SCHEMA_SQL = Path(__file__).resolve().parent.parent / "sql" / "001-chunks-schema.sql"
+SQL_DIR = Path(__file__).resolve().parent.parent / "sql"
 EMBEDDING_DIMS = 1024
 
 
@@ -28,13 +28,22 @@ def client():
 
 
 def _schema_ddl() -> str:
-    """DDL de la tabla chunks, leído del MISMO .sql que corre en producción.
+    """DDL de la tabla chunks, leído de los MISMOS .sql que corren en producción.
 
     Duplicar la definición acá sería garantizar que un día divergen y los tests
-    validen contra una tabla que ya no existe. Solo se filtran las meta-órdenes
-    de psql (\\set), que no son SQL.
+    validen contra una tabla que ya no existe. Por el mismo motivo se leen TODOS
+    los sql/0*.sql en orden y no solo el 001: si una migración posterior agrega
+    una columna, el schema de prueba tiene que tenerla. Solo se filtran las
+    meta-órdenes de psql (\\set), que no son SQL.
     """
-    lineas = SCHEMA_SQL.read_text(encoding="utf-8").splitlines()
+    archivos = sorted(SQL_DIR.glob("0*.sql"))
+    if not archivos:
+        raise FileNotFoundError(f"No hay DDL en {SQL_DIR}")
+    lineas = [
+        l
+        for archivo in archivos
+        for l in archivo.read_text(encoding="utf-8").splitlines()
+    ]
     return "\n".join(l for l in lineas if not l.lstrip().startswith("\\"))
 
 

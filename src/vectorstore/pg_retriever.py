@@ -39,7 +39,11 @@ WITH dense AS (
 lexical AS (
     SELECT chunk_id,
            ROW_NUMBER() OVER (ORDER BY ts_rank_cd(tsv, q) DESC) AS rank
-    FROM chunks, to_tsquery('simple', %(qtext)s) AS q
+    -- es_simple, NO simple: tiene que ser LA MISMA config con la que se genero
+    -- chunks.tsv (sql/002-unaccent-tsv.sql). Con 'simple' aca, una consulta CON
+    -- tilde produce un token acentuado que ya no existe en el indice normalizado
+    -- y devuelve CERO filas — medido: 'autorización' 97 -> 0.
+    FROM chunks, to_tsquery('es_simple', %(qtext)s) AS q
     WHERE collection = %(collection)s AND tsv @@ q
     ORDER BY ts_rank_cd(tsv, q) DESC
     LIMIT %(pool)s

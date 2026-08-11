@@ -12,6 +12,7 @@ node_modules/
 
 # Data (volúmenes Docker)
 data/scraped/
+data/scraped_sac/
 data/chroma/
 data/raw/
 

@@ -38,6 +38,7 @@ _UPSERT_SQL = """
     )
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (chunk_id) DO UPDATE SET
+        collection   = EXCLUDED.collection,
         title        = EXCLUDED.title,
         content      = EXCLUDED.content,
         source       = EXCLUDED.source,
@@ -46,6 +47,12 @@ _UPSERT_SQL = """
         content_hash = EXCLUDED.content_hash,
         embedding    = EXCLUDED.embedding
 """
+# `collection` MUST be in the DO UPDATE list. chunk_id is derived from
+# article_id + index, so a conflict means "same article again" — and re-indexing
+# an article INTO ANOTHER COLLECTION has to move it. Leaving it out made the
+# caller's requested collection silently unreachable: add_from_url reported
+# writing to gx_docs while the rows stayed in gx_syntax (measured 2026-08-11 on
+# the WWP article 1149). Same failure shape as the handler bug it hid.
 
 
 def _vector_literal(values) -> str:

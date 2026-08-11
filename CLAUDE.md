@@ -1,83 +1,166 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guía para trabajar en este repo. **Verificado contra el código el 2026-08-11**; lo fechado así se
+midió, no se supone.
 
 ## What This Is
 
-RAG support system for GeneXus/Bantotal documentation in a banking context. **Pure retrieval — no own LLM.** It is consumed by external AI agents (e.g. Claude Code) via MCP, and its core design goal is reducing hallucination. Fully local: zero cloud, zero API keys.
+RAG de documentación GeneXus/Bantotal para banca. **Retrieval puro — sin LLM propio.** Lo consumen
+agentes IA externos (Claude Code y similares) vía MCP, y su objetivo de diseño es **reducir la
+alucinación del agente consumidor**.
 
-Current state: **Phase 1** (corpus characterization + wiki ingestion). See `FASE1_ALISTAMIENTO.md` for live progress and `docs/README.md` for the planning-doc reading order. `docs/CLAUDE.md` is a *planning spec*, not current reality — it prescribes tooling that doesn't exist yet (`pyproject.toml`, ruff, mypy, pytest, `ingest_*.py` scripts).
+**El consumidor NO es una persona, y de ahí sale el criterio que ordena las decisiones de interfaz:**
+
+> **La descripción de una tool y el texto de su respuesta son el PROMPT del agente que la consume,
+> no documentación.** Una descripción vaga no confunde a un lector: hace que el agente concluya mal
+> y afirme algo falso aguas abajo. Por eso toda respuesta declara qué NO se puede concluir de ella
+> (ver `_VERDICT_GUIDANCE` y las descripciones de `READ_TOOLS` en `src/server.py` como referencia de
+> estilo), y todo parámetro declarado se honra de verdad.
+
+Estado: **Fase 1** (caracterización de corpus + ingesta de wiki). Progreso vivo en
+`FASE1_ALISTAMIENTO.md`; orden de lectura de los docs de planeación en `docs/README.md`.
+
+| Necesitás | Leé |
+|---|---|
+| La arquitectura real, con clasificación de evidencia por afirmación | **`RAG_SYSTEM_MAP.md`** — reconstruido desde el código, es el mapa autoritativo |
+| El QUÉ SE QUERÍA (hay requisitos escritos y sin implementar) | `docs/` — ⚠️ `docs/CLAUDE.md` es **spec de planeación, no realidad** |
+| Auditar el repo contra sus propios docs | `docs/PROMPT-auditoria-agente.md` |
+| **Trabajo de optimización en curso** (hallazgos medidos, fases, coordinación entre agentes) | **`docs/PLAN-optimizacion.md`** — empezá por su sección "Cómo arrancar" |
 
 ## Commands
 
 ```bash
-# Full stack (requires external network: docker network create infra_gateway)
+# Full stack (requiere red externa: docker network create infra_gateway)
 docker compose up
-# Services: gx-rag-api (FastAPI, host port 8000), gx-rag-ui (nginx :80 internal, no host port)
+# Servicios: gx-rag-api (FastAPI, puerto host 8000), gx-rag-ui (nginx :80 interno, sin puerto host)
 
-# Backend locally — ALWAYS use a venv (see note below)
+# Backend local — SIEMPRE en venv (ver nota abajo)
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API (canonical port 8000, same as Dockerfile CMD)
-.venv/bin/python -m src.server                        # MCP server (stdio) — separate entrypoint, NOT run by compose
+.venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API (puerto canónico 8000, igual que el Dockerfile)
+.venv/bin/python -m src.server                        # MCP server (stdio) — entrypoint aparte, NO lo levanta compose
 
-# Scraper CLI
+# Tests — 82 passing al 2026-08-11 16:30. Corré esto antes de creerle al número:
+.venv/bin/python -m pytest tests/ -q
+# Marcadores (pytest.ini, --strict-markers): unit | integration
+
+# Ingesta
 .venv/bin/python scripts/scrape_wiki.py <url> [--output-dir <dir>]
+.venv/bin/python -m scripts.ingest_dump <file> --format genexus|workwithplus [--dry-run]
 
-# Frontend (frontend/) — Vite dev server, default port 5173
-npm install
-npm run dev                                           # UI on http://localhost:5173
-# For local dev outside Docker, point the proxy at the local API (default target is the
-# Docker hostname gx-rag-api:8000, which does NOT resolve locally):
+# Frontend (frontend/) — Vite, puerto 5173
+npm install && npm run dev
+# Fuera de Docker, apuntá el proxy a la API local (el default gx-rag-api:8000 no resuelve):
 VITE_API_TARGET=http://127.0.0.1:8000 npm run dev
-npm run build
 ```
 
-**Ports**: backend API `8000`, frontend dev `5173` (Vite auto-increments to 5174+ if taken). The frontend calls `/api/*`, which Vite proxies to `VITE_API_TARGET` (default `http://gx-rag-api:8000` for Docker). If `8000` is busy locally, run uvicorn on another port and set `VITE_API_TARGET` to match.
+**Puertos**: API `8000`, frontend dev `5173` (Vite incrementa a 5174+ si está tomado). El frontend
+llama `/api/*` y Vite lo proxea a `VITE_API_TARGET`.
 
-**Local dev launcher** (`./dev.sh`): starts backend + frontend together and defaults to **8050** (backend) / **3050** (frontend) to avoid colliding with other local projects on this machine (`gx-docs-v1` runs on `:8000`). Override with `BACKEND_PORT` / `FRONTEND_PORT`. Docker and the canonical backend port remain `8000`.
+**`./dev.sh`** levanta backend + frontend juntos en **8050** / **3050** para no colisionar con otros
+proyectos de esta máquina (`gx-docs-v1` usa `:8000`). Override con `BACKEND_PORT` / `FRONTEND_PORT`.
 
-**Must run in a venv, not the global interpreter.** A stray global package (`notebooklm_skill`) ships a top-level `scripts` package that shadows this repo's `scripts/` (which has no `__init__.py`, so it's only an implicit namespace package) — that breaks `from scripts import scrape_wiki` in `src/api.py`. A venv isolates the project and avoids the collision. Docker is unaffected (clean base image).
+**Corré en el venv, no en el intérprete global.** Un paquete global (`notebooklm_skill`) trae un
+package `scripts` de nivel superior que tapa el `scripts/` de este repo (que no tiene `__init__.py`,
+así que es namespace package implícito) y rompe `from scripts import scrape_wiki` en `src/api.py`.
+Docker no se ve afectado (imagen limpia).
 
-**Tests**: `tests/` contains only `__init__.py` — there are no tests or pytest config yet. Do not claim test coverage exists.
+**No existe `pyproject.toml`**: dependencias en `requirements.txt`, config de tests en `pytest.ini`.
+Sin ruff ni mypy configurados.
 
 ## Architecture
 
-Two entrypoints share one ingestion/retrieval core:
+Dos entrypoints sobre un mismo core de ingesta/retrieval:
 
-- `src/server.py` — MCP server (official `mcp` SDK, stdio). Tools: `search_docs`, `get_document`, `verify_syntax`, `list_methods`, `add_from_url`. (`ingest_batch` is declared but returns "not implemented".)
-- `src/api.py` — FastAPI "Ingestor API" that also mirrors the MCP tools as HTTP endpoints (`/scrape`, `/status`, `/articles`, `/search`, `/documents`, `/verify`, `/methods`, `/health`) for the admin UI.
+- **`src/server.py`** — MCP server (SDK oficial `mcp`, stdio). **7 tools**, separadas por permiso:
+  - `READ_TOOLS` (5): `search_docs`, `get_article`, `get_document`, `verify_syntax`, `list_methods`.
+  - `WRITE_TOOLS` (2): `add_from_url`, `ingest_batch`. **Mutan el corpus ⇒ quedan FUERA del
+    transporte público** (`add_from_url` es un vector de SSRF y la ingesta exige gate humano).
+    `PUBLIC_TOOL_NAMES` se deriva de `READ_TOOLS`, así que esa frontera no puede desincronizarse.
+- **`src/api.py`** — FastAPI "Ingestor API" para la UI admin: `/`, `/health`, `/status`, `/scrape`,
+  `/discover`, `/articles`, `/article`, `/documents`, `/search`, `/verify`, `/methods`.
+  `src/http_server.py` expone el transporte público (solo las read tools).
 
-Data flow:
+Flujo de datos:
 
-1. **Scrape** (`scripts/scrape_wiki.py`): fetches a GeneXus wiki page, converts to Markdown, computes SHA256 `content_hash` for idempotency, extracts `version_hint`.
-2. **Classify** (`classify_genre()` in the same file): heuristic keyword scoring decides `genre` (reference vs guide) and therefore the destination collection — reference → `gx_syntax` catalog, guide → `gx_docs` retrieval.
-3. **Ingest** (`src/ingestion/ingestor.py`): writes `.md` + `.meta.json` to `data/scraped/` AND indexes into ChromaDB.
-4. **Index** (`src/vectorstore/indexer.py`): chunks with `langchain-text-splitters`, embeds with `intfloat/multilingual-e5-large`, stores in ChromaDB at `data/chroma/`.
-5. **Retrieve** (`src/vectorstore/retriever.py::hybrid_search`): **dense (e5) + BM25 (`rank-bm25`) fused with Reciprocal Rank Fusion** (RRF_K=60). BM25 index is cached per-collection and rebuilt when the doc count changes. The reranker (`cross-encoder/ms-marco-MiniLM-L-6-v2` in config) is **intentionally not wired** — it is English-trained and the corpus is Spanish; deferred pending a multilingual model decision.
-6. **Validate** (`src/syntax_db/`): SQLite catalog at `data/syntax.db` (SQLAlchemy). `gx_repository.verify_syntax()` gives a binary verdict — exact match → VÁLIDO, fuzzy-only match → INVÁLIDO, nothing similar → NO_VERIFICABLE. Every verdict is logged to `validation_log`; near-misses go to `missing_methods` for human curation.
+1. **Scrape** (`scripts/scrape_wiki.py`): baja el artículo, lo pasa a Markdown, calcula el SHA256
+   `content_hash` para idempotencia, extrae `version_hint`. Sirve para `wiki.genexus.com` **y
+   `docs.workwithplus.com`**.
+2. **Clasifica** (`classify_genre()`, mismo archivo): scoring por keywords decide el `genre` y con él
+   la colección destino. **El eje es el GÉNERO, no el producto**: `reference → gx_syntax`,
+   `guide → gx_docs`. Un artículo de WorkWithPlus clasificado `reference` cae en `gx_syntax` — es el
+   diseño, no un error.
+3. **Ingesta** (`src/ingestion/ingestor.py`): escribe `.md` + `.meta.json` en `data/scraped/` e
+   indexa. `src/ingestion/bulk_loader.py` hace lo mismo en lote sobre **dumps delimitados** (formatos
+   `genexus` y `workwithplus`), siempre como `genre="guide"`: texto plano es demasiado ruidoso para el
+   catálogo de veredicto binario.
+4. **Index** (`src/vectorstore/pg_indexer.py`): chunkea con `langchain-text-splitters`
+   (`CHUNK_SIZE=800`, overlap 100), embebe con `intfloat/multilingual-e5-large`, escribe en
+   **Postgres**. `reindex_if_changed()` compara `content_hash` y saltea sin re-embeddear.
+5. **Retrieve** (`src/vectorstore/pg_retriever.py::hybrid_search`): **denso (pgvector) + full-text
+   (`ts_rank_cd`) fusionados con RRF (`RRF_K=60`), resuelto EN SQL** con un CTE por criterio. El
+   reranker (`cross-encoder/ms-marco-MiniLM-L-6-v2`) está **declarado en `config.py` y no usado por
+   ningún módulo**: es English-trained y el corpus es español, diferido hasta decidir un modelo
+   multilingüe.
+6. **Valida** (`src/syntax_db/`): catálogo **SQLite** en `data/syntax.db` (SQLAlchemy).
+   `gx_repository.verify_syntax()` da veredicto binario — match exacto → `VÁLIDO`, match solo difuso →
+   `INVÁLIDO`, nada parecido → `NO_VERIFICABLE`. Todo veredicto se loguea; los near-miss van a
+   `missing_methods` con `hit_count` para curación humana.
 
-**Two-layer anti-hallucination principle (core design rule — do not mix the layers):** retrieval (ChromaDB, fuzzy, scored) *mitigates* hallucination; validation (syntax.db, closed catalog, binary verdict) *cuts* it.
+> **Principio de dos capas contra la alucinación (regla de diseño — no mezclarlas):** el retrieval
+> (Postgres, difuso, con score) **mitiga** la alucinación; la validación (`syntax.db`, catálogo
+> cerrado, veredicto binario) la **corta**. Son almacenes distintos: **indexar documentos en la
+> colección `gx_syntax` NO alimenta el catálogo del validador**, aunque el nombre lo sugiera.
 
-Frontend (`frontend/src/`): Vue 3 + Vite admin UI for corpus management/curation only — explicitly NOT a RAG chat interface (querying happens through MCP clients). `src/tools/` and `src/prompts/` are empty placeholders; tool logic currently lives inline in `server.py` and `api.py`.
+Frontend (`frontend/src/`): Vue 3 + Vite, UI admin para gestión y curación de corpus — **no** es un
+chat RAG (las consultas entran por MCP). `src/tools/` y `src/prompts/` están vacíos: la lógica de
+tools vive inline en `server.py` y `api.py`.
 
 ## Configuration
 
-`src/config.py` uses pydantic-settings (env prefix `GX_`, reads `.env` — no `.env` file exists; everything runs on hardcoded defaults). docker-compose declares no env vars.
+`src/config.py` usa pydantic-settings (prefijo `GX_`, lee `.env`). **El `.env` existe** y define
+`GXRAG_DSN` (el store Postgres, lo leen `pg_client` y `syntax_db` vía `os.environ`) y
+`HF_HUB_DISABLE_XET`. `Config` usa `extra="ignore"` justamente porque el `.env` es de toda la app:
+con el `forbid` que trae pydantic-settings por defecto, cualquier clave ajena rompe el import entero.
 
-Data directories (bind-mounted into the API container): `data/chroma/` (ChromaDB), `data/syntax.db` (SQLite catalog), `data/scraped/` (raw articles).
+`data/`: `data/syntax.db` (catálogo SQLite) y `data/scraped/` (artículos crudos).
+**No hay `data/chroma/`** — `VectorStoreConfig.path` quedó solo para `scripts/migrate_chroma_to_pg.py`.
 
-## Hard Rules (from project planning docs)
+## Hard Rules
 
-- Use the official `mcp` SDK, NOT standalone FastMCP.
-- Never invent GeneXus/Bantotal methods, properties, or signatures — `syntax.db` is the source of truth.
-- Never invent a PyPI version number from memory — check PyPI first.
-- No LangChain/LlamaIndex as framework base — only `langchain-text-splitters` for chunking.
-- Corpus growth requires a human gate: automatic *discovery* of candidate content is fine, automatic *ingestion* is not.
-- A phase is done when behavior is functionally verified, not when code compiles.
+- Nunca inventes métodos, propiedades ni firmas de GeneXus/Bantotal: `syntax.db` es la fuente de
+  verdad, y lo no catalogado es `NO_VERIFICABLE`.
+- **El crecimiento del corpus pasa por un gate humano**: descubrir candidatos automáticamente está
+  bien, ingerir automáticamente no. La rama segura va por defecto (`dry_run=true` en `ingest_batch`).
+- Usá el SDK oficial `mcp`, no FastMCP standalone.
+- Sin LangChain/LlamaIndex como framework base — solo `langchain-text-splitters` para chunking.
+- Consultá PyPI para cualquier número de versión: no los escribas de memoria.
+- Una fase está lista cuando el comportamiento se verificó funcionando, no cuando compila.
+- **Después de una escritura, verificá el estado por una vía independiente del valor de retorno.**
+  El retorno de una tool no describe el store: para probar pertenencia usá una lectura determinista
+  (`get_article` por colección), no una búsqueda por ranking.
 
 ## Known Gotchas
 
-- Chunk-size mismatch: `config.py` declares 1000/200 but `indexer.py` hardcodes 800/100 — the config values are not actually used by the indexer.
-- Retrieval `score` is now the Reciprocal Rank Fusion score (rank-based), not a calibrated similarity — higher is better, but the absolute value is not a probability.
-- Nested env-var overrides in `config.py` are likely non-functional (nested pydantic-settings classes don't inherit the `GX_` prefix consistently).
-- `docs/gx-bt-rag-mcp-stack.md` specs richer tool signatures (e.g. `min_score`, `snippet_mode`) and a `cross_ref` collection that are not implemented.
+- **Un `top_k` chico NO prueba una ausencia.** `gx_docs` tiene ~50k chunks y el ranking mezcla
+  fuentes: un tema presente puede no entrar en los primeros 3. Para afirmar que algo no está, subí
+  `top_k` y reformulá con términos del dominio.
+- **`gx_docs` mezcla tres fuentes**: wiki GeneXus, tickets SAC (`sac.genexus.com`) y wiki de
+  WorkWithPlus (`docs.workwithplus.com`). GeneXus tiene un pattern nativo *Work With for Web* y WWP
+  (DVelop) es otro producto: una query sobre "el pattern" devuelve los dos entremezclados. **Filtrá
+  por procedencia (la url del hit), no por presencia.**
+- **`bt_docs` y `bt_apis` están vacías** (2026-08-11): Bantotal todavía sin cubrir. `search_docs`
+  avisa qué colecciones tienen contenido cuando pegás en una vacía.
+- 🔴 **Un mismo artículo entra con DOS identidades según el camino de ingesta**, y eso rompe la
+  idempotencia: `add_from_url` normaliza el `source_key` (`normalize_wiki_url`) y el dump usa la URL
+  cruda. Como `reindex_if_changed` deduplica por `source_key`, **un artículo ya ingerido por dump se
+  DUPLICA si después entra por URL**. Medido con el artículo WWP 1149. Pendiente unificar el esquema.
+- **El proceso MCP conserva el código viejo en memoria**: un cambio se verifica por MCP recién
+  después de reconectar el server.
+- Chunk size: `config.py` declara 1000/200 pero `pg_indexer.py` usa 800/100 — **manda el módulo**, los
+  valores del config no se leen.
+- El `score` del retrieval es RRF (posicional, rank-based), **no** una similitud calibrada: más alto
+  es mejor, pero el valor absoluto no es una probabilidad.
+- Los overrides anidados de env-var en `config.py` probablemente no funcionan (las clases anidadas de
+  pydantic-settings no heredan el prefijo `GX_` de forma consistente).
+- `docs/gx-bt-rag-mcp-stack.md` especifica firmas más ricas y una colección `cross_ref` que no están
+  implementadas.

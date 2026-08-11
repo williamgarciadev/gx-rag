@@ -1,8 +1,16 @@
 """
 gx_bt_rag.server — MCP server (stdio transport).
 
-Retrieval semántico (ChromaDB + hybrid search) sobre documentación
-GeneXus y Bantotal, con capa de validación contra SQLite.
+Retrieval semántico (hybrid search sobre el store en Postgres) de documentación
+GeneXus/Bantotal, más una capa de validación contra el catálogo SQL curado.
+
+El consumidor es un AGENTE, no una persona: las descripciones de las tools son
+el prompt que el agente lee para elegir, y los textos de respuesta son lo que
+lee al momento de concluir. Por eso ambos declaran explícitamente qué NO cubre
+el corpus y cómo NO leer cada veredicto — un agente no puede calibrar un
+resultado que no se explica, y una respuesta ambigua se convierte en una
+afirmación falsa aguas abajo. Al tocar una descripción o un mensaje acá,
+mantené esa propiedad.
 """
 
 import logging
@@ -43,10 +51,26 @@ READ_TOOLS: list[Tool] = [
     Tool(
         name="search_docs",
         description=(
-            "Búsqueda híbrida (dense + BM25 + RRF) en la colección indicada "
-            "de documentación GeneXus/Bantotal. Devuelve los fragmentos más "
-            "relevantes con score. Si la colección está vacía, informa cuáles "
-            "tienen contenido para reintentar."
+            "Búsqueda híbrida (dense + BM25 + RRF) sobre documentación indexada. "
+            "Devuelve fragmentos con score y PROCEDENCIA (url, article_id, hash): "
+            "cita la url, no el fragmento suelto. Si la colección está vacía, "
+            "informa cuáles tienen contenido.\n"
+            "QUÉ HAY, mezclado en la MISMA colección: wiki de GeneXus, tickets SAC "
+            "(sac.genexus.com — la mejor fuente para '¿es un bug conocido?' y sus "
+            "workarounds) y la wiki de WorkWithPlus (docs.workwithplus.com).\n"
+            "🔴 POR ESO, FILTRÁ POR PROCEDENCIA, NO POR PRESENCIA. GeneXus tiene un "
+            "pattern nativo 'Work With for Web' y WorkWithPlus (DVelop) es OTRO "
+            "producto: una query sobre 'el pattern' devuelve los dos entremezclados. "
+            "El riesgo no es quedarte sin respuesta, es tomar la del producto "
+            "equivocado. Mirá la url de cada hit: solo lo que viene de "
+            "docs.workwithplus.com aplica a una KB con WWP aplicado.\n"
+            "🔴 NUNCA concluyas 'no está documentado' desde un top_k chico: el corpus "
+            "tiene decenas de miles de chunks y el ranking mezcla fuentes, así que "
+            "un tema presente puede no entrar en los primeros 3. Antes de afirmar "
+            "una ausencia, subí top_k y reformulá con términos del dominio.\n"
+            "bt_docs / bt_apis (Bantotal) pueden estar vacías: si lo están, la "
+            "respuesta te dice qué colecciones tienen contenido.\n"
+            "Un fragmento recuperado NO valida una firma: recuperar ≠ verificar."
         ),
         inputSchema={
             "type": "object",
@@ -133,9 +157,28 @@ READ_TOOLS: list[Tool] = [
     Tool(
         name="verify_syntax",
         description=(
-            "Verifica si una firma, método o comando de GeneXus/Bantotal "
-            "es válido contra el catálogo estructurado. "
-            "Devuelve VÁLIDO / INVÁLIDO / NO_VERIFICABLE con procedencia."
+            "Verifica una firma/método/comando contra el catálogo estructurado "
+            "(SQL, curado a mano). Devuelve VÁLIDO / INVÁLIDO / NO_VERIFICABLE.\n"
+            "🔴 CÓMO LEER EL VEREDICTO — acá se cometen los errores más caros. "
+            "NINGUNO de los tres es simétrico: solo VÁLIDO es una afirmación.\n"
+            "  VÁLIDO         = está en el catálogo curado. Afirmalo, con su source.\n"
+            "  INVÁLIDO       = NO matcheó exacto Y existen entradas PARECIDAS. Es\n"
+            "                   un detector de TYPO (mirá 'sugerencias'), NO una\n"
+            "                   prueba de que la construcción no exista. Se calcula\n"
+            "                   por similitud contra un catálogo incompleto: un\n"
+            "                   nombre válido no catalogado que se parezca a otra\n"
+            "                   entrada cae acá. Tratalo como '¿quisiste decir X?'.\n"
+            "  NO_VERIFICABLE = 'NO SÉ'. No es inválido ni inexistente.\n"
+            "El catálogo cubre una fracción mínima de GeneXus, así que "
+            "NO_VERIFICABLE es la respuesta ESPERADA para casi todo, y para "
+            "construcciones perfectamente válidas.\n"
+            "Ante NO_VERIFICABLE o INVÁLIDO, verificá por otra vía antes de "
+            "afirmar: (1) leé un objeto de la KB real que ya use la construcción — "
+            "mirarlo, no recordarlo; (2) la wiki oficial para la semántica. "
+            "Es distinto de search_docs, que RECUPERA prosa: acá hay veredicto "
+            "contra catálogo cerrado. Cada token no encontrado se registra en la "
+            "cola de curación (con hit_count), así que preguntar sirve incluso "
+            "cuando la respuesta es 'no sé'."
         ),
         inputSchema={
             "type": "object",
@@ -161,8 +204,13 @@ READ_TOOLS: list[Tool] = [
     Tool(
         name="list_methods",
         description=(
-            "Lista todos los métodos/propiedades conocidos de un objeto "
-            "GeneXus específico en el catálogo."
+            "Lista los métodos/propiedades de un objeto GeneXus QUE ESTÁN EN EL "
+            "CATÁLOGO.\n"
+            "🔴 'Sin resultados' significa 'no hay nada catalogado para ese "
+            "object_type', NO 'ese objeto no tiene métodos'. El catálogo está "
+            "incompleto, así que una lista vacía —o parcial— es lo normal. "
+            "Nunca la presentes como el conjunto completo de métodos de un objeto "
+            "ni concluyas de su ausencia que un método no existe."
         ),
         inputSchema={
             "type": "object",
@@ -182,14 +230,24 @@ READ_TOOLS: list[Tool] = [
 ]
 
 
+# Collections an ingestion call may target. Single source of truth: it feeds the
+# add_from_url enum AND the runtime check, so the schema and the validation can
+# never drift apart.
+WRITABLE_COLLECTIONS = frozenset({"gx_docs", "gx_syntax"})
+
+# Dump parsers exposed through ingest_batch, by `format` value.
+DUMP_FORMATS = ("genexus", "workwithplus")
+
+
 # Write tools — mutate the corpus. Kept OFF the public transport (add_from_url is
 # an SSRF vector; ingestion requires a human gate). stdio/admin surface only.
 WRITE_TOOLS: list[Tool] = [
     Tool(
         name="add_from_url",
         description=(
-            "Ingiere un artículo de la wiki GeneXus desde su URL. "
-            "Lo scrapea, clasifica, guarda en filesystem e indexa en ChromaDB."
+            "Ingiere UN artículo de wiki desde su URL: lo scrapea, lo clasifica, "
+            "lo guarda en data/scraped/ y lo indexa en el store (Postgres). "
+            "Sirve tanto para wiki.genexus.com como para docs.workwithplus.com."
         ),
         inputSchema={
             "type": "object",
@@ -200,8 +258,12 @@ WRITE_TOOLS: list[Tool] = [
                 },
                 "collection": {
                     "type": "string",
-                    "enum": ["gx_docs", "gx_syntax"],
-                    "description": "Colección destino (sobreescribe clasificación automática si se indica).",
+                    "enum": sorted(WRITABLE_COLLECTIONS),
+                    "description": (
+                        "Colección destino. Si se omite, la elige classify_genre: "
+                        "genre 'reference' → gx_syntax, 'guide' → gx_docs. La "
+                        "respuesta informa la colección efectiva y si hubo override."
+                    ),
                 },
             },
             "required": ["url"],
@@ -210,23 +272,51 @@ WRITE_TOOLS: list[Tool] = [
     Tool(
         name="ingest_batch",
         description=(
-            "Ingiere todos los archivos Markdown de un directorio local. "
-            "Útil para procesar el corpus Bantotal ya curado."
+            "Ingiere en lote un DUMP ya scrapeado (un solo archivo de texto con "
+            "varios artículos delimitados), no un directorio de .md. Idempotente: "
+            "un artículo cuyo contenido no cambió se salta sin re-embeddear. "
+            "Corre en dry_run por defecto — hay que pasar dry_run=false para "
+            "escribir, que es el gate ante un lote de miles de documentos."
         ),
         inputSchema={
             "type": "object",
             "properties": {
-                "directory": {
+                "file": {
                     "type": "string",
-                    "description": "Ruta al directorio con archivos .md.",
+                    "description": "Ruta al archivo .txt del dump.",
+                },
+                "format": {
+                    "type": "string",
+                    "enum": list(DUMP_FORMATS),
+                    "description": (
+                        "Formato del dump. 'genexus': bloques "
+                        "'--- INÍCIO/FIM DO CONTEÚDO DE: {id}.html ---'. "
+                        "'workwithplus': bloques '--- URL: {url} ---' separados por '===='."
+                    ),
                 },
                 "collection": {
                     "type": "string",
-                    "description": "Colección destino.",
+                    "description": (
+                        "Colección destino. Un dump SIEMPRE entra como genre 'guide' "
+                        "(capa de retrieval): es texto plano, demasiado ruidoso para el "
+                        "catálogo de veredicto binario, que requiere curación humana."
+                    ),
                     "default": "gx_docs",
                 },
+                "dry_run": {
+                    "type": "boolean",
+                    "description": (
+                        "true (default): parsea y reporta cuántos documentos y chunks "
+                        "entrarían, con muestras, SIN escribir nada."
+                    ),
+                    "default": True,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Procesar solo los primeros N documentos del dump.",
+                },
             },
-            "required": ["directory"],
+            "required": ["file", "format"],
         },
     ),
 ]
@@ -234,6 +324,142 @@ WRITE_TOOLS: list[Tool] = [
 
 # Tool names allowed on the public internet-facing transport (read-only).
 PUBLIC_TOOL_NAMES = frozenset(t.name for t in READ_TOOLS)
+
+
+# What to DO with each verdict, appended to every verify_syntax response. The
+# tool description carries the same rules, but a description is read once when
+# choosing the tool while this is read at the moment of concluding — which is
+# where a NO_VERIFICABLE gets mistaken for "does not exist".
+_VERDICT_GUIDANCE = {
+    "VÁLIDO": (
+        "→ Confirmado contra el catálogo curado. Podés afirmarlo; citá el 'source'."
+    ),
+    "INVÁLIDO": (
+        "→ NO es prueba de que no exista. Significa: no matcheó exacto y hay "
+        "entradas parecidas (mirá 'sugerencias') — señal de TYPO, calculada por "
+        "similitud contra un catálogo incompleto. Antes de descartar la "
+        "construcción, verificala contra un objeto real de la KB o la wiki oficial."
+    ),
+    "NO_VERIFICABLE": (
+        "→ Es 'NO SÉ', NO 'inválido' ni 'no existe'. El catálogo cubre una "
+        "fracción mínima de GeneXus, así que este es el veredicto esperado para "
+        "casi todo, incluidas construcciones válidas. Verificá por otra vía: leé "
+        "un objeto de la KB que ya use la construcción (mirarlo, no recordarlo) o "
+        "la wiki oficial. El token quedó en la cola de curación."
+    ),
+}
+
+
+def _verdict_guidance(verdict: object) -> str:
+    """Return the next-step guidance for a verify_syntax result.
+
+    Defensive on purpose: an unknown or malformed payload must never mask the
+    verdict itself, so it degrades to a conservative line instead of raising.
+    """
+    key = verdict.get("verdict") if isinstance(verdict, dict) else None
+    return _VERDICT_GUIDANCE.get(
+        key,
+        "→ Veredicto no reconocido: tratalo como NO concluyente y verificá contra "
+        "la KB real o la wiki oficial.",
+    )
+
+
+def _run_ingest_batch(arguments: dict) -> str:
+    """Parse a pre-scraped dump and (unless dry_run) index it.
+
+    Business logic lives in src.ingestion.bulk_loader — this only adapts it to the
+    MCP transport, which must RETURN text instead of printing it like the
+    scripts/ingest_dump.py CLI does.
+
+    Raises FileNotFoundError for a bad path and ValueError for a bad argument, so
+    the caller can report the actual cause instead of the generic error (an agent
+    that gets "internal error" cannot tell a typo from an outage).
+    """
+    import itertools
+
+    from src.ingestion.bulk_loader import (
+        load_dump,
+        parse_genexus_dump,
+        parse_wwp_dump,
+    )
+
+    parsers = {"genexus": parse_genexus_dump, "workwithplus": parse_wwp_dump}
+
+    path = arguments.get("file", "")
+    fmt = arguments.get("format", "")
+    collection = arguments.get("collection") or "gx_docs"
+    # Default TRUE: the safe branch has to be the one you get by omission.
+    dry_run = arguments.get("dry_run", True)
+    limit = arguments.get("limit")
+
+    if not path:
+        raise ValueError("Falta 'file': ruta al archivo .txt del dump.")
+    if fmt not in parsers:
+        raise ValueError(
+            f"Formato '{fmt}' inválido. Válidos: {', '.join(parsers)}."
+        )
+    if collection not in WRITABLE_COLLECTIONS:
+        raise ValueError(
+            f"Colección '{collection}' inválida. "
+            f"Válidas: {', '.join(sorted(WRITABLE_COLLECTIONS))}."
+        )
+
+    # Propagates FileNotFoundError by design — see docstring.
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+
+    docs = parsers[fmt](text)
+    if limit is not None:
+        docs = itertools.islice(docs, limit)
+
+    if dry_run:
+        from src.vectorstore.pg_indexer import CHUNK_SIZE
+
+        total = 0
+        est_chunks = 0
+        samples = []
+        for doc in docs:
+            total += 1
+            est_chunks += max(1, len(doc.content) // CHUNK_SIZE)
+            if len(samples) < 5:
+                samples.append(doc)
+
+        if total == 0:
+            return (
+                f"[dry-run] 0 documentos parseados de '{path}'.\n"
+                f"El formato '{fmt}' no matcheó ningún bloque: probablemente el dump "
+                f"esté en el otro formato. Válidos: {', '.join(parsers)}."
+            )
+
+        lines = [
+            f"[dry-run] NADA SE ESCRIBIÓ. Esto es lo que entraría:",
+            f"  documentos : {total}",
+            f"  chunks     : ~{est_chunks} (estimado a {CHUNK_SIZE} chars)",
+            f"  colección  : {collection}  (genre 'guide' — capa de retrieval)",
+            "  muestras   :",
+        ]
+        lines += [
+            f"    - [{d.page_id}] {d.title[:60]} ({len(d.content)} chars) {d.url}"
+            for d in samples
+        ]
+        lines.append(
+            "Para escribir de verdad, repetí la llamada con dry_run=false. "
+            "Es idempotente: lo ya indexado sin cambios se salta."
+        )
+        return "\n".join(lines)
+
+    report = load_dump(docs, collection=collection)
+    if report.total == 0:
+        return (
+            f"0 documentos parseados de '{path}' con formato '{fmt}': "
+            f"nada indexado. Revisá que el formato del dump sea el correcto."
+        )
+    return (
+        f"Ingesta OK en '{collection}' — total={report.total} "
+        f"indexed={report.indexed} reindexed={report.reindexed} "
+        f"skipped={report.skipped}\n"
+        f"(skipped = ya estaba indexado con el mismo contenido, no se re-embeddeó.)"
+    )
 
 
 ToolDispatcher = Callable[[str, dict], Awaitable[list[TextContent]]]
@@ -377,7 +603,9 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         version = arguments.get("version")
         try:
             verdict = verify_syntax(snippet, language=lang, version=version)
-            return [TextContent(type="text", text=str(verdict))]
+            return [
+                TextContent(type="text", text=f"{verdict}\n{_verdict_guidance(verdict)}")
+            ]
         except Exception:
             log.exception("%s failed", name)
             return [TextContent(type="text", text=GENERIC_ERROR)]
@@ -390,11 +618,27 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             methods = list_methods(obj_type, version=version)
             if not methods:
-                return [TextContent(type="text", text="Sin resultados.")]
+                return [
+                    TextContent(
+                        type="text",
+                        text=(
+                            f"Sin entradas catalogadas para object_type='{obj_type}'.\n"
+                            "Esto NO significa que ese objeto no tenga métodos: el "
+                            "catálogo está incompleto y una lista vacía es lo normal. "
+                            "No concluyas de esta respuesta que un método no existe — "
+                            "verificá contra un objeto real de la KB o la wiki oficial. "
+                            "Y revisá el object_type: se compara exacto "
+                            "(p. ej. 'Transaction', 'Procedure')."
+                        ),
+                    )
+                ]
             return [
                 TextContent(
                     type="text",
-                    text="Métodos conocidos:\n" + "\n".join(f"- {m}" for m in methods),
+                    text=f"Métodos catalogados para '{obj_type}' ({len(methods)}):\n"
+                    + "\n".join(f"- {m}" for m in methods)
+                    + "\n(Lista PARCIAL: es lo que hay en el catálogo, no el conjunto "
+                    "completo de métodos del objeto. La ausencia no prueba nada.)",
                 )
             ]
         except Exception:
@@ -408,15 +652,42 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         url = arguments.get("url", "")
         if not url:
             return [TextContent(type="text", text="URL requerida.")]
+
+        override = arguments.get("collection")
+        if override and override not in WRITABLE_COLLECTIONS:
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Colección '{override}' inválida. "
+                    f"Válidas: {', '.join(sorted(WRITABLE_COLLECTIONS))}.",
+                )
+            ]
         try:
             article = scrape(url)
+            auto = article.metadata.destination
+            # El override del schema tiene que ganarle a classify_genre: hasta
+            # 2026-08-11 se declaraba y se ignoraba, y la tool decia haber escrito
+            # donde el llamador pidio cuando en realidad escribio donde clasifico.
+            if override:
+                article.metadata.destination = override
             result = ingest(article)
+
+            routing = f"Colección: {result['destination']}"
+            if override:
+                routing += (
+                    f"  (override explícito; classify_genre proponía '{auto}')"
+                    if override != auto
+                    else "  (override coincide con classify_genre)"
+                )
+            else:
+                routing += f"  (elegida por classify_genre desde genre '{result['genre']}')"
+
             return [
                 TextContent(
                     type="text",
                     text=f"Scraped: {result['title']}\n"
                     f"Género: {result['genre']}\n"
-                    f"Colección: {result['destination']}\n"
+                    f"{routing}\n"
                     f"Chunks indexados: {result['chunks_indexed']}\n"
                     f"Hash: {result['content_hash'][:16]}...\n"
                     f"Palabras: {result['word_count']}\n"
@@ -428,13 +699,20 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=GENERIC_ERROR)]
 
     elif name == "ingest_batch":
-        return [
-            TextContent(
-                type="text",
-                text="Batch ingestion aún no implementado. "
-                "Usar add_from_url para artículos individuales.",
-            )
-        ]
+        try:
+            return [TextContent(type="text", text=_run_ingest_batch(arguments))]
+        except FileNotFoundError:
+            return [
+                TextContent(
+                    type="text",
+                    text=f"No existe el archivo: {arguments.get('file', '')}",
+                )
+            ]
+        except ValueError as e:
+            return [TextContent(type="text", text=str(e))]
+        except Exception:
+            log.exception("ingest_batch error")
+            return [TextContent(type="text", text=GENERIC_ERROR)]
 
     else:
         return [TextContent(type="text", text=f"Tool '{name}' no implementada.")]

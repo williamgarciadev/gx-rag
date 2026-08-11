@@ -120,6 +120,101 @@ def test_load_dump_tallies_index_statuses():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# parse_text_files — Word plain-text exports (Bantotal functional manual)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_parse_text_files_normalizes_bare_cr_and_strips_bom(tmp_path):
+    """Guards the exact regression that silently ate a previous ingest.
+
+    These exports are UTF-8 WITH BOM and terminate paragraphs with a bare CR.
+    Read as bytes they collapse into one line with no blank line anywhere, and
+    the recursive splitter then cuts on arbitrary spaces instead of paragraphs —
+    no error, just worse chunks.
+    """
+    p = tmp_path / "Procesos Batch.txt"
+    p.write_bytes("﻿Titulo\r\r\rParrafo uno\rParrafo dos\r".encode("utf-8"))
+
+    doc = next(bl.parse_text_files([p], id_prefix="bt/test"))
+
+    assert "\r" not in doc.content
+    assert "﻿" not in doc.content
+    assert "\n\n" in doc.content  # consecutive CRs survive as a paragraph break
+    assert doc.content.startswith("Titulo")
+
+
+def test_parse_text_files_derives_identity_from_filename(tmp_path):
+    # The first line is a TOC heading, so a first-line title would be wrong here.
+    p = tmp_path / "Plan de Cuentas.txt"
+    p.write_bytes(
+        "﻿CONTENIDO DEL CAPÍTULO DE \"PLAN DE CUENTAS\"\r"
+        "Definicion Pág. 3\r"
+        "Rubros Pág. 7\r"
+        "\rEl rubro se compone del codigo contable base.\r".encode("utf-8")
+    )
+
+    doc = next(
+        bl.parse_text_files(
+            [p], id_prefix="bt/manual-funcional/", title_prefix="Manual — "
+        )
+    )
+
+    assert doc.source_key == "bt/manual-funcional/plan-de-cuentas"
+    assert doc.title == "Manual — Plan de Cuentas"
+    assert doc.page_id == "Plan de Cuentas.txt"
+    assert doc.url == str(p.resolve())  # load_dump maps this to source AND url
+    # The chapter's own TOC is dropped: it repeats every section title and would
+    # match any query about the chapter.
+    assert "Pág. 3" not in doc.content
+    assert "CONTENIDO DEL" not in doc.content
+    assert doc.content.startswith("El rubro se compone")
+
+
+def test_parse_text_files_keeps_content_without_a_toc(tmp_path):
+    """A chapter with no TOC must come back untouched — the stripper is opt-in."""
+    p = tmp_path / "Cadena de Cierre.txt"
+    p.write_bytes("﻿CADENA DE CIERRE\rEl programa es el PP014.\r".encode("utf-8"))
+
+    doc = next(bl.parse_text_files([p], id_prefix="bt/test"))
+
+    assert "CADENA DE CIERRE" in doc.content
+    assert "PP014" in doc.content
+
+
+def test_parse_text_files_converts_word_artifacts(tmp_path):
+    p = tmp_path / "Sector Contabilidad.txt"
+    p.write_bytes("﻿col a\x07col b\rpagina uno\x0cpagina dos\r".encode("utf-8"))
+
+    doc = next(bl.parse_text_files([p], id_prefix="bt/test"))
+
+    assert "\x07" not in doc.content and "\t" in doc.content
+    # Form feeds become paragraph breaks, never page numbers: measured, they do
+    # not line up with the "Pág. N" the chapter's own index reports.
+    assert "\x0c" not in doc.content
+    assert "pagina uno\n\npagina dos" in doc.content
+
+
+def test_split_index_files_separates_volume_indexes(tmp_path):
+    names = ["IndiceTomo1.txt", "IndiceTomo2.txt", "Prestamos.txt", "DPF's.txt"]
+    for n in names:
+        (tmp_path / n).write_text("x", encoding="utf-8")
+
+    content, indexes = bl.split_index_files(tmp_path.glob("*.txt"))
+
+    assert [p.name for p in indexes] == ["IndiceTomo1.txt", "IndiceTomo2.txt"]
+    assert {p.name for p in content} == {"Prestamos.txt", "DPF's.txt"}
+
+
+def test_parse_text_files_skips_files_that_normalize_to_nothing(tmp_path):
+    (tmp_path / "Vacio.txt").write_bytes("﻿\r\r\x0c\r".encode("utf-8"))
+    (tmp_path / "Bueno.txt").write_bytes("﻿contenido real\r".encode("utf-8"))
+
+    docs = list(bl.parse_text_files(sorted(tmp_path.glob("*.txt")), id_prefix="bt/t"))
+
+    assert [d.page_id for d in docs] == ["Bueno.txt"]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Dedup helper (indexer.reindex_if_changed) — decision logic isolated from embeddings
 # ─────────────────────────────────────────────────────────────────────────────
 
