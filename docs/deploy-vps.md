@@ -43,10 +43,12 @@ curl -s -o /dev/null -w '%{http_code}\n' https://gxrag.wgsoft.com.co/mcp/   # 40
 
 ## Actualizar un deploy que ya está corriendo
 
-> ⏳ **PENDIENTE AL 2026-08-11 — hay código commiteado que NO está desplegado.**
+> ⏳ **PENDIENTE AL 2026-08-11 — hay código commiteado que NO está desplegado, y
+> desplegarlo está BLOQUEADO por una reconciliación de ramas (ver más abajo).**
 >
 > Commits `e4544ed`, `84d1bb5`, `cfbb892` (auditoría de interfaz) están en
-> `vps-produccion` y **el VPS todavía sirve el código anterior**.
+> `vps-produccion` y **el VPS todavía sirve el código anterior**. Verificado, no
+> supuesto: `docker exec gx-rag-mcp grep -c BM25 /app/src/server.py` → **1**.
 >
 > **Por qué importa acá y no es cosmético:** esos commits corrigen las
 > descripciones de las read tools, y en este sistema *la descripción de una tool
@@ -65,17 +67,70 @@ Los tres servicios de `docker-compose.yml` usan `build: .`, y el único volumen 
 `./data`. **El código viaja horneado en la imagen**, no bind-mounteado. Sin
 `--build` el contenedor sigue corriendo el `src/` con el que se construyó.
 
-### Procedimiento
+### 🔴 ESTADO REAL DEL VPS — medido por SSH el 2026-08-11. NO hagas `git pull` acá.
+
+Reconocimiento hecho sobre `vps2-tunel` (`173.249.49.68`, usuario `gga`). Lo que hay
+**no es un checkout de esta rama esperando un fast-forward**:
+
+| Qué | Valor medido |
+|---|---|
+| Directorio del proyecto | `/home/admin/.openclaw/workspace/gx-bt-rag-mcp` (dueño `admin:admin`, **no** `gga`) |
+| Remote | `https://github.com/williamgarciadev/gx-rag.git` |
+| **Rama del VPS** | **`feat/hybrid-retrieval-and-api-hardening`**, HEAD `3229fd8` |
+| Working tree | **SUCIO: 15 entradas**, incluida `M src/vectorstore/retriever.py` — archivo **borrado** en `c4fb609` |
+| Sin trackear | `DiscoverPanel.vue`, `data/scraped_sac/`, backups de `.env` y de `data/chroma.bak-*` |
+| `gx-rag-mcp` | imagen del 2026-08-11 10:26, healthy — y su `/app/src/server.py` **contiene `BM25`** |
+| `gx-rag-api` / `gx-rag-ui` | del 2026-07-25 y **sin labels de compose**: se levantaron por otra vía, no con este `docker-compose.yml` |
+
+**Divergencia real** desde la base común `3229fd8`:
+
+- El VPS tiene **11 commits que esta rama no tiene**: panel admin de SAC (UI +
+  endpoints de scrape jobs), `DiscoverPanel.vue`, guías de setup Windows, fix de
+  `StatusBar`. **Hay trabajo hecho directo en el VPS que nunca volvió al repo.**
+- Esta rama tiene **16 commits que el VPS no tiene**: toda la migración a
+  Postgres (`c4fb609`), el catálogo de sintaxis, y la auditoría de interfaz.
+
+O sea: el árbol del VPS es **anterior a la migración a Postgres**, con parches
+locales encima. Un `git pull origin vps-produccion` ahí no es un fast-forward: es
+un merge de ramas divergentes sobre un árbol sucio, y puede pisar el panel de SAC.
+
+Además `vps-produccion` **no existe en el remoto** (solo hay `main` y
+`feat/hybrid-retrieval-and-api-hardening`) y la rama local **no tiene upstream**:
+"hacer push" acá significa **crear una rama nueva en GitHub**, no actualizar una.
+
+### ⛔ Reconciliar las dos ramas es DECISIÓN HUMANA — no la tome un agente
+
+Hay trabajo no publicado en los dos lados, así que cualquier camino puede perder
+código. Las opciones, con su costo:
+
+1. **Publicar `vps-produccion` y reconciliar en un branch de integración.** Push
+   de la rama nueva, luego `merge` con `feat/hybrid-retrieval-and-api-hardening`
+   resolviendo a mano los conflictos de `src/api.py`, `scrape_wiki.py` y
+   `frontend/`. Es el único camino que preserva las dos mitades. El conflicto
+   gordo es estructural, no textual: el VPS tiene `retriever.py` (ChromaDB) y acá
+   ese motor ya no existe.
+2. **Rescatar primero lo del VPS.** Commitear/exportar los 15 archivos sucios y
+   los 11 commits del panel de SAC **antes** de tocar nada, para no depender de
+   que ese disco siga vivo.
+3. **Redeploy limpio desde esta rama**, aceptando explícitamente que se pierde el
+   panel admin de SAC hasta que se re-porte sobre el store Postgres.
+
+**Ninguna de las tres se ejecuta sin decisión explícita.** Mientras no se decida,
+el endpoint público sigue sirviendo el código pre-auditoría — con las
+descripciones viejas, que son el prompt del agente consumidor.
+
+### Procedimiento, una vez reconciliadas las ramas
 
 ```bash
 ssh vps2-tunel                    # 173.249.49.68, usuario gga
 # (host alternativo: vps2 — mismo server, usuario geo, puerto 54022)
 
-cd <dir del repo en el VPS>
-# Primera vez, confirmá CÓMO llegó el código (nadie lo dejó escrito):
-git -C . remote -v                # si no es un clone, el paso de abajo es rsync/scp
+cd /home/admin/.openclaw/workspace/gx-bt-rag-mcp
+# El dir es de `admin`, así que git corre bajo sudo y se queja de ownership.
+# El flag va por comando, para NO ensuciar la config global del VPS:
+sudo git -c safe.directory=$PWD status --short     # tiene que estar LIMPIO antes
 
-git pull origin vps-produccion
+sudo git -c safe.directory=$PWD pull origin <la-rama-que-se-haya-acordado>
 
 # `gga` tiene sudo passwordless pero NO está en el grupo docker → sudo docker.
 sudo docker compose up -d --build
@@ -87,6 +142,12 @@ sudo docker compose exec gx-rag-mcp curl -fs http://localhost:8080/health
 # Verificar que el endpoint público sigue cerrado sin key.
 curl -s -o /dev/null -w '%{http_code}\n' https://gxrag.wgsoft.com.co/mcp/   # 401
 ```
+
+⚠️ Ojo con `up -d --build`: `gx-rag-api` y `gx-rag-ui` hoy corren **fuera** de este
+compose (sin labels, del 2026-07-25). El comando los **recrea** según este
+`docker-compose.yml`, que a propósito les quita el puerto host publicado. Es lo
+que dice `DEPLOY.md`, pero significa que la URL por la que hoy se llegue al admin
+puede cambiar: preparate para usar el túnel SSH de más abajo.
 
 ### Verificar que el deploy REALMENTE cambió lo que tenía que cambiar
 
