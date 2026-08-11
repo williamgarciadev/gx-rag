@@ -43,12 +43,39 @@ curl -s -o /dev/null -w '%{http_code}\n' https://gxrag.wgsoft.com.co/mcp/   # 40
 
 ## Actualizar un deploy que ya está corriendo
 
-> ⏳ **PENDIENTE AL 2026-08-11 — hay código commiteado que NO está desplegado, y
-> desplegarlo está BLOQUEADO por una reconciliación de ramas (ver más abajo).**
+> ✅ **DESPLEGADO el 2026-08-11.** El VPS pasó de ChromaDB + BM25 a
+> Postgres + pgvector, sirviendo el código de `vps-produccion` (HEAD `28a9a08`).
 >
-> Commits `e4544ed`, `84d1bb5`, `cfbb892` (auditoría de interfaz) están en
-> `vps-produccion` y **el VPS todavía sirve el código anterior**. Verificado, no
-> supuesto: `docker exec gx-rag-mcp grep -c BM25 /app/src/server.py` → **1**.
+> Verificado end-to-end contra `https://gxrag.wgsoft.com.co/mcp/`, no supuesto:
+>
+> | Verificación | Resultado |
+> |---|---|
+> | `grep -c BM25 /app/src/server.py` en el contenedor | **0** (antes 1) |
+> | Módulos `pg_*` en el contenedor | 4 |
+> | `tools/list` sin key | **401** (fail-closed intacto) |
+> | `tools/list` con **la key de siempre** | **200**, y sin `BM25` |
+> | `search_docs("autorización…", bt_docs)` | 2 hits desde Postgres |
+> | `list_methods("Method", version="gx18")` | **34** (antes: vacío siempre) |
+> | `verify_syntax("do")` | **NO_VERIFICABLE** (antes: `INVÁLIDO` fabricado) |
+> | `search_docs(collection="gx_doc")` | "Colección desconocida" (antes: "Sin resultados") |
+>
+> Corpus en producción: 51.211 chunks — `gx_docs` 50.063 · `bt_docs` 1.122 ·
+> `gx_syntax` 26. Prueba de tildes: `autorizacion` 131 = `autorización` 131.
+>
+> **Lo que quedó recuperable:** el trabajo previo del VPS está en un `git stash`
+> allá (`git stash list`) **y** rescatado en local; la config de los contenedores
+> viejos en `/home/gga/gx-rag-containers-pre-deploy.json`; los backups del `.env`
+> en `.env.bak-predeploy-postgres-*`; y el dump del corpus en `~/gxrag.dump`
+> (239 MB) por si hay que reconstruir el store.
+
+> 🔴 **Hallazgo abierto: la procedencia de `bt_docs` no es citable.** Los hits del
+> manual funcional traen `Fuente: C:\Users\wigam\pautas-genexus\rag\manuales_
+> bantotal\*.txt` — la ruta del disco de quien lo ingirió. Sale de
+> `parse_text_files`, que hace `url=str(path.resolve())`. Para un agente
+> consumidor esa procedencia **no existe y no se puede verificar**, lo que choca
+> con la regla del repo de citar la fuente. Arreglarlo exige decidir una URL
+> canónica para el manual y **reindexar `bt_docs`**: decisión de política de
+> corpus, no un fix mecánico.
 >
 > **Por qué importa acá y no es cosmético:** esos commits corrigen las
 > descripciones de las read tools, y en este sistema *la descripción de una tool
@@ -290,6 +317,33 @@ nombre y, peor, invita a borrarlo. Nombrándolos, el store queda fuera del
 alcance del comando. (Adoptarlo con compose es una ventana de mantenimiento
 aparte: `docker rm -f gx-rag-pg` y dejar que compose lo recree — el volumen
 `gx-rag-pgdata` persiste, así que el corpus sobrevive.)
+
+🔴 **`gx-rag-api` y `gx-rag-ui` también estaban fuera de compose** (creados el
+2026-07-25, sin labels), así que el `up` aborta con
+`Conflict. The container name "/gx-rag-api" is already in use`. **`DEPLOY.md` dice
+que "el nuevo compose los recrea": es falso, choca.** Hay que borrarlos primero —
+respaldando antes su definición, porque es la única copia de cómo estaban puestos:
+
+```bash
+docker inspect gx-rag-api gx-rag-ui > ~/gx-rag-containers-pre-deploy.json
+docker rm -f gx-rag-api gx-rag-ui        # data/ es bind-mount: no se pierde nada
+docker compose up -d --no-deps gx-rag-mcp gx-rag-api gx-rag-ui
+```
+
+Las imágenes viejas quedan en el host (sin tag, por id) por si hay que volver
+atrás; el `inspect` guarda con qué estaban corriendo.
+
+**Verificación end-to-end** (el `Started` de compose no prueba nada). Ojo: el
+endpoint responde **SSE**, así que hay que sacarle el prefijo `data: ` antes de
+parsear el JSON — si no, muere con `Extra data: line 1 column 5`:
+
+```bash
+K=$(sudo grep '^GX_PUBLIC_API_KEYS=' .env | cut -d= -f2- | cut -d, -f1)
+curl -s https://gxrag.wgsoft.com.co/mcp/ -H "Authorization: Bearer $K" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+| sed 's/^data: //' | grep '^{' | grep -c BM25       # -> 0 = imagen nueva
+```
 
 ⚠️ Ojo con `up -d --build`: `gx-rag-api` y `gx-rag-ui` hoy corren **fuera** de este
 compose (sin labels, del 2026-07-25). El comando los **recrea** según este
