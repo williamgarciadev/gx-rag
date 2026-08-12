@@ -160,12 +160,18 @@ const lastQuery = ref('')
 const lastCollection = ref('')
 const copied = ref(false)
 
+// WorkWithPlus va SEPARADO de la wiki a propósito, no por prolijidad: GeneXus tiene
+// un pattern nativo "Work With for Web" y WWP (DVelop) es OTRO producto, y las dos
+// fuentes viven mezcladas en gx_docs. Poder aislarlas es lo que convierte este
+// filtro en la herramienta que CLAUDE.md pide — "filtrá por procedencia, no por
+// presencia" — en vez de un adorno.
 const sourceFilters = [
   { key: 'wiki', label: 'Wiki', color: '#60a5fa' },
   { key: 'sac', label: 'SAC', color: '#f59e0b' },
+  { key: 'wwp', label: 'WorkWithPlus', color: '#a78bfa' },
   { key: 'bt', label: 'Bantotal', color: '#22c55e' },
 ]
-const activeSources = ref(['wiki', 'sac', 'bt'])
+const activeSources = ref(['wiki', 'sac', 'wwp', 'bt'])
 
 const exampleQueries = [
   'ControlValueChanged evento enter',
@@ -186,12 +192,23 @@ function formatCollection(c) {
   return map[c] || c
 }
 
+// CLAVE canónica de procedencia. Los chips y el filtro leen de ACÁ los dos, así no
+// pueden desincronizarse — y se desincronizaron: el chip usaba la clave 'bt' y
+// sourceLabel devolvía 'Bantotal', así que al empezar a filtrar de verdad
+// (`filteredResults` en el v-for) los hits del manual Bantotal desaparecían todos.
+function sourceKey(url) {
+  if (!url) return 'otro'
+  if (url.includes('sac.genexus.com')) return 'sac'
+  if (url.includes('workwithplus')) return 'wwp'
+  if (url.includes('wiki.genexus.com') || url.includes('docs.genexus.com')) return 'wiki'
+  if (url.toLowerCase().includes('bantotal')) return 'bt'
+  return 'otro'
+}
+
+const SOURCE_LABELS = { wiki: 'Wiki', sac: 'SAC', wwp: 'WorkWithPlus', bt: 'Bantotal', otro: 'Otro' }
+
 function sourceLabel(url) {
-  if (!url) return 'Desconocido'
-  if (url.includes('sac.genexus.com')) return 'SAC'
-  if (url.includes('wiki.genexus.com')) return 'Wiki'
-  if (url.includes('bantotal')) return 'Bantotal'
-  return 'Web'
+  return SOURCE_LABELS[sourceKey(url)]
 }
 
 function sourceClass(url) {
@@ -219,10 +236,12 @@ const hiddenByFilter = computed(() => results.value.length - filteredResults.val
 
 const filteredResults = computed(() => {
   return results.value.filter(r => {
-    const src = sourceLabel(r.source).toLowerCase()
-    return activeSources.value.includes(
-      src === 'web' ? (r.source?.includes('sac') ? 'sac' : 'wiki') : src
-    )
+    const key = sourceKey(r.source)
+    // Una procedencia que no cae en ningún chip se MUESTRA. Ocultar en silencio
+    // algo que el corpus devolvió es peor que mostrar un hit sin categoría: es la
+    // misma regla que en el backend, donde una ausencia no puede confundirse con
+    // un filtro. Vale para fuentes que se agreguen y todavía no tengan chip.
+    return key === 'otro' || activeSources.value.includes(key)
   })
 })
 
