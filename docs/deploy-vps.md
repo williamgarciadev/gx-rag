@@ -285,7 +285,19 @@ que el contenedor no arranque nunca con password vacía.
 credenciales de GitHub** y el repo es privado: `fetch` muere con
 `could not read Username for 'https://github.com'`. Poner un token en el VPS es
 peor. Un bundle lleva los commits **preservando la historia**, sin red ni
-credenciales, y como el VPS ya tenía la base común pesa **0.2 MB**:
+credenciales, y como el VPS ya tenía la base común pesa **0.2 MB**.
+
+> 📌 **Qué rama se despliega.** El VPS tiene checkouteada `vps-produccion`, que es el
+> **puntero de release**: no se desarrolla ahí. Antes de armar el bundle, avanzala
+> desde `main` en tu máquina — así el bundle lleva exactamente lo integrado:
+>
+> ```bash
+> git checkout vps-produccion && git merge --ff-only main && git push
+> ```
+>
+> Si el `--ff-only` falla, alguien commiteó en `vps-produccion`: eso rompe el rol de
+> la rama y hay que resolverlo antes de desplegar. Ver la tabla de ramas en
+> `CLAUDE.md`.
 
 ```bash
 # Local — sólo lo que el VPS no tiene:
