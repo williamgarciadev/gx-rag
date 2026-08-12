@@ -41,5 +41,10 @@ export function useApi() {
     return request(`/scrape?url=${encodeURIComponent(url)}`)
   }
 
-  return { health, status, scrape, scrapeGet, articles }
+  async function search(q, collection = 'gx_docs', topK = 5) {
+    const params = new URLSearchParams({ q, collection, top_k: String(topK) })
+    return request(`/search?${params.toString()}`)
+  }
+
+  return { health, status, scrape, scrapeGet, articles, search }
 }

@@ -12,6 +12,7 @@ node_modules/
 
 # Data (volúmenes Docker)
 data/scraped/
+data/scraped_sac/
 data/chroma/
 data/raw/
 
@@ -28,8 +29,17 @@ data/raw/
 .DS_Store
 Thumbs.db
 
-# Docker
-.dockerignore
+# Volcados de crash de MSYS/Git Bash. Aparecen en la raíz cada vez que pytest
+# carga e5-large en Windows: torch tira "Windows fatal exception: access
+# violation" materializando los pesos y deja el .stackdump. Es ruido, no un fallo
+# de la suite (los tests pasan), pero sin esto un `git add .` lo commitea.
+*.stackdump
 
 # Logs
 *.log
+
+# Test / lint artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/

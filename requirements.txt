@@ -1,16 +1,21 @@
 # gx-bt-rag-mcp dependencies
 
 # MCP
-mcp>=1.0
+# Techo en la mayor a proposito: 2.0 elimino los decoradores @server.list_tools()
+# y @server.call_tool(). El pin abierto "mcp>=1.0" dejo entrar la 2.0 sola y el
+# servidor dejo de arrancar. El codigo ya usa add_request_handler (API 2.x).
+mcp>=2,<3
 
 # API
 fastapi>=0.115
 uvicorn[standard]>=0.30
 
 # Vector store
-chromadb>=1.5
+# chromadb y rank-bm25 salieron: el denso lo hace pgvector y el lexico
+# tsvector/GIN, ambos dentro de Postgres. scripts/migrate_chroma_to_pg.py sigue
+# necesitando chromadb, pero es una herramienta de una sola vez — se instala a
+# mano el dia que haya que re-migrar, no en cada deploy.
 sentence-transformers>=2.0
-rank-bm25>=0.2
 langchain-text-splitters>=0.2
 
 # Scraper / parsing
@@ -21,8 +26,22 @@ pymupdf>=1.28
 
 # DB
 SQLAlchemy>=2.0
+# PostgreSQL + pgvector. Estaban instalados y en uso (src/vectorstore/pg_client.py)
+# pero sin declarar: un pip install -r en limpio no levantaba la capa PG.
+# El extra [pool] trae psycopg-pool; [binary] evita compilar libpq en Windows.
+psycopg[binary,pool]>=3.2,<4
 
 # Config / utils
 pydantic>=2.0
 pydantic-settings>=2.0
+# Lo importa src/__init__.py para cargar el .env; tampoco estaba declarado.
+python-dotenv>=1,<2
 structlog>=26.0
+
+# Testing
+pytest>=8
+pytest-cov>=5
+
+# Lint / format
+ruff>=0.6
+black>=24
