@@ -704,9 +704,13 @@ Detalle completo, con la medición de cada uno, en la tabla #21–#32 de
   final — vive fuera del repo (`.mcp.json` registra el stdio local).
 - Contenido exacto de `data-corpus.tar.gz` (artefacto de deploy, no
   inspeccionado).
-- Si `VITE_API_TARGET` tiene efecto real: `vite.config.js` hardcodea el target
-  del proxy; la variable solo la inyecta `dev.sh` (INFERRED que el default
-  manda).
+- ~~Si `VITE_API_TARGET` tiene efecto real~~ → **RESUELTO (VERIFIED, 2026-08-11):
+  NO tenía ninguno.** `vite.config.js` hardcodeaba `http://gx-rag-api:8000`, un
+  hostname que solo existe dentro de la red de Docker — donde este proxy **no se
+  usa**, porque ahí el frontend se sirve como estáticos por nginx. Resultado: en
+  `npm run dev` (el único escenario donde el proxy actúa) TODAS las llamadas
+  devolvían 500, incluida `/api/health`, que ni toca la base. Corregido: el
+  default es `127.0.0.1:8000` y la variable ahora se lee de verdad.
 - Estado real del corpus en el Postgres de producción más allá de los números
   documentados en el SQL (50.056 chunks en gx_docs): cobertura de SAC,
   frescura, duplicados por el dedup débil.

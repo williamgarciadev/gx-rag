@@ -47,10 +47,11 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python scripts/scrape_wiki.py <url> [--output-dir <dir>]
 .venv/bin/python -m scripts.ingest_dump <file> --format genexus|workwithplus [--dry-run]
 
-# Frontend (frontend/) — Vite, puerto 5173
+# Frontend (frontend/) — Vite, puerto 5173. NECESITA el backend arriba:
+.venv/Scripts/python.exe -m uvicorn src.api:app --host 127.0.0.1 --port 8000   # en otra terminal
 npm install && npm run dev
-# Fuera de Docker, apuntá el proxy a la API local (el default gx-rag-api:8000 no resuelve):
-VITE_API_TARGET=http://127.0.0.1:8000 npm run dev
+# El proxy apunta por defecto a http://127.0.0.1:8000. Para otro destino:
+VITE_API_TARGET=http://otro-host:8000 npm run dev
 ```
 
 **Puertos**: API `8000`, frontend dev `5173` (Vite incrementa a 5174+ si está tomado). El frontend

@@ -130,6 +130,8 @@ lee como una **ausencia verificada**.
 | 35 | **Los builds del frontend no son reproducibles** | `frontend/Dockerfile:4-5`: `COPY package.json` **sin** el lock, y `npm install` | `vue: ^3.4.0` resuelve a cualquier 3.x; dos builds del mismo commit pueden diferir | 🔲 barato: `COPY package*.json` + `npm ci` (el lock ya está versionado) |
 | 36 | ✅ **RESUELTO — el `<select>` de colecciones del buscador estaba VACÍO.** Tercer lugar con el campo muerto, y no estaba en ninguna tabla: `loadCollections()` leía `s.chroma_collections` | `SearchPanel.vue:240` | no se podía elegir dónde buscar. **Y el `\|\| []` es la causa de que nadie lo notara**: convierte "el campo no existe" en "no hay colecciones", así que la promesa nunca rechaza y el fallback del `catch` —que existía para esto— jamás se ejecutaba | bajo |
 
+| 37 | ✅ **RESUELTO — `npm run dev` daba 500 en TODAS las llamadas.** `vite.config.js` hardcodeaba `target: 'http://gx-rag-api:8000'`, hostname que existe sólo dentro de Docker… donde este proxy **no se usa** (ahí sirve nginx). O sea: el default no funcionaba en el único escenario donde corre. Y `VITE_API_TARGET`, documentada en `CLAUDE.md`, **no se leía**: era una variable sin ningún efecto | reportado por el usuario con el 500 de `/api/health` —endpoint que ni toca la base— y confirmado leyendo `vite.config.js:9` | el frontend en dev era inusable; y `CLAUDE.md` documentaba un comportamiento inexistente | bajo |
+
 > **Cómo apareció #36, que es la lección transferible:** no leyendo el código, sino
 > **grepeando el bundle JS ya servido por nginx**. Tras desplegar #19 y #20, el
 > asset todavía contenía una ocurrencia de `chroma_collections` que no correspondía
