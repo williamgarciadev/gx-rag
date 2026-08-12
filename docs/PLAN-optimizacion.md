@@ -1,37 +1,73 @@
 # Plan — optimizar `gx-rag`: medir primero, después cortar peso muerto
 
 > **Documento de handoff.** Está escrito para que un agente que llega sin contexto lo levante y
-> arranque. Reconstruido desde el código el **2026-08-11**, rama `vps-produccion`, HEAD `dfeeb63`.
-> Todo `archivo:línea` de acá fue verificado, no supuesto. Si al retomarlo el HEAD cambió,
-> revalidá la tabla de hallazgos antes de ejecutar.
+> arranque. Reconstruido desde el código el **2026-08-11**; **última actualización 2026-08-12**,
+> rama `vps-produccion`, HEAD `71ccd58`. Todo `archivo:línea` de acá fue verificado, no supuesto.
+> Si al retomarlo el HEAD cambió, revalidá la tabla de hallazgos antes de ejecutar.
+>
+> ⚠️ La cabecera de este doc estuvo stale un día entero (declaraba HEAD `dfeeb63`, 76 tests y
+> «638 líneas sin commitear») mientras denunciaba que el bootstrap estaba stale. **Si ejecutás una
+> fase, actualizá esta cabecera en el mismo commit.**
 
-## Cómo arrancar (leer esto primero)
+## Estado al 2026-08-12 (leer esto primero)
+
+**El VPS ya corre Postgres+pgvector y sirve el código de esta rama.** Migró de ChromaDB+BM25 el
+2026-08-11; procedimiento verificado y sus cinco trampas en `docs/deploy-vps.md`.
+
+| | |
+|---|---|
+| Corpus en producción | **51.211 chunks** — `gx_docs` 50.063 · `bt_docs` 1.122 · `gx_syntax` 26 · `bt_apis` **0** |
+| Catálogo del validador | **59 entradas**, `version_since` NULL en todas (por construcción, ver #21) |
+| Tests | **114 passing** (piso; era 76 al escribirse este plan) |
+| Store en producción | contenedor **dedicado** `gx-rag-pg` (`pgvector/pgvector:pg16`, pgvector 0.8.6) |
+
+**Ejecutado:** Fase 3 casi completa (auditoría de interfaz, #9–#11 y #21–#28) · migración del VPS ·
+primer set de evaluación (`scripts/eval_bt_docs.py`) · bugs del frontend #19/#20/#36/#37.
+
+**Lo que sigue, en orden de valor:**
+
+1. **Fase 0 — baseline.** Sigue sin hacerse y sigue siendo el gate de la Fase 2. Ahora se puede
+   medir contra los 51k chunks reales, en local y en el VPS.
+2. **#40 (nuevo, y el de mayor impacto en calidad):** el OR de `_to_tsquery` perdió el IDF al migrar
+   de BM25. Es el primer experimento a correr con el set de evaluación.
+3. **#1** (`ROW_NUMBER` anulando el HNSW) — sigue siendo hipótesis sin medir.
+4. **Decisiones humanas pendientes:** #32 (`bt_docs` fuera de `WRITABLE_COLLECTIONS`), #33
+   (procedencia de `bt_docs` no citable), #30 (`/discover` no funciona con ninguna fuente).
+
+## Cómo arrancar
 
 1. **Entorno.** Trabajá en el venv del repo, nunca en el intérprete global: un paquete global
    (`notebooklm_skill`) trae un package `scripts` de nivel superior que tapa el `scripts/` de este
    repo y rompe `from scripts import scrape_wiki` en `src/api.py`.
    ```bash
-   .venv/bin/python -m pytest tests/ -q     # piso declarado: 76 passing al 2026-08-11
+   .venv/Scripts/python.exe -m pytest tests/ -q   # Windows. En POSIX: .venv/bin/python
    ```
 2. **`GXRAG_DSN` es obligatoria.** Sin ella `get_pool()` tira `RuntimeError` al arrancar
    (`pg_client.py:29-33`, `open=True` a propósito: falla temprano, no en la primera query).
    El `.env` de la raíz se carga en `src/__init__.py:20` con `override=False` — el entorno gana.
    Ojo: esa misma variable decide si el **catálogo de sintaxis** vive en Postgres o en el SQLite
    local (`models.py:113-140`).
-3. **Leé `RAG_SYSTEM_MAP.md`** (raíz, sin trackear) — es el mapa autoritativo, con clasificación de
-   evidencia por afirmación. `CLAUDE.md` ya está sincronizado. **`docs/CLAUDE.md` es spec de
+3. **Leé `RAG_SYSTEM_MAP.md`** (raíz, **ya trackeado**) — es el mapa autoritativo, con clasificación
+   de evidencia por afirmación. `CLAUDE.md` está sincronizado. **`docs/CLAUDE.md` es spec de
    planeación, no realidad.**
 4. **Reiniciar el MCP no es automático.** El proceso conserva el código viejo en memoria: un cambio
    se verifica por MCP recién después de reconectar el server.
-5. **Orden de ejecución:** Fase 0 y Fase 1 pueden ir en paralelo (Fase 1 no depende de mediciones).
+5. **El frontend necesita el backend arriba.** `npm run dev` solo no alcanza: levantá
+   `uvicorn src.api:app --port 8000` en otra terminal (ver #37).
+6. **Orden de ejecución:** Fase 0 y Fase 1 pueden ir en paralelo (Fase 1 no depende de mediciones).
    Fase 2 **no arranca** hasta que Fase 0 dejó escrito `docs/BASELINE-perf.md`. Fases 3 y 4 son
    independientes de todo lo anterior y se pueden tomar en cualquier momento.
 
 ## Contexto
 
+> 📜 **Registro del punto de partida (2026-08-11, HEAD `dfeeb63`), no el estado actual.** Se
+> conserva porque explica POR QUÉ el plan arranca midiendo en vez de tocando parámetros. Para saber
+> dónde está el proyecto hoy, mirá «Estado» arriba: aquellas 638 líneas ya están commiteadas y el
+> HEAD se movió muchas veces.
+
 El pedido es **identificar qué se puede mejorar/optimizar y hacerlo más eficiente**, más **una versión nueva del prompt de bootstrap**.
 
-Punto de partida verificado hoy contra el código (rama `vps-produccion`, HEAD `dfeeb63`):
+Punto de partida verificado el 2026-08-11 contra el código (rama `vps-produccion`, HEAD `dfeeb63`):
 
 - El bootstrap que se usó para arrancar la sesión **está stale y contradice el repo**: describe ChromaDB + rank-bm25, dice que `tests/` está vacío y que `ingest_batch` no está implementado. Nada de eso es cierto — el store es Postgres+pgvector+tsvector (commit `c4fb609`), hay `pytest.ini` con 6 suites, y `ingest_batch` está implementado con `dry_run=True` por defecto.
 - `RAG_SYSTEM_MAP.md` (sin trackear) ya es el mapa autoritativo, con clasificación de evidencia por afirmación. `CLAUDE.md` raíz ya fue sincronizado. **La fase de "entender el sistema" está cerrada** — no se re-hace.
@@ -79,6 +115,22 @@ dense AS (
 ⚠️ **Esto es una hipótesis, no una medición.** El plan la valida con `EXPLAIN (ANALYZE, BUFFERS)` **antes** de tocar nada. Si el plan de ejecución ya usa el índice, se descarta y se documenta por qué.
 
 ---
+
+## Hallazgos — índice
+
+Se fueron acumulando en bloques según de dónde salieron. Los números **no se reciclan** y un
+hallazgo refutado se marca `DESCARTADO` con su evidencia, nunca se borra.
+
+| Bloque | Números | De dónde salió |
+|---|---|---|
+| Optimización (abajo) | **#1–#20** | lectura del código, 2026-08-11 |
+| Auditoría de interfaz | **#21–#32** | contrato de cada tool contra el estado REAL de los datos |
+| Deploy y frontend | **#33–#37** | migrar el VPS y hacer funcionar la UI de curación |
+| Retrieval medido | **#38–#40** | correr el primer set de evaluación |
+
+**Abiertos que más pesan:** #40 (OR sin IDF) · #1 (`ROW_NUMBER`/HNSW) · #2 (sin instrumentación) ·
+#29 (`sql/001` con config `'simple'`) · #38 (tildes sólo resueltas en la mitad léxica).
+**Esperando decisión humana:** #14 · #30 · #32 · #33.
 
 ## Tabla de hallazgos (prioridad descendente)
 
@@ -216,7 +268,7 @@ obligatorio al comparar un árbol de Linux con uno de Windows.
 
 ## Plan de ejecución
 
-### Fase 0 — Baseline (sin esto, nada de lo demás es verificable)
+### Fase 0 — Baseline · 🔲 PENDIENTE (sin esto, nada de lo demás es verificable)
 
 1. **`scripts/bench_retrieval.py`** (nuevo): corre N queries fijas contra `hybrid_search()`, reporta p50/p95/p99 y, con `--explain`, vuelca `EXPLAIN (ANALYZE, BUFFERS)` de `_SEARCH_SQL`. Reusa `pg_client.get_pool()` y `pg_retriever._SEARCH_SQL` — sin duplicar SQL.
 2. **Medir el hallazgo #1**: `EXPLAIN ANALYZE` de la query actual contra `gx_docs` y contra `gx_syntax` (26 filas vs 50k: el contraste expone el comportamiento del filtro por colección sobre HNSW).
@@ -225,7 +277,7 @@ obligatorio al comparar un árbol de Linux con uno de Windows.
 
 **Gate:** sin baseline escrito, no se pasa a Fase 2.
 
-### Fase 1 — Peso muerto (seguro por construcción, sin cambio de comportamiento)
+### Fase 1 — Peso muerto · 🔲 PENDIENTE (seguro por construcción, sin cambio de comportamiento)
 
 Se puede hacer en paralelo a Fase 0; no depende de mediciones.
 
@@ -236,7 +288,7 @@ Se puede hacer en paralelo a Fase 0; no depende de mediciones.
 - `find src -name '__pycache__' -exec rm -rf` para los `.pyc` huérfanos (#18).
 - Sincronizar las 2 descripciones de tools que le mienten al agente consumidor (#10, #11) — cambio de texto, cero riesgo, alto valor: **esas descripciones son el prompt del agente**.
 
-### Fase 2 — Optimizaciones medidas (cada una re-mide contra el baseline)
+### Fase 2 — Optimizaciones medidas · 🔲 BLOQUEADA por Fase 0 (cada una re-mide contra el baseline)
 
 Orden por relación impacto/riesgo:
 
@@ -247,7 +299,7 @@ Orden por relación impacto/riesgo:
 5. **Pre-warm del modelo** (#8): cargar e5-large al arrancar `server.py`/`http_server.py`, con log de cuánto tardó.
 6. **Ingesta en lote** (#6, #7): adaptador binario de vector + `COPY` a tabla staging + `MERGE`/`INSERT … ON CONFLICT` desde ahí. Medir contra los 501 artículos de `data/scraped_sac/`, que son el lote real pendiente.
 
-### Fase 3 — Correcciones de interfaz (baratas, tocan no-alucinación)
+### Fase 3 — Correcciones de interfaz · ✅ EJECUTADA EN PARTE (baratas, tocan no-alucinación)
 
 ✅ **EJECUTADA EN PARTE el 2026-08-11** (auditoría de interfaz). Aplicado con un test que falla sin el fix en cada caso — suite completa **109 passed** (piso previo: 82):
 
@@ -288,7 +340,7 @@ Los docs de `docs/` describen **qué se quería**; esta tabla dice contra qué q
 | `structlog` en cada tool de validación | `docs/CLAUDE.md` | **AUSENTE** | declarado en `requirements.txt`, cero imports (#16) |
 | `ruff` / `mypy` en el flujo de calidad | `docs/CLAUDE.md` | **AUSENTE** | sin config de ninguno de los dos, y no hay `pyproject.toml` |
 
-### Fase 4 — Prompt de bootstrap nuevo
+### Fase 4 — Prompt de bootstrap nuevo · 🔲 PENDIENTE
 
 Crear **`docs/BOOTSTRAP-agente.md`**, reemplazo del prompt stale. Contenido:
 
