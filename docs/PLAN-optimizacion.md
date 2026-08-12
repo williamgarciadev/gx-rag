@@ -150,7 +150,7 @@ hallazgo refutado se marca `DESCARTADO` con su evidencia, nunca se borra.
 | 12 | `/verify` HTTP devuelve veredicto **sin** `_VERDICT_GUIDANCE` | `api.py:268` vs `server.py:598-612` | superficie anti-alucinación asimétrica entre transportes | bajo |
 | 13 | `scripts/ingest_dump.py` **escribe por defecto** (`--dry-run` opt-in) | `ingest_dump.py:103` vs `server.py:395` | gate humano invertido respecto de la tool MCP | bajo |
 | 14 | `data/syntax.db` **trackeado en git**, binario mutable con telemetría real | `git ls-files data/`; 32K→45K en el diff | diffs opacos, conflictos irresolubles, snippets de usuario versionados | bajo |
-| 15 | `data/scraped_sac/` (1002 archivos, 2.9 MB) **no está en `.gitignore`** | `.gitignore` solo cubre `data/scraped/`, `chroma/`, `raw/` | un `git add .` infla el repo para siempre | nulo |
+| 15 | ✅ **RESUELTO** — `data/scraped_sac/` (1002 archivos, 2.9 MB) fuera de `.gitignore`. **Verificado el 2026-08-12: ya estaba cubierto**, este hallazgo se había quedado stale. Se sumó `*.stackdump`, que reaparece en la raíz en cada corrida de pytest en Windows (torch deja el volcado al cargar e5-large) | `.gitignore` | un `git add .` infla el repo para siempre | nulo |
 | 16 | `pymupdf` y `structlog` declarados con **cero imports** | `requirements.txt`; `rg` sin resultados | peso de imagen e instalación | nulo |
 | 17 | Config muerta: `chunk_size/overlap`, `reranker_model`, `default_version`, `SyntaxDBConfig.path` | `config.py:17-23,50` vs `pg_indexer.py:24-25` | cambiar la config no cambia nada | nulo |
 | 18 | `.pyc` huérfanos de los módulos Chroma borrados | `src/vectorstore/__pycache__/` | ruido | nulo |
