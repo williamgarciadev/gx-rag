@@ -30,6 +30,12 @@ interfaz, #9–#11 y #21–#28) · migración del VPS · primer set de evaluaci�
 1. **#40 — el CTE léxico.** Ya no es sólo calidad: el `EXPLAIN` lo mide como el **94% del SQL** en
    `gx_docs`. Atacarlo mejora latencia **y** ranking a la vez, y es el único candidato que se puede
    verificar por las dos vías (`bench_retrieval.py` + `eval_bt_docs.py`).
+   🔴 **Y en producción pesa más:** medido en el VPS, `gx_docs` da **610 ms p50 y 5,3 s p99** — 17×
+   la cola de desarrollo. Eso es lo que espera hoy un agente que consume el MCP.
+1bis. **#41 (nuevo) — la varianza en producción.** El p99 del SQL en el VPS es 17× el de dev mientras
+   el p50 sólo 2,6×: no es "CPU más lenta", es **contención** con las otras apps del server
+   (`postgres-main`, `magis`, `firma-service`). Es un problema distinto de la latencia media y sólo
+   se ve midiendo allá. Ver `docs/BASELINE-perf.md` § Serie 2.
 2. **El embedding**, que el baseline expone como el **54–98% del total** (~115 ms fijos por consulta).
    El plan lo tenía como secundario y es el costo dominante en 2 de 3 colecciones.
 3. **Decisiones humanas pendientes:** #32 (`bt_docs` fuera de `WRITABLE_COLLECTIONS`), #33

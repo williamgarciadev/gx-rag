@@ -38,7 +38,7 @@ Dos decisiones que cambian el resultado:
   mezclaría el arranque en frío con la latencia de servicio. Ese costo es el hallazgo
   #8, aparte.
 
-## Resultados (5 consultas × 3 repeticiones por colección, `top_k=5`)
+## Serie 1 — DESARROLLO (Windows, Postgres local) · 5 consultas × 3 repeticiones, `top_k=5`
 
 | Colección | embedding p50 | SQL p50 | SQL p95 | **TOTAL p50** | TOTAL p95 | reparto p50 |
 |---|---|---|---|---|---|---|
@@ -114,13 +114,61 @@ escala con el match set léxico, no con el denso.
 4. `hnsw.ef_search=40` con `CANDIDATE_POOL=30` (#4) sigue sin medir, pero su techo es
    esos 9,8 ms del denso: impacto acotado.
 
+## Serie 2 — PRODUCCIÓN (VPS), medida el 2026-08-12
+
+Corrida **dentro del contenedor `gx-rag-api`** que está sirviendo, contra `gx-rag-pg`.
+Misma metodología, mismas consultas. **Es la serie que importa**, porque es la que
+paga un agente que consume el MCP.
+
+| Colección | embedding p50 | SQL p50 | SQL p95 | SQL **p99** | TOTAL p50 | TOTAL p99 | reparto p50 |
+|---|---|---|---|---|---|---|---|
+| `gx_docs` | 325 ms | 223 ms | 2.914 ms | **5.045 ms** | **610 ms** | **5.350 ms** | embed 53% · SQL 37% |
+| `bt_docs` | 418 ms | 27 ms | 54 ms | 77 ms | **447 ms** | 790 ms | embed 94% · SQL 6% |
+| `gx_syntax` | 330 ms | 3,5 ms | 6 ms | 6 ms | **334 ms** | 543 ms | embed 99% · SQL 1% |
+
+Warm-up del modelo en el VPS: **12,2 s** (contra 6,7–8,7 s en dev).
+
+### Qué dice la comparación
+
+| Métrica (`gx_docs`) | dev | VPS | factor |
+|---|---|---|---|
+| TOTAL p50 | 212 ms | 610 ms | **2,9×** |
+| embedding p50 | 114 ms | 325 ms | 2,9× |
+| SQL p50 | 85 ms | 223 ms | 2,6× |
+| **SQL p95** | 245 ms | 2.914 ms | **12×** |
+| **SQL p99** | 288 ms | 5.045 ms | **17×** |
+
+1. **El p50 escala parejo (~3×)**: es CPU más lenta y compartida. Esperable y
+   proporcional en las dos mitades.
+2. 🔴 **La COLA no escala parejo: 17× en el p99.** Eso no es "el VPS es más lento",
+   es **contención**. El p50 de 223 ms contra un p99 de 5 s en la misma consulta
+   significa que algo se interpone de a ratos — `postgres-main`, `magis`,
+   `firma-service` y el resto comparten CPU y IO en esa máquina. **La varianza es un
+   problema distinto de la latencia media, y sólo se ve midiendo en producción.**
+3. **El reparto estructural se confirma**: embedding 53% / SQL 37% en `gx_docs`,
+   94% / 6% en `bt_docs`, 99% / 1% en `gx_syntax`. La conclusión de la serie de dev
+   —el embedding domina— **no era un artefacto del entorno**.
+4. **El `lru_cache` del embedding vale el triple acá**: evita 325 ms, no 114.
+
+**Lo que un agente experimenta hoy** consultando `gx_docs` por el MCP público:
+~0,6 s en el caso típico y **hasta 5,3 s en el peor**. Ese número es el que hay que
+mover, y el 94% del SQL en `gx_docs` sigue siendo el CTE léxico (#40).
+
 ## Reproducir
 
 ```bash
+# Desarrollo
 .venv/Scripts/python.exe scripts/bench_retrieval.py --repeat 3
 .venv/Scripts/python.exe scripts/bench_retrieval.py --explain --collection gx_syntax
+
+# Producción, SIN rebuild: se copia el script al contenedor que ya está sirviendo,
+# así se mide exactamente lo que corre. El DSN se pasa desde el .env del VPS.
+docker cp scripts/bench_retrieval.py gx-rag-api:/app/scripts/
+docker exec -e GXRAG_DSN="$(grep '^GXRAG_DSN=' .env | cut -d= -f2-)" gx-rag-api \
+  python scripts/bench_retrieval.py --repeat 3
+docker exec gx-rag-api rm -f /app/scripts/bench_retrieval.py
 ```
 
-⚠️ Los números de acá son del **entorno de desarrollo** (Windows, Postgres local). El
-VPS comparte CPU con otras apps y tiene otro perfil: para comparar contra producción,
-correr el harness allá. No mezclar las dos series.
+⚠️ **No mezclar las dos series.** Son entornos distintos: cualquier comparación
+antes/después de una optimización tiene que hacerse contra la serie del **mismo**
+entorno.
