@@ -148,14 +148,56 @@ con el `forbid` que trae pydantic-settings por defecto, cualquier clave ajena ro
 
 **En este repo trabajan varios agentes en paralelo, y ya hubo colisión real**: el 2026-08-11
 `src/vectorstore/pg_retriever.py` quedó en disputa entre dos agentes (documentado en
-`docs/PLAN-optimizacion.md`, sección "Trabajo en paralelo"). Por eso:
+`docs/PLAN-optimizacion.md`, sección "Trabajo en paralelo").
 
-- **Antes de editar, siempre**: `git status` + `git log --oneline -3`. Un working tree sucio es
-  trabajo de otro agente: **se integra, no se pisa.** Si el HEAD cambió respecto de lo que dice el
-  plan que estás ejecutando, revalidá sus `archivo:línea` antes de tocar nada.
-- **Declarás la franja que tomás** en la tabla de coordinación de `docs/PLAN-optimizacion.md`, y la
-  leés antes para elegir una que no choque. Las fases están cortadas para minimizar colisión.
-- **Ramas**: se trabaja sobre `vps-produccion`. `main` es la rama de PR — no se commitea ahí directo.
+### 🔴 Lo primero, porque es lo que se malentiende: la rama es del CLON, no del agente
+
+Un repo tiene **un solo working tree**. Dos agentes en el mismo directorio **están en la misma
+rama, siempre** — si uno hace `git checkout`, se lo cambia al otro por debajo, y si el otro tenía
+cambios sin commitear se los arrastra o el checkout falla. La tabla de ramas de más abajo NO da
+paralelismo por sí sola.
+
+**Antes de editar, siempre tres cosas** (no dos):
+
+```bash
+git branch --show-current    # ¿en qué rama me dejó el anterior?
+git status --short           # ¿hay trabajo ajeno sin commitear?
+git log --oneline -3         # ¿el HEAD es el que dice el plan que estoy ejecutando?
+```
+
+Un working tree sucio es trabajo de otro: **se integra, no se pisa.** Y **no cambies de rama con
+cambios ajenos encima** — commiteálos en la rama donde están o preguntá.
+
+**Dos agentes, dos modos:**
+
+| Situación | Qué hacer |
+|---|---|
+| Comparten el clon (caso habitual) | **Comparten rama.** El que llega segundo NO hace `checkout`: trabaja en la rama activa y **declara su franja de archivos** en la tabla de coordinación de `docs/PLAN-optimizacion.md`, eligiendo una que no choque |
+| Se quiere paralelismo REAL por rama | `git worktree add ../gx-rag-<tarea> -b <rama>` — directorio propio, rama propia, mismo `.git`. Es la única forma de que dos agentes estén en ramas distintas a la vez |
+
+El checkout del VPS (`/home/admin/.openclaw/workspace/gx-bt-rag-mcp`) es **otro clon**, así que no
+interfiere: puede estar en `vps-produccion` mientras acá se trabaja en otra rama.
+
+⚠️ Ojo con el `git worktree` en esta máquina: cada sesión de agente levanta su propio `src.server`
+con su modelo (~3,5 GB de commit reservado). Más worktrees no cuestan RAM por sí mismos, pero más
+sesiones sí.
+### Ramas, commits y despliegue
+
+- **Ramas — tres roles, y no se mezclan** (decidido 2026-08-12, después del PR #1):
+
+  | Rama | Rol | Regla |
+  |---|---|---|
+  | `main` | integración | todo entra por **PR**. Nunca commit directo |
+  | rama por tarea | trabajo | se crea **desde `main`** (`fase0-baseline`, `fix/...`, `docs/...`) y se borra al mergear |
+  | `vps-produccion` | **puntero de release** | NO se desarrolla acá. Se le hace `merge --ff-only main` **sólo al desplegar**. Es la rama que el VPS tiene checkouteada |
+
+  **Por qué separar release de integración:** un push **no despliega** —el código va horneado en la
+  imagen— y el build cuesta ~15 min. "Integrado" y "desplegado" son estados distintos, así que
+  tienen rama distinta: podés mergear a `main` sin tocar producción, y desplegar es un acto
+  explícito.
+
+  ⚠️ Durante los primeros 49 commits `vps-produccion` fue la rama de trabajo, con nombre de
+  ambiente. Si ves historia vieja ahí, es por eso.
 - **Commits atómicos**: un fix + su test = un commit. Formato conventional commits, en imperativo.
   Sin `Co-Authored-By` ni ninguna atribución de IA.
 - **Nunca commitear ni pushear sin pedido explícito del usuario.**
