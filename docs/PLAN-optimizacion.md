@@ -154,6 +154,51 @@ top-3 15/15 (100%).** Los dos fallos de top-1 caen en capítulos chicos
 | 38 | 🔴 **El `sql/002` normalizó SÓLO la mitad léxica: el ranking sigue dependiendo de las tildes.** `unaccent` arregla el `tsvector`, pero el embedding de «préstamos» **no** es el de «prestamos» — coseno **0.9355** — y el RRF fusiona las dos mitades | `eval_bt_docs.py`: `garantias` vs `garantías` y `prestamos` vs `préstamos` devuelven **top-3 distintos**. Con «garantías» (bien escrito) entra *Procesos Batch* en el top-2 | acotado: el top-1 aguantó en los 3 pares, el top-3 se contamina. Pero el `sql/002` documenta el problema como resuelto y **sólo lo está a medias** | 🔲 abierto. Normalizar la query antes de embeddear cambia el sentido de los 51k vectores ya indexados ⇒ **exige el set etiquetado que recién arranca** |
 | 39 | ✅ **El score RRF sí tiene estructura interpretable** (matiza, no contradice, "no es una probabilidad") | `1/(RRF_K+1) = 0.0164` es el score de un chunk que entró por **un solo** retriever. Medido: «Angular signals» y «kubernetes ingress» puntúan **exactamente 0.0164**; los aciertos rondan **0.029** porque aparecen en el denso Y en el léxico | da un piso empírico para distinguir ruido de match real | ✅ documentado en la descripción de `min_score` |
 
+### 🔴 Hallazgo #40 — el OR de `_to_tsquery` perdió su red de contención al migrar de BM25
+
+El `sql/001` anotó como "delta medido, no un bug" que `ts_rank_cd` ≠ `BM25Okapi`
+(«IDF + saturación k1 + normalización por longitud»), y que la señal léxica solapa
+~30% @5 con el baseline. **La causa de ese 30% aparece ahora, y es concreta: se
+perdió el IDF.**
+
+`_to_tsquery` une los términos con **OR** — decisión deliberada y documentada, para
+no perder recall. Con BM25 eso era seguro: el **IDF** hundía automáticamente los
+términos ultra-frecuentes. `ts_rank_cd` es *cover density*: **no tiene IDF**. O sea
+que el OR quedó sin la defensa que lo hacía razonable.
+
+Medido en `gx_docs` (50.063 chunks):
+
+| Término | Chunks que matchea |
+|---|---|
+| `for` | **14.844** (30% del corpus) |
+| `each` | 3.276 |
+| `command` | 1.632 |
+
+Consecuencia, con el artículo correcto **presente en el corpus** (`For each command`,
+37 chunks):
+
+| Modo | Top-3 léxico |
+|---|---|
+| **OR** (actual) | *List of code snippets shortcuts* · *Exit command* · *Commands in Procedures* |
+| **AND** (contraste) | ***Data Selectors in For Each command*** · *When None Clause* · *GeneXus 18 Help* |
+
+Y algo que **invierte la lectura del score**: agregar palabras genéricas **sube** el
+score y **empeora** el resultado. `FST900` solo puntúa 0.0164; `FST900 tabla
+parametros` puntúa **0.0269** y devuelve *Cuentas Corrientes*. El score no es sólo
+"no calibrado": puede moverse **en contra** de la relevancia, porque «tabla» y
+«parametros» aportan apoyo léxico irrelevante.
+
+**Por qué pega más en `gx_docs` que en `bt_docs`:** el corpus GeneXus está en inglés
+y las consultas traen palabras funcionales (`for`, `each`, `with`), y la config
+`es_simple` **no tiene stopwords** (heredado del `001`, que descartó `'spanish'` por
+el stemming). En español técnico las consultas son más específicas y el efecto casi
+no se ve — que es justo por qué el set de `bt_docs` da 86% y esto quedó invisible.
+
+**NO se toca sin medición**, y ahora hay con qué: extender `eval_bt_docs.py` a
+`gx_docs` y comparar OR vs `plainto_tsquery` (AND) vs `websearch_to_tsquery` vs
+filtrar términos por frecuencia documental. Es el experimento que el propio repo
+exige antes de mover ranking, y el primer candidato de la Fase 2.
+
 ### ⚠️ Corrección de un diagnóstico propio (2026-08-11)
 
 Afirmé que el deploy había hecho **retroceder el frontend**, porque el diff del VPS
