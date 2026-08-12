@@ -116,7 +116,14 @@ READ_TOOLS: list[Tool] = [
                     "type": "number",
                     "description": (
                         "Piso de score RRF (rank-based, NO calibrado: no es "
-                        "probabilidad). Filtro grueso, no umbral de confianza."
+                        "probabilidad). Filtro grueso, no umbral de confianza.\n"
+                        "SÍ es interpretable su ESTRUCTURA: el score suma 1/(60+rank) "
+                        "por cada mitad que encontró el chunk. Un score ≈0.0164 "
+                        "(=1/61) significa que entró por UNA sola mitad, sin apoyo "
+                        "léxico — típico de una consulta cuyo tema no está en la "
+                        "colección. Los aciertos con apoyo de las dos mitades rondan "
+                        "el doble. Medido sobre bt_docs: un tema ajeno al corpus "
+                        "(«kubernetes ingress») puntúa exactamente 0.0164."
                     ),
                 },
             },

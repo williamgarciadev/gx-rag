@@ -141,6 +141,19 @@ lee como una **ausencia verificada**.
 > minificado: es UNA sola línea, así que cuenta 1 aunque haya cien ocurrencias —
 > hay que usar `grep -o | wc -l`.
 
+### Primer set de evaluación: `scripts/eval_bt_docs.py` (2026-08-11)
+
+El requisito AUSENTE y declarado CRITICAL deja de estar en cero. Ground truth
+débil pero verificable: los títulos de los 33 capítulos del manual funcional.
+**Resultado medido sobre 15 consultas: ruteo correcto top-1 13/15 (86%),
+top-3 15/15 (100%).** Los dos fallos de top-1 caen en capítulos chicos
+(«cajas de seguridad», 5 chunks) que pierden contra capítulos de 160 chunks.
+
+| # | Hallazgo | Evidencia (medida) | Impacto | Estado |
+|---|---|---|---|---|
+| 38 | 🔴 **El `sql/002` normalizó SÓLO la mitad léxica: el ranking sigue dependiendo de las tildes.** `unaccent` arregla el `tsvector`, pero el embedding de «préstamos» **no** es el de «prestamos» — coseno **0.9355** — y el RRF fusiona las dos mitades | `eval_bt_docs.py`: `garantias` vs `garantías` y `prestamos` vs `préstamos` devuelven **top-3 distintos**. Con «garantías» (bien escrito) entra *Procesos Batch* en el top-2 | acotado: el top-1 aguantó en los 3 pares, el top-3 se contamina. Pero el `sql/002` documenta el problema como resuelto y **sólo lo está a medias** | 🔲 abierto. Normalizar la query antes de embeddear cambia el sentido de los 51k vectores ya indexados ⇒ **exige el set etiquetado que recién arranca** |
+| 39 | ✅ **El score RRF sí tiene estructura interpretable** (matiza, no contradice, "no es una probabilidad") | `1/(RRF_K+1) = 0.0164` es el score de un chunk que entró por **un solo** retriever. Medido: «Angular signals» y «kubernetes ingress» puntúan **exactamente 0.0164**; los aciertos rondan **0.029** porque aparecen en el denso Y en el léxico | da un piso empírico para distinguir ruido de match real | ✅ documentado en la descripción de `min_score` |
+
 ### ⚠️ Corrección de un diagnóstico propio (2026-08-11)
 
 Afirmé que el deploy había hecho **retroceder el frontend**, porque el diff del VPS
