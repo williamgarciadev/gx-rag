@@ -151,11 +151,14 @@ hallazgo refutado se marca `DESCARTADO` con su evidencia, nunca se borra.
 | Optimización (abajo) | **#1–#20** | lectura del código, 2026-08-11 |
 | Auditoría de interfaz | **#21–#32** | contrato de cada tool contra el estado REAL de los datos |
 | Deploy y frontend | **#33–#37** | migrar el VPS y hacer funcionar la UI de curación |
-| Retrieval medido | **#38–#40** | correr el primer set de evaluación |
+| Retrieval medido | **#38–#41** | correr el set de evaluación y el baseline de la Fase 0 |
 
-**Abiertos que más pesan:** #40 (OR sin IDF) · #1 (`ROW_NUMBER`/HNSW) · #2 (sin instrumentación) ·
-#29 (`sql/001` con config `'simple'`) · #38 (tildes sólo resueltas en la mitad léxica).
+**Abiertos que más pesan:** **#40** (OR sin IDF — y es el 94% del SQL, ver Fase 0) · **#41** (varianza
+en producción, p99 17×) · #29 (`sql/001` con config `'simple'`) · #38 (tildes sólo resueltas en la
+mitad léxica) · #3/#8 (el embedding, que el baseline expone como el costo dominante).
 **Esperando decisión humana:** #14 · #30 · #32 · #33.
+**Ya cerrados y por eso fuera de esta lista:** ~~#1~~ (descartado con `EXPLAIN`) · ~~#2~~ (resuelto:
+existe el harness) · #9–#11 · #15 · #19–#28 · #36 · #37 · #39.
 
 ## Tabla de hallazgos (prioridad descendente)
 
@@ -317,7 +320,7 @@ Se puede hacer en paralelo a Fase 0; no depende de mediciones.
 
 Orden por relación impacto/riesgo:
 
-1. **Reescribir los CTE con `LIMIT` interno** (#1). Comparar `EXPLAIN ANALYZE` antes/después y p95. Test de equivalencia: mismo top-k, mismo orden, mismos scores contra el corpus de test.
+1. ❌ ~~**Reescribir los CTE con `LIMIT` interno** (#1)~~ — **NO HACER.** El `EXPLAIN` de la Fase 0 mostró que el HNSW ya se usa (9,8 ms de 206). Reemplazado por: **atacar el CTE léxico (#40)**, que es el 94% del SQL. Comparar latencia (`bench_retrieval.py`) **y** ruteo (`eval_bt_docs.py`) en el mismo experimento: OR vs `plainto_tsquery` vs `websearch_to_tsquery` vs filtrado por frecuencia documental.
 2. **Setear `hnsw.ef_search` explícito por sesión** (#4) en `pg_client` o como `SET LOCAL` en la query. Barrer 40/64/100 y quedarse con el codo de la curva latencia/recall.
 3. **`CANDIDATE_POOL = max(30, top_k * 4)`** (#5) — el pool deja de ser un techo escondido cuando el llamador pide más.
 4. **Arreglar el `lru_cache`** (#3): sacarlo de `embed_texts` y ponerlo en `embed()` (camino de query, un texto, alta repetición). La ingesta deja de retener RAM sin motivo.
@@ -400,7 +403,7 @@ Marcar el bootstrap viejo como derogado donde viva.
 
 ## Verificación
 
-1. `.venv/bin/python -m pytest tests/ -q` en verde **antes** de empezar (el piso declarado es 76 passing) y después de cada fase.
+1. `.venv/Scripts/python.exe -m pytest tests/ -q` en verde **antes** de empezar (**piso: 114 passing** al 2026-08-12) y después de cada fase.
 2. Cada optimización de Fase 2 lleva su número: `scripts/bench_retrieval.py` antes y después, delta explícito. **Si no mejora, se revierte** — no se queda "porque en teoría es mejor".
 3. Equivalencia de resultados en el fix #1: mismos `chunk_id` en el mismo orden con los mismos scores, sobre el schema de test descartable de `tests/conftest.py` (que ya tiene guarda anti-producción).
 4. Test que falla sin el fix, para cada corrección de Fase 3 — la regla del repo.
@@ -462,11 +465,10 @@ sumar `bt_docs` en español. Verificado que los identificadores Bantotal siguen 
 
 **Impacto sobre este plan:**
 
-1. El hallazgo #1 (CTE con `ROW_NUMBER`) **sigue vigente y se aplica ENCIMA de este cambio**, no en
-   lugar de él. Tocan el mismo CTE `lexical` pero cosas distintas: ellos la config de la tsquery,
-   nosotros la estructura del `LIMIT`.
-2. **La urgencia de #1 sube**: `unaccent` ensancha el match set léxico, y ese CTE calcula
-   `ts_rank_cd` sobre *todas* las filas que matchean antes de aplicar el `LIMIT`.
+1. ❌ ~~El hallazgo #1 sigue vigente~~ — **descartado el 2026-08-12** con `EXPLAIN`: el HNSW se usa.
+2. ✅ **Pero la intuición de que el CTE léxico era el problema resultó CORRECTA, por otro motivo**:
+   `unaccent` ensancha el match set, y ese CTE calcula `ts_rank_cd` sobre *todas* las filas que
+   matchean antes del `LIMIT` — 193 ms de 206. Es el hallazgo #40, y es el candidato #1 de Fase 2.
 3. El baseline de Fase 0 debe medirse **después** de aplicar `sql/002`, o los números no comparan.
 4. El corpus creció. ✅ **Conteos revalidados el 2026-08-11 contra el Postgres real**: `gx_docs`
    **50.063** · `bt_docs` **1.122** · `gx_syntax` **26** · `bt_apis` **0**. Total 51.211 chunks.
@@ -477,7 +479,7 @@ Las fases están cortadas para minimizar colisión de archivos. Si trabajan dos 
 
 | Franja | Archivos que toca | Choca con |
 |---|---|---|
-| Fase 0 (baseline) | `scripts/bench_retrieval.py` (nuevo), `docs/BASELINE-perf.md` (nuevo) | nadie |
+| ✅ Fase 0 (baseline, **cerrada** 2026-08-12) | `scripts/bench_retrieval.py`, `docs/BASELINE-perf.md` | nadie |
 | Fase 1 (peso muerto) | `.gitignore`, `requirements.txt`, `src/config.py`, `src/server.py` (solo strings 54 y 146) | Fase 2 en `config.py` si se cablea chunking |
 | Fase 2 (perf) | `pg_retriever.py`, `embeddings.py`, `pg_indexer.py` | 🔴 **`pg_retriever.py` está EN DISPUTA** — ver sección de arriba |
 | Fase 3 (interfaz) | `pg_collections.py`, `api.py`, `ingest_dump.py`, `frontend/` | nadie |
