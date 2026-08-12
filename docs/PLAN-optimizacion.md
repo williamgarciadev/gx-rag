@@ -2,7 +2,7 @@
 
 > **Documento de handoff.** Está escrito para que un agente que llega sin contexto lo levante y
 > arranque. Reconstruido desde el código el **2026-08-11**; **última actualización 2026-08-12**,
-> rama `vps-produccion`, HEAD `71ccd58`. Todo `archivo:línea` de acá fue verificado, no supuesto.
+> rama `main`, base `2db2e71`. Todo `archivo:línea` de acá fue verificado, no supuesto.
 > Si al retomarlo el HEAD cambió, revalidá la tabla de hallazgos antes de ejecutar.
 >
 > ⚠️ La cabecera de este doc estuvo stale un día entero (declaraba HEAD `dfeeb63`, 76 tests y
@@ -21,18 +21,20 @@
 | Tests | **114 passing** (piso; era 76 al escribirse este plan) |
 | Store en producción | contenedor **dedicado** `gx-rag-pg` (`pgvector/pgvector:pg16`, pgvector 0.8.6) |
 
-**Ejecutado:** Fase 3 casi completa (auditoría de interfaz, #9–#11 y #21–#28) · migración del VPS ·
-primer set de evaluación (`scripts/eval_bt_docs.py`) · bugs del frontend #19/#20/#36/#37.
+**Ejecutado:** **Fase 0 (baseline → `docs/BASELINE-perf.md`)** · Fase 3 casi completa (auditoría de
+interfaz, #9–#11 y #21–#28) · migración del VPS · primer set de evaluación
+(`scripts/eval_bt_docs.py`) · bugs del frontend #19/#20/#36/#37.
 
-**Lo que sigue, en orden de valor:**
+**Lo que sigue, en orden de valor** (reordenado por lo que midió la Fase 0):
 
-1. **Fase 0 — baseline.** Sigue sin hacerse y sigue siendo el gate de la Fase 2. Ahora se puede
-   medir contra los 51k chunks reales, en local y en el VPS.
-2. **#40 (nuevo, y el de mayor impacto en calidad):** el OR de `_to_tsquery` perdió el IDF al migrar
-   de BM25. Es el primer experimento a correr con el set de evaluación.
-3. **#1** (`ROW_NUMBER` anulando el HNSW) — sigue siendo hipótesis sin medir.
-4. **Decisiones humanas pendientes:** #32 (`bt_docs` fuera de `WRITABLE_COLLECTIONS`), #33
+1. **#40 — el CTE léxico.** Ya no es sólo calidad: el `EXPLAIN` lo mide como el **94% del SQL** en
+   `gx_docs`. Atacarlo mejora latencia **y** ranking a la vez, y es el único candidato que se puede
+   verificar por las dos vías (`bench_retrieval.py` + `eval_bt_docs.py`).
+2. **El embedding**, que el baseline expone como el **54–98% del total** (~115 ms fijos por consulta).
+   El plan lo tenía como secundario y es el costo dominante en 2 de 3 colecciones.
+3. **Decisiones humanas pendientes:** #32 (`bt_docs` fuera de `WRITABLE_COLLECTIONS`), #33
    (procedencia de `bt_docs` no citable), #30 (`/discover` no funciona con ninguna fuente).
+4. ~~#1 (`ROW_NUMBER`/HNSW)~~ → **DESCARTADO con `EXPLAIN`**: el índice se usa, 9,8 ms de 206.
 
 ## Cómo arrancar
 
@@ -54,9 +56,9 @@ primer set de evaluación (`scripts/eval_bt_docs.py`) · bugs del frontend #19/#
    se verifica por MCP recién después de reconectar el server.
 5. **El frontend necesita el backend arriba.** `npm run dev` solo no alcanza: levantá
    `uvicorn src.api:app --port 8000` en otra terminal (ver #37).
-6. **Orden de ejecución:** Fase 0 y Fase 1 pueden ir en paralelo (Fase 1 no depende de mediciones).
-   Fase 2 **no arranca** hasta que Fase 0 dejó escrito `docs/BASELINE-perf.md`. Fases 3 y 4 son
-   independientes de todo lo anterior y se pueden tomar en cualquier momento.
+6. **Orden de ejecución:** el gate de la Fase 2 **ya está cumplido** — `docs/BASELINE-perf.md`
+   existe, así que la Fase 2 se puede tomar. Leelo ANTES de optimizar: reordena las prioridades y
+   descarta el que era el hallazgo principal. Fase 1, 3 y 4 son independientes.
 
 ## Contexto
 
@@ -79,7 +81,24 @@ El problema de fondo para "optimizar": **no hay una sola medición de latencia e
 
 ---
 
-## Hallazgo principal: el `ROW_NUMBER()` dentro de los CTE probablemente anula el índice HNSW
+## ~~Hallazgo principal~~ · ❌ DESCARTADO CON EVIDENCIA (2026-08-12): el `ROW_NUMBER()` NO anula el HNSW
+
+> **Medido con `EXPLAIN (ANALYZE, BUFFERS)`** — ver `docs/BASELINE-perf.md`. El CTE
+> `dense` usa `Index Scan using chunks_embedding_hnsw` y tarda **9,8 ms de 206**: el
+> planner empuja el `LIMIT 30` dentro del índice sin ayuda. **El fix que se propone
+> más abajo no habría cambiado nada.**
+>
+> 🔴 **El cuello de botella real es el CTE LÉXICO: 193 ms de 206, el 94%.** Ordena por
+> `ts_rank_cd` todo el match set de la tsquery OR (`quicksort`, 1.666 kB) antes de su
+> `LIMIT`. Es decir: **#1 y #40 son el mismo problema**, y el hallazgo #40 (el OR
+> perdió el IDF al migrar de BM25) pasa de ser sólo un defecto de *calidad* a ser
+> también el **driver de latencia**.
+>
+> Se conserva el análisis original abajo porque la hipótesis era razonable y su
+> refutación es el resultado más valioso de la Fase 0. **Un hallazgo refutado con
+> medición vale tanto como uno confirmado.**
+
+### El análisis original (hipótesis, ahora refutada)
 
 `src/vectorstore/pg_retriever.py:30-46`:
 
@@ -136,8 +155,8 @@ hallazgo refutado se marca `DESCARTADO` con su evidencia, nunca se borra.
 
 | # | Hallazgo | Evidencia | Costo real | Riesgo del fix |
 |---|---|---|---|---|
-| 1 | `ROW_NUMBER()` en los CTE puede anular HNSW y GIN | `pg_retriever.py:33,41` | latencia de **toda** query | bajo (equivalencia semántica) |
-| 2 | Cero instrumentación de latencia en el camino de servicio | `rg` sobre `src/` | no hay baseline para nada | nulo |
+| 1 | ❌ **DESCARTADO 2026-08-12** — el `ROW_NUMBER()` **no** anula el HNSW: `EXPLAIN` muestra `Index Scan using chunks_embedding_hnsw`, 9,8 ms de 206. El 94% se lo lleva el **CTE léxico** ordenando el match set del OR ⇒ es #40 | `docs/BASELINE-perf.md` | ninguno: la hipótesis era falsa | — |
+| 2 | ✅ **RESUELTO 2026-08-12** — `scripts/bench_retrieval.py` mide embedding y SQL **por separado**, con p50/p95/p99 y `EXPLAIN`. Baseline en `docs/BASELINE-perf.md` | — | ya hay contra qué comparar | nulo |
 | 3 | `lru_cache(1024)` cachea por **lote completo** de textos | `embeddings.py:25-33` | hit-rate ~0 en ingesta; retiene hasta 1024 lotes de embeddings + sus strings en RAM para siempre | bajo |
 | 4 | `hnsw.ef_search` nunca se setea; default 40 vs `CANDIDATE_POOL=30` | ausencia en `pg_retriever.py`; `sql/001-chunks-schema.sql:57` | recall denso al borde del default | bajo (medible) |
 | 5 | `CANDIDATE_POOL=30` fijo sin importar `top_k` | `pg_retriever.py:25,104` | `top_k=20` fusiona sobre un pool raquítico | bajo |
@@ -268,7 +287,7 @@ obligatorio al comparar un árbol de Linux con uno de Windows.
 
 ## Plan de ejecución
 
-### Fase 0 — Baseline · 🔲 PENDIENTE (sin esto, nada de lo demás es verificable)
+### Fase 0 — Baseline · ✅ EJECUTADA 2026-08-12 → `docs/BASELINE-perf.md`
 
 1. **`scripts/bench_retrieval.py`** (nuevo): corre N queries fijas contra `hybrid_search()`, reporta p50/p95/p99 y, con `--explain`, vuelca `EXPLAIN (ANALYZE, BUFFERS)` de `_SEARCH_SQL`. Reusa `pg_client.get_pool()` y `pg_retriever._SEARCH_SQL` — sin duplicar SQL.
 2. **Medir el hallazgo #1**: `EXPLAIN ANALYZE` de la query actual contra `gx_docs` y contra `gx_syntax` (26 filas vs 50k: el contraste expone el comportamiento del filtro por colección sobre HNSW).
@@ -288,7 +307,7 @@ Se puede hacer en paralelo a Fase 0; no depende de mediciones.
 - `find src -name '__pycache__' -exec rm -rf` para los `.pyc` huérfanos (#18).
 - Sincronizar las 2 descripciones de tools que le mienten al agente consumidor (#10, #11) — cambio de texto, cero riesgo, alto valor: **esas descripciones son el prompt del agente**.
 
-### Fase 2 — Optimizaciones medidas · 🔲 BLOQUEADA por Fase 0 (cada una re-mide contra el baseline)
+### Fase 2 — Optimizaciones medidas · 🔲 DESBLOQUEADA (el baseline existe; cada una re-mide contra él)
 
 Orden por relación impacto/riesgo:
 
