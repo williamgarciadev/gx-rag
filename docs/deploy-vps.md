@@ -333,6 +333,45 @@ docker compose up -d --no-deps gx-rag-mcp gx-rag-api gx-rag-ui
 Las imágenes viejas quedan en el host (sin tag, por id) por si hay que volver
 atrás; el `inspect` guarda con qué estaban corriendo.
 
+### Garantizar que el VPS sirve EXACTAMENTE el código del repo
+
+El checkout en el mismo commit **no** prueba que los contenedores sirvan ese código:
+las imágenes se construyen en momentos distintos y es fácil rebuildear unas y no
+otras. La verificación fuerte compara el **blob del commit** contra el archivo
+**dentro del contenedor** — blob y no working tree, porque en Windows el working
+tree tiene CRLF y daría falsos negativos:
+
+```bash
+# Local: hashes canónicos del commit
+git ls-files 'src/*.py' 'src/**/*.py' 'scripts/*.py' | while read f; do
+  echo "$(git show "HEAD:$f" | sha256sum | cut -c1-16)  $f"
+done > hashes.txt && scp hashes.txt vps2-tunel:~/
+
+# VPS: comparar contra CADA contenedor de Python (son imágenes distintas)
+for C in gx-rag-mcp gx-rag-api; do
+  while read h f; do
+    ch=$(docker exec "$C" sha256sum "/app/$f" | cut -c1-16)
+    [ "$ch" = "$h" ] || echo "DISTINTO en $C: $f"
+  done < ~/hashes.txt
+done
+```
+
+Corriéndolo el 2026-08-12 apareció justo lo que buscaba: `gx-rag-api` tenía un
+`src/server.py` viejo y le faltaba `scripts/eval_bt_docs.py`, porque los deploys
+anteriores rebuildearon `gx-rag-ui` y `gx-rag-mcp` pero no la API. **No afectaba al
+runtime** (la API corre `src.api:app` y nunca importa `src/server.py`), pero engaña
+a cualquiera que inspeccione el contenedor. Tras rebuildear: **26/26 idénticos en
+los dos**.
+
+🔴 **El bundle del frontend NO se puede comparar por hash desde Windows.** Con
+`core.autocrlf=true` el working tree tiene CRLF y el checkout del VPS LF, así que el
+input del build ya difiere: el mismo commit produce `index-BE_0ZAc_.js` desde LF y
+`index-B4SeJq98.js` desde CRLF. `npm ci` (ya aplicado) fija las dependencias pero no
+esto. Para el frontend, verificá **los fuentes contra el blob** y **marcadores
+literales** en el bundle (`WorkWithPlus`, `total_chunks`), nunca nombres de
+funciones: el minificador los renombra, y `grep -c` sobre un bundle devuelve 1
+aunque haya cien ocurrencias porque es una sola línea — usá `grep -o | wc -l`.
+
 **Verificación end-to-end** (el `Started` de compose no prueba nada). Ojo: el
 endpoint responde **SSE**, así que hay que sacarle el prefijo `data: ` antes de
 parsear el JSON — si no, muere con `Extra data: line 1 column 5`:
