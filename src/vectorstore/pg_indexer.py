@@ -112,7 +112,7 @@ def _write_chunks(
         log.warning("sin chunks para %s", article_id)
         return []
 
-    embs = emb.embed_texts(tuple(textos))
+    embs = emb.embed_passage(tuple(textos))
     chunk_ids = [f"{article_id}_c{i}" for i in range(len(textos))]
 
     def _meta_de(i: int) -> str:

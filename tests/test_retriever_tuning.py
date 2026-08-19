@@ -85,7 +85,7 @@ def pool_espia(monkeypatch):
     """Pool falso que registra el SQL ejecutado, sin tocar Postgres."""
     pool = _FakePool()
     monkeypatch.setattr(pg_retriever, "get_pool", lambda: pool)
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: [0.0] * 1024)
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: [0.0] * 1024)
     return pool
 
 

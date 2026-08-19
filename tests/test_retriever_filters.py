@@ -72,7 +72,7 @@ def kb_sembrada(pg_store, monkeypatch):
                              "chunk_kind": "structure", "kb_name": KB_NAME})),
             )
 
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _QVEC)
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _QVEC)
     return pg_retriever
 
 
@@ -165,7 +165,7 @@ def test_kb_name_scopes_two_kbs_in_the_same_collection(pg_store, monkeypatch):
                              "chunk_kind": "structure", "kb_name": kb})),
             )
 
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _QVEC)
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _QVEC)
 
     hits = pg_retriever.hybrid_search(
         "factura", collection=KB, top_k=5, filters={"kb_name": ["KBActivas"]}

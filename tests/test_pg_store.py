@@ -102,7 +102,7 @@ def test_lexical_signal_finds_a_document_the_vector_missed(pg_store, monkeypatch
     pg_store.insert("b_c0", "modulo de prestamo bancario", seed=500)
     pg_store.insert("c_c0", "vector search index", seed=2)
 
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _unit(1))
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _unit(1))
 
     ids = [r["doc_id"] for r in pg_retriever.hybrid_search("prestamo", top_k=3)]
 
@@ -115,7 +115,7 @@ def test_dense_signal_ranks_the_nearest_vector_first(pg_store, monkeypatch):
     pg_store.insert("lejos_c0", "texto sin relacion", seed=700)
     pg_store.insert("cerca_c0", "texto sin relacion", seed=42)
 
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _unit(42))
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _unit(42))
 
     resultados = pg_retriever.hybrid_search("cualquier cosa", top_k=2)
 
@@ -128,7 +128,7 @@ def test_search_is_scoped_to_its_collection(pg_store, monkeypatch):
     pg_store.insert("gx_c0", "comando for each", collection="gx_docs", seed=3)
     pg_store.insert("bt_c0", "comando for each", collection="bt_docs", seed=3)
 
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _unit(3))
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _unit(3))
 
     ids = [r["doc_id"] for r in pg_retriever.hybrid_search("for each", collection="bt_docs")]
 
@@ -140,7 +140,7 @@ def test_query_with_no_usable_terms_returns_empty(pg_store, monkeypatch):
     from src.vectorstore import pg_retriever
 
     pg_store.insert("a_c0", "algo", seed=1)
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _unit(1))
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _unit(1))
 
     assert pg_retriever.hybrid_search("!!! ???") == []
 
@@ -149,7 +149,7 @@ def test_result_carries_the_provenance_an_agent_needs_to_cite(pg_store, monkeypa
     from src.vectorstore import pg_retriever
 
     pg_store.insert("art_c0", "for each command", article_id="art", title="For Each", seed=7)
-    monkeypatch.setattr(pg_retriever.emb, "embed", lambda q: _unit(7))
+    monkeypatch.setattr(pg_retriever.emb, "embed_query", lambda q: _unit(7))
 
     r = pg_retriever.hybrid_search("for each")[0]
 

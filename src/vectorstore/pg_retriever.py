@@ -211,7 +211,7 @@ def hybrid_search(
 
     fparams = filter_params(filters)
 
-    qvec = "[" + ",".join(f"{float(v):.7g}" for v in emb.embed(query)) + "]"
+    qvec = "[" + ",".join(f"{float(v):.7g}" for v in emb.embed_query(query)) + "]"
 
     params = {
         "qvec": qvec,
