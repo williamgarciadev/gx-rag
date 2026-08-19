@@ -1,5 +1,6 @@
 """Shared pytest fixtures for the gx-rag test suite."""
 
+import json
 import os
 from pathlib import Path
 
@@ -146,14 +147,20 @@ def pg_store(pg_dsn, pg_schema, monkeypatch):
         return "[" + ",".join(vals) + "]"
 
     def insert(chunk_id, content, *, collection="gx_docs", article_id=None,
-               chunk_index=0, title="", seed=0, content_hash="H"):
+               chunk_index=0, title="", seed=0, content_hash="H", meta=None):
+        """meta: dict de metadatos (sql/003), o None para dejar el default '{}'.
+
+        Aditivo con default: los llamadores previos no lo pasan y siguen valiendo.
+        """
         with pool.connection() as conn:
             conn.execute(
                 "INSERT INTO chunks (chunk_id, collection, article_id, chunk_index,"
-                " title, content, source, url, genre, content_hash, embedding)"
-                " VALUES (%s,%s,%s,%s,%s,%s,'','','',%s,%s)",
+                " title, content, source, url, genre, content_hash, embedding, meta)"
+                " VALUES (%s,%s,%s,%s,%s,%s,'','','',%s,%s,"
+                " COALESCE(%s::jsonb, '{}'::jsonb))",
                 (chunk_id, collection, article_id or chunk_id, chunk_index,
-                 title, content, content_hash, vector(seed)),
+                 title, content, content_hash, vector(seed),
+                 json.dumps(meta) if meta is not None else None),
             )
 
     with pool.connection() as conn:
