@@ -120,3 +120,34 @@ def collection_counts() -> list[tuple[str, int]]:
             "GROUP BY collection ORDER BY count(*) DESC"
         )
         return [(r[0], r[1]) for r in cur.fetchall()]
+
+
+def meta_facets(
+    collection: str, claves: tuple[str, ...], limite: int = 8
+) -> dict[str, list[tuple[str, int]]]:
+    """Valores que EXISTEN para cada clave de metadatos, con su conteo.
+
+    Sirve el mismo proposito que list_object_types() en el catalogo de sintaxis:
+    cuando un filtro no matchea nada, informar lo que SI hay evita que el llamador
+    reintente con otro valor que tambien garantiza vacio — y, mas importante, evita
+    que lea "sin resultados" como una afirmacion sobre el corpus cuando en realidad
+    escribio 'Transacion' con una sola c.
+
+    Una clave sin ningun valor no aparece en el dict (no se devuelve vacia).
+    """
+    salida: dict[str, list[tuple[str, int]]] = {}
+    with get_pool().connection() as conn, conn.cursor() as cur:
+        for clave in claves:
+            # La clave viene de una tupla declarada en el codigo, no del usuario, pero
+            # igual va como PARAMETRO y no interpolada: el dia que alguien la pase
+            # desde afuera, esto no se convierte en una inyeccion.
+            cur.execute(
+                "SELECT meta->>%s AS v, count(*) FROM chunks "
+                "WHERE collection = %s AND meta ? %s "
+                "GROUP BY 1 ORDER BY 2 DESC LIMIT %s",
+                (clave, collection, clave, limite),
+            )
+            valores = [(r[0], r[1]) for r in cur.fetchall() if r[0] is not None]
+            if valores:
+                salida[clave] = valores
+    return salida

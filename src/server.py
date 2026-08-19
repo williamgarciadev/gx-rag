@@ -28,6 +28,14 @@ from mcp.types import (
     Tool,
 )
 
+# A nivel de modulo y no diferido como el resto de los src.*: los enums de las
+# secciones y los tipos sugeridos se evaluan al CONSTRUIR el inputSchema, que pasa al
+# importar. Ambos modulos son livianos —kb_fichas solo trae el splitter de
+# langchain-text-splitters, sin modelos— y kb_loader difiere pg_indexer, asi que esto
+# no arrastra Postgres ni e5 al arranque.
+from src.ingestion import kb_fichas
+from src.ingestion.kb_loader import KB_MAX_INLINE
+
 # Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -51,7 +59,15 @@ server = Server(APP_NAME)
 # `gx_doc` mal escrito llegaba al SQL, no matcheaba nada y volvía como "Sin
 # resultados", que el agente lee como evidencia sobre el CORPUS y no sobre su
 # propio argumento.
-KNOWN_COLLECTIONS = ("gx_docs", "bt_docs", "gx_syntax", "bt_apis")
+KNOWN_COLLECTIONS = ("gx_docs", "bt_docs", "gx_syntax", "bt_apis", "gx_kb_objects")
+
+# La coleccion de objetos de Knowledge Base exige `kb_name` en los filtros. Es lo que
+# hace imposible mezclar dos KBs sin darse cuenta: un hit de la KB equivocada haria
+# que el agente escriba codigo con nombres de objetos que no existen en la KB activa,
+# y eso es PEOR que no recuperar nada. El CHECK de sql/003 garantiza que la clave
+# exista en cada fila; esto garantiza que la consulta la use.
+KB_COLLECTION = "gx_kb_objects"
+COLLECTIONS_REQUIRING_KB_NAME = frozenset({KB_COLLECTION})
 
 
 # Read-only tools — safe for the public internet-facing transport.
@@ -66,14 +82,22 @@ READ_TOOLS: list[Tool] = [
             "cita la url, no el fragmento suelto. Si la colección está vacía, "
             "informa cuáles tienen contenido.\n"
             "QUÉ HAY, mezclado en la MISMA colección: wiki de GeneXus, tickets SAC "
-            "(sac.genexus.com — la mejor fuente para '¿es un bug conocido?' y sus "
-            "workarounds) y la wiki de WorkWithPlus (docs.workwithplus.com).\n"
-            "🔴 POR ESO, FILTRÁ POR PROCEDENCIA, NO POR PRESENCIA. GeneXus tiene un "
-            "pattern nativo 'Work With for Web' y WorkWithPlus (DVelop) es OTRO "
-            "producto: una query sobre 'el pattern' devuelve los dos entremezclados. "
-            "El riesgo no es quedarte sin respuesta, es tomar la del producto "
-            "equivocado. Mirá la url de cada hit: solo lo que viene de "
-            "docs.workwithplus.com aplica a una KB con WWP aplicado.\n"
+            "(la mejor fuente para '¿es un bug conocido?' y sus workarounds) y la wiki "
+            "de WorkWithPlus. **Los tickets SAC son MÁS DE LA MITAD del corpus** y la "
+            "wiki de WorkWithPlus apenas una fracción chica.\n"
+            "🔴 POR ESO, USÁ `filters={\"origin\": [...]}`. Valores: `gx_wiki` (wiki "
+            "GeneXus) · `sac` (tickets) · `wwp` (WorkWithPlus). Toda fila tiene la "
+            "clave, así que un filtro que no matchea significa 'ese origen no lo "
+            "tiene', nunca 'no está clasificado'.\n"
+            "Medido: la consulta 'como configurar el pattern en una transaccion' "
+            "SIN filtro devuelve 10 de 10 hits de SAC — puros tickets de incidentes — "
+            "mientras la documentación que responde la pregunta existe y queda fuera "
+            "del top. Con `origin=gx_wiki` aparece primera. El ranking solo NO alcanza "
+            "cuando una fuente es la mitad del corpus.\n"
+            "🔴 Y ojo con el producto: GeneXus tiene un pattern nativo 'Work With for "
+            "Web', y WorkWithPlus (DVelop) es OTRO producto. Solo `origin=wwp` aplica "
+            "a una KB con WWP aplicado. El riesgo no es quedarte sin respuesta: es "
+            "tomar la del producto equivocado.\n"
             "🔴 NUNCA concluyas 'no está documentado' desde un top_k chico: el corpus "
             "tiene decenas de miles de chunks y el ranking mezcla fuentes, así que "
             "un tema presente puede no entrar en los primeros 3. Antes de afirmar "
@@ -119,11 +143,43 @@ READ_TOOLS: list[Tool] = [
                         "probabilidad). Filtro grueso, no umbral de confianza.\n"
                         "SÍ es interpretable su ESTRUCTURA: el score suma 1/(60+rank) "
                         "por cada mitad que encontró el chunk. Un score ≈0.0164 "
-                        "(=1/61) significa que entró por UNA sola mitad, sin apoyo "
-                        "léxico — típico de una consulta cuyo tema no está en la "
-                        "colección. Los aciertos con apoyo de las dos mitades rondan "
-                        "el doble. Medido sobre bt_docs: un tema ajeno al corpus "
-                        "(«kubernetes ingress») puntúa exactamente 0.0164."
+                        "(=1/61) significa que ESE chunk apareció en UNA sola de las "
+                        "dos mitades, en rank 1.\n"
+                        "🔴 ESO NO PRUEBA QUE EL TEMA FALTE, y leerlo así es el error "
+                        "fácil. Las dos mitades rankean con criterios distintos "
+                        "(distancia coseno vs ts_rank_cd), así que ES NORMAL que sus "
+                        "listas no se solapen: 30 resultados densos excelentes y 30 "
+                        "léxicos excelentes que no comparten ningún chunk dan un "
+                        "máximo de 0.0164 igual. El score alto no aparece por "
+                        "relevancia sino por COINCIDENCIA entre las dos mitades — es "
+                        "señal de consenso, no de calidad, y su ausencia no es "
+                        "evidencia de nada sobre el corpus.\n"
+                        "Para decidir si un tema está: subí top_k y reformulá con "
+                        "términos del dominio. No lo deduzcas del score."
+                    ),
+                },
+                "filters": {
+                    "type": "object",
+                    "description": (
+                        "Filtro por metadatos del chunk. Valor: string o lista de "
+                        "strings (OR entre los valores de una clave, AND entre "
+                        "claves). Comparación EXACTA, sin normalizar.\n"
+                        "Claves: kb_name, obj_type, obj_name, chunk_kind, module, "
+                        "origin, related.\n"
+                        "En 'gx_docs' la clave útil es `origin` (gx_wiki | sac | wwp): "
+                        "es la forma mecánica de resolver la mezcla de fuentes en vez "
+                        "de mirar la url de cada hit a ojo.\n"
+                        "En 'gx_kb_objects' (objetos de una Knowledge Base GeneXus) "
+                        "`kb_name` es OBLIGATORIO: sin él la búsqueda se rechaza, "
+                        "porque un hit de otra KB haría que escribas código con "
+                        "nombres de objetos que no existen en la KB activa.\n"
+                        "🔴 Una clave desconocida o una lista vacía se RECHAZAN, no se "
+                        "ignoran: devolver resultados sin filtrar que el llamador cree "
+                        "filtrados es peor que un error.\n"
+                        "Los filtros se aplican DENTRO de cada mitad del híbrido, así "
+                        "que un filtro selectivo no degrada el recall — pero sí sube "
+                        "los scores en promedio, así que un min_score calibrado sin "
+                        "filtros no es transferible tal cual."
                     ),
                 },
             },
@@ -374,11 +430,263 @@ WRITE_TOOLS: list[Tool] = [
             "required": ["file", "format"],
         },
     ),
+    Tool(
+        name="ingest_kb_objects",
+        description=(
+            "Indexa fichas YA CONSTRUIDAS de objetos de una Knowledge Base GeneXus "
+            f"en la colección '{KB_COLLECTION}'. Idempotente por objeto.\n"
+            "EMPEZÁ POR EL DRY RUN, que es el default, porque te dice algo que "
+            "necesitás y no sabés: CUÁLES de las fichas que le pasás son realmente "
+            "nuevas. Compara el hash de procedencia de cada una contra lo indexado, "
+            "con un solo SELECT y sin embeddear nada. Si navegaste 12 objetos y 9 no "
+            "cambiaron, el dry run te lo dice y escribís 3.\n"
+            "🔴 ESTA TOOL NO LEE LA KB. No abre GeneXus, no le habla al MCP de "
+            "GeneXus, y NO verifica que la ficha describa el objeto real: indexa el "
+            "texto que le pasás. Si la ficha está mal, queda mal indexada y una "
+            "búsqueda posterior la va a devolver como si fuera verdad.\n"
+            "🔴 `kb_hash` es la clave de idempotencia y debería ser el hash del "
+            "SOURCE del objeto en la KB, no de la ficha. Si lo omitís, cada corrida "
+            "con prosa distinta cuenta como cambio y se re-embeddea todo de nuevo.\n"
+            "🔴 NO acepta una ruta de archivo, a propósito. La carga masiva inicial "
+            "la hace scripts/bootstrap_kb.py, que llama a la misma función de "
+            "librería sin pasar por MCP. Esta tool es para el flujo incremental: "
+            f"navegás objetos, armás sus fichas y las pasás inline (máximo "
+            f"{KB_MAX_INLINE} por llamada; arriba de eso se RECHAZA la llamada "
+            "entera, no se trunca).\n"
+            "Las fichas van en PROSA ESTRUCTURADA por secciones, no XML ni Source "
+            "crudo: el modelo de embeddings es de texto natural, así que un "
+            "PatternInstance pegado tal cual no aporta a la mitad densa.\n"
+            f"La colección '{KB_COLLECTION}' NO se sirve en el endpoint público de "
+            "internet: es la KB interna, no documentación."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "kb_name": {
+                    "type": "string",
+                    "description": (
+                        "KB de origen, ej. MatikaErp_3003. Sale de "
+                        "genexus_whoami → kb.active. Obligatorio: sin él no hay "
+                        "identidad estable y dos KBs con un objeto homónimo se "
+                        "sobreescribirían."
+                    ),
+                },
+                "objects": {
+                    "type": "array",
+                    "maxItems": KB_MAX_INLINE,
+                    "description": (
+                        "Fichas a indexar. El article_id se DERIVA de "
+                        "kb_name + obj_type + obj_name; no lo mandes."
+                    ),
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "obj_name": {"type": "string"},
+                            "obj_type": {
+                                "type": "string",
+                                "description": (
+                                    "Tipo GeneXus. Sugeridos: "
+                                    + " | ".join(kb_fichas.KB_OBJ_TYPES_SUGERIDOS)
+                                    + ". No es un enum cerrado: la KB tiene decenas "
+                                    "de tipos y se acepta cualquiera."
+                                ),
+                            },
+                            "module": {"type": "string"},
+                            "kb_hash": {
+                                "type": "string",
+                                "description": (
+                                    "Hash del source del objeto EN LA KB. Es la clave "
+                                    "de idempotencia — ver la nota de la tool."
+                                ),
+                            },
+                            "related": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Nombres de objetos relacionados.",
+                            },
+                            "sections": {
+                                "type": "array",
+                                "minItems": 1,
+                                "description": (
+                                    "Secciones de la ficha. `kind` alimenta el filtro "
+                                    "chunk_kind de search_docs."
+                                ),
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {
+                                            "type": "string",
+                                            "enum": list(kb_fichas.KB_CHUNK_KINDS),
+                                        },
+                                        "text": {"type": "string"},
+                                    },
+                                    "required": ["kind", "text"],
+                                },
+                            },
+                        },
+                        "required": ["obj_name", "obj_type", "sections"],
+                    },
+                },
+                "dry_run": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": (
+                        "true (default): valida y reporta POR FICHA qué pasaría — "
+                        "would_index / would_reindex / skipped / invalid — sin "
+                        "escribir ni embeddear. false: escribe."
+                    ),
+                },
+                "on_invalid": {
+                    "type": "string",
+                    "enum": ["stop", "skip"],
+                    "default": "stop",
+                    "description": (
+                        "Qué hacer con una ficha que no valida. 'stop' (default): no "
+                        "escribe NADA y te dice cuál falló — en un lote, seguir de "
+                        "largo deja la colección con agujeros que después nadie "
+                        "distingue de objetos que la KB no tiene. 'skip': escribe las "
+                        "válidas y lista TODAS las salteadas con su motivo."
+                    ),
+                },
+            },
+            "required": ["kb_name", "objects"],
+        },
+    ),
 ]
 
 
 # Tool names allowed on the public internet-facing transport (read-only).
 PUBLIC_TOOL_NAMES = frozenset(t.name for t in READ_TOOLS)
+
+
+# Colecciones que NO se sirven en el transporte público, y su complemento.
+#
+# POR QUE HACE FALTA, y por qué no alcanza PUBLIC_TOOL_NAMES: ese frozenset cubre
+# la dimensión TOOL, y del lado write está bien cubierto. Pero `search_docs` YA es
+# público y recibe `collection` como PARAMETRO, validado solo contra
+# KNOWN_COLLECTIONS. O sea: sumar un nombre a esa tupla alcanzaba para publicar
+# una colección en internet, sin tocar http_server.py y sin que ningún test se
+# ponga rojo. El contenido de una KB de banca no puede depender de eso.
+#
+# SE DECLARA POR SUSTRACCION, no por enumeración de lo público: el default seguro
+# tiene que ser "no se publica". Con una lista blanca, agregar una colección y
+# olvidarse de la lista la deja pública; con esta forma, la deja privada.
+#
+# gx_kb_objects figura acá ANTES de existir en KNOWN_COLLECTIONS, a propósito: la
+# política precede a la capacidad, así no hay una ventana entre el commit que crea
+# la colección y el commit que la protege.
+NON_PUBLIC_COLLECTIONS = frozenset({"gx_kb_objects"})
+PUBLIC_COLLECTIONS = frozenset(KNOWN_COLLECTIONS) - NON_PUBLIC_COLLECTIONS
+
+
+# Qué significa cada estado de la ingesta de fichas, adjunto a TODA respuesta de
+# ingest_kb_objects. Mismo principio que _VERDICT_GUIDANCE: la descripción se lee una
+# vez al elegir la tool, esto se lee en el momento de CONCLUIR — que es donde un
+# "skipped" se confunde con un fallo y dispara un reintento inútil.
+_INGEST_STATUS_GUIDANCE = {
+    "indexed": "no había ficha de ese objeto. Se escribió.",
+    "reindexed": (
+        "había una con otro hash de procedencia. Se borraron sus chunks viejos y se "
+        "escribió la nueva, en UNA transacción: el objeto nunca quedó a medias."
+    ),
+    "skipped": (
+        "ya estaba con el MISMO hash. NO es error, NO es que la ficha esté mal, y NO "
+        "hace falta repetir la llamada: es idempotencia. Si esperabas un cambio y "
+        "salió skipped, lo que no cambió es el kb_hash que MANDASTE — revisá cómo lo "
+        "calculás, no reintentes."
+    ),
+    "would_index": "en una escritura real entraría como nueva.",
+    "would_reindex": "en una escritura real reemplazaría la versión indexada.",
+    "invalid": (
+        "la ficha NO se indexó y NO está en el store. Ver la sección de problemas: es "
+        "tu argumento, no el servidor."
+    ),
+    "error": "falló al escribir. Esa ficha NO está en el store.",
+}
+
+
+def _render_ingest_report(reporte) -> str:
+    """Texto del reporte de ingesta. Lo lee un LLM, no un humano.
+
+    Decisiones de forma: totales PRIMERO (una lectura truncada igual se lleva el
+    resumen), una ficha por línea con el estado en vocabulario fijo y columna
+    alineada, el glosario de estados en la MISMA respuesta, los problemas en sección
+    propia y nunca abreviados, y el cierre con la verificación independiente que exige
+    la Hard Rule del repo (el retorno de una tool no describe el store).
+    """
+    modo = "DRY RUN (no se escribió nada)" if reporte.dry_run else "ESCRITO"
+    estados = [
+        "indexed", "reindexed", "skipped", "would_index", "would_reindex",
+        "invalid", "error",
+    ]
+    conteos = " ".join(
+        f"{e}={reporte.contar(e)}" for e in estados if reporte.contar(e)
+    )
+    lineas = [
+        f"INGESTA {KB_COLLECTION} — kb={reporte.kb_name} — {modo}",
+        f"total={reporte.total} {conteos}",
+        "",
+    ]
+
+    for r in reporte.results:
+        if r.status in ("invalid", "error"):
+            continue
+        detalle = ""
+        if r.chunks:
+            kinds = ",".join(r.kinds)
+            detalle = f"  {r.chunks} chunks ({kinds})"
+        lineas.append(f"{r.status:14s} {r.article_id}{detalle}")
+
+    problemas = [r for r in reporte.results if r.status in ("invalid", "error")]
+    if problemas:
+        nada = (
+            " NADA se escribió (on_invalid=stop). Corregí y repetí la llamada entera:"
+            if reporte.dry_run is False and reporte.contar("indexed") == 0
+            else ""
+        )
+        lineas += ["", f"PROBLEMAS ({len(problemas)}).{nada}"]
+        for r in problemas:
+            # Identificado por INDICE cuando no hay article_id: una ficha sin
+            # obj_name/obj_type no tiene identidad, y el índice en el array es lo único
+            # que el llamador puede mapear a lo que mandó.
+            quien = r.article_id or f"objects[{r.index}]"
+            lineas.append(f"{r.status:14s} {quien}: {r.reason}")
+
+    presentes = {r.status for r in reporte.results}
+    glosario = [
+        f"  {e:14s} {_INGEST_STATUS_GUIDANCE[e]}"
+        for e in estados
+        if e in presentes and e in _INGEST_STATUS_GUIDANCE
+    ]
+    if glosario:
+        lineas += ["", "QUÉ SIGNIFICA CADA ESTADO — no los interpretes por el nombre:"]
+        lineas += glosario
+
+    if reporte.sin_kb_hash:
+        lineas += [
+            "",
+            f"⚠ {reporte.sin_kb_hash} ficha(s) sin `kb_hash`. La idempotencia de esas "
+            "queda colgada de que vuelvas a generar la MISMA prosa: si la redactás "
+            "distinto, la próxima corrida las cuenta como cambio y se re-embeddean. "
+            "Pasá el hash del source del objeto en la KB.",
+        ]
+
+    if not reporte.dry_run and reporte.contar("indexed") + reporte.contar("reindexed"):
+        primero = next(
+            (r for r in reporte.results if r.status in ("indexed", "reindexed")), None
+        )
+        lineas += [
+            "",
+            "VERIFICACIÓN INDEPENDIENTE — este texto es un valor de retorno, no el "
+            "estado del store:",
+            f'  get_article article_id="{primero.article_id}" '
+            f'collection="{KB_COLLECTION}"',
+            "  Es una lectura determinista por colección. NO uses search_docs para "
+            "comprobar pertenencia: es un ranking, y no encontrar algo ahí no prueba "
+            "que no esté.",
+        ]
+
+    return "\n".join(lineas)
 
 
 # What to DO with each verdict, appended to every verify_syntax response. The
@@ -419,6 +727,132 @@ def _verdict_guidance(verdict: object) -> str:
     )
 
 
+def _reject_missing_kb_name(collection: str, filters: dict | None) -> str | None:
+    """Mensaje de rechazo si falta `kb_name` en una colección que lo exige.
+
+    Es la barrera contra el peor modo de falla de una colección multi-KB: recuperar la
+    ficha de un objeto de OTRA KB y escribir código con nombres que no existen en la
+    KB activa. Un aislamiento que depende de que el llamador se acuerde de filtrar no
+    es un aislamiento; esto lo vuelve un error ruidoso.
+    """
+    if collection not in COLLECTIONS_REQUIRING_KB_NAME:
+        return None
+    if filters and filters.get("kb_name"):
+        return None
+
+    disponibles = ""
+    try:
+        from src.vectorstore.pg_collections import meta_facets
+
+        facetas = meta_facets(collection, ("kb_name",))
+        if facetas.get("kb_name"):
+            nombres = " · ".join(f"{v} ({n} chunks)" for v, n in facetas["kb_name"])
+            disponibles = f"\nKBs indexadas en esta colección: {nombres}"
+    except Exception:  # pragma: no cover - el mensaje no puede depender de la DB
+        pass
+
+    return (
+        f"Falta el filtro obligatorio 'kb_name' para la colección '{collection}'.\n"
+        "Esta colección puede contener objetos de MAS DE UNA Knowledge Base, y un "
+        "resultado de la KB equivocada te haría escribir código con nombres de objetos "
+        "que no existen en la KB activa — peor que no recuperar nada.\n"
+        'Pasá filters={"kb_name": "<nombre>"}. Si no sabés cuál es la KB activa, '
+        "consultá genexus_whoami en el MCP de GeneXus (campo kb.active)."
+        f"{disponibles}\n"
+        "NOTA: esto se rechazó ANTES de consultar el store. No dice nada sobre su "
+        "contenido."
+    )
+
+
+def _meta_line(meta: dict | None) -> str:
+    """Línea de metadatos del hit, o vacío. Genérica: no ramifica por colección.
+
+    Un hit de KB muestra obj_name/obj_type/module; uno de wiki no muestra nada, porque
+    su `meta` es {}. `related` se omite: es un array y ensuciaría la línea.
+    """
+    if not meta:
+        return ""
+    pares = sorted(
+        (k, v) for k, v in meta.items() if k != "related" and isinstance(v, str)
+    )
+    if not pares:
+        return ""
+    return "Meta: " + " · ".join(f"{k}={v}" for k, v in pares) + "\n"
+
+
+def _empty_search_text(collection: str, filters: dict | None) -> str:
+    """Texto de "sin resultados", consciente de si había filtros activos.
+
+    POR QUE DOS RAMAS: sin filtros, la causa más común es haber apuntado a una
+    colección vacía, y el hint correcto es qué colecciones tienen contenido. CON
+    filtros, ese mismo texto es ENGAÑOSO — la colección sí tiene contenido, el filtro
+    es lo que no matcheó — y llevaría al llamador a concluir sobre el corpus cuando el
+    problema está en su argumento (un 'Transacion' con una sola c).
+    """
+    from src.vectorstore.pg_collections import collection_counts, meta_facets
+
+    if filters:
+        activos = " · ".join(f"{k}={v}" for k, v in sorted(filters.items()))
+        lineas = [
+            f"Sin resultados en '{collection}' CON LOS FILTROS APLICADOS.",
+            f"Filtros activos: {activos}",
+        ]
+        try:
+            total = dict(collection_counts()).get(collection, 0)
+            if total:
+                lineas.append(
+                    f"La colección NO está vacía ({total} chunks): el filtro es lo que "
+                    "no matcheó. La comparación es EXACTA, sin normalizar."
+                )
+            facetas = meta_facets(collection, tuple(filters.keys()))
+            for clave, valores in facetas.items():
+                muestra = " · ".join(f"{v} ({n})" for v, n in valores)
+                lineas.append(f"  {clave} que EXISTEN: {muestra}")
+        except Exception:  # pragma: no cover
+            pass
+        lineas.append(
+            "Si ninguno de esos valores es el que buscabas, el filtro puede ser "
+            "correcto y el tema realmente no estar indexado — pero verificalo sin "
+            "filtros antes de afirmarlo."
+        )
+        return "\n".join(lineas)
+
+    populated = []
+    try:
+        populated = [f"{n} ({c} chunks)" for n, c in collection_counts()]
+    except Exception:
+        pass
+    hint = (
+        f" Colecciones con contenido: {', '.join(populated)}."
+        if populated
+        else " No hay colecciones con contenido; ingestá con add_from_url."
+    )
+    return f"Sin resultados en '{collection}'.{hint}"
+
+
+def reject_non_public_collection(collection: str | None) -> str | None:
+    """Mensaje de rechazo si la colección no se sirve en público; None si sí.
+
+    Pública (sin `_`) porque la consume http_server: es el gate de la dimensión
+    COLECCION, complementario al de la dimensión TOOL que ya hace PUBLIC_TOOL_NAMES.
+    Función de módulo y no un chequeo inline en el closure para que sea testeable
+    sin levantar el transporte, siguiendo el patrón de _reject_unknown_collection.
+
+    `None` (colección no pasada) NO se rechaza: cae en el default del schema, que
+    siempre es una colección de documentación.
+    """
+    if collection is None or collection in PUBLIC_COLLECTIONS:
+        return None
+    return (
+        f"Colección '{collection}' no disponible en el endpoint público. "
+        f"Disponibles: {', '.join(sorted(PUBLIC_COLLECTIONS))}.\n"
+        # Sin esta línea un rechazo de POLITICA se lee como una colección vacía, y
+        # el agente concluye sobre el corpus a partir de una decisión de acceso.
+        "Esto NO dice nada sobre su contenido: se rechazó ANTES de consultar el "
+        "store. No concluyas que está vacía ni que el tema no existe."
+    )
+
+
 def _reject_unknown_collection(collection: str) -> str | None:
     """Mensaje de rechazo si la colección no existe; None si es válida.
 
@@ -435,6 +869,58 @@ def _reject_unknown_collection(collection: str) -> str | None:
         "Esto NO dice nada sobre el corpus: se rechazó el argumento ANTES de "
         "consultar el store. Corregí el nombre y repetí la llamada."
     )
+
+
+def _run_ingest_kb_objects(arguments: dict) -> str:
+    """Adaptador MCP delgado sobre kb_loader.load_fichas.
+
+    Toda la lógica vive en la librería, que el bootstrap importa directo sin pasar por
+    MCP — mismo reparto que _run_ingest_batch sobre bulk_loader.load_dump.
+
+    Los chequeos de acá NO son redundantes con el inputSchema: el SDK no lo valida
+    (ver el comentario de KNOWN_COLLECTIONS), así que `maxItems` es decorativo hasta
+    que alguien lo verifica en el handler.
+    """
+    from src.ingestion.kb_loader import load_fichas
+
+    kb_name = (arguments.get("kb_name") or "").strip()
+    if not kb_name:
+        raise ValueError(
+            "Falta 'kb_name'. Sale de genexus_whoami → kb.active en el MCP de GeneXus. "
+            "Sin él no hay identidad estable: dos KBs con un objeto homónimo se "
+            "sobreescribirían entre sí."
+        )
+
+    objects = arguments.get("objects")
+    if not isinstance(objects, list) or not objects:
+        raise ValueError("'objects' vacío o ausente: no hay nada que indexar.")
+
+    if len(objects) > KB_MAX_INLINE:
+        # Se RECHAZA la llamada entera y no se truncan las primeras N: un lote truncado
+        # reportaría éxito sobre un subconjunto mientras el llamador cree que entraron
+        # todas — la misma clase de mentira silenciosa que el resto de este archivo
+        # existe para prevenir.
+        raise ValueError(
+            f"{len(objects)} fichas exceden el máximo de {KB_MAX_INLINE} por llamada. "
+            "NO se indexó ninguna (no se truncó el lote: un lote truncado reportaría "
+            f"éxito parcial como éxito). Partí en tandas de hasta {KB_MAX_INLINE} y "
+            "llamá una vez por tanda. Para la carga masiva inicial usá "
+            "scripts/bootstrap_kb.py, que no pasa por MCP."
+        )
+
+    on_invalid = arguments.get("on_invalid", "stop")
+    if on_invalid not in ("stop", "skip"):
+        raise ValueError(
+            f"on_invalid={on_invalid!r} no reconocido. Válidos: stop | skip."
+        )
+
+    reporte = load_fichas(
+        objects,
+        kb_name=kb_name,
+        dry_run=arguments.get("dry_run", True),
+        on_invalid=on_invalid,
+    )
+    return _render_ingest_report(reporte)
 
 
 def _run_ingest_batch(arguments: dict) -> str:
@@ -587,27 +1073,19 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         k = arguments.get("top_k", 5)
         snippet_chars = arguments.get("snippet_chars", 600)
         min_score = arguments.get("min_score")
+        filters = arguments.get("filters")
         # Antes de embeddear: rechazar acá evita además pagar la carga de e5-large
         # (~2.2 GB en frío) por un argumento que ya sabemos inválido.
         if rejection := _reject_unknown_collection(col):
             return [TextContent(type="text", text=rejection)]
+        if rejection := _reject_missing_kb_name(col, filters):
+            return [TextContent(type="text", text=rejection)]
         try:
-            results = hybrid_search(q, collection=col, top_k=k, min_score=min_score)
+            results = hybrid_search(
+                q, collection=col, top_k=k, min_score=min_score, filters=filters
+            )
             if not results:
-                # Guide the caller to a collection that actually has content.
-                populated = []
-                try:
-                    populated = [f"{n} ({c} chunks)" for n, c in collection_counts()]
-                except Exception:
-                    pass
-                hint = (
-                    f" Colecciones con contenido: {', '.join(populated)}."
-                    if populated
-                    else " No hay colecciones con contenido; ingestá con add_from_url."
-                )
-                return [
-                    TextContent(type="text", text=f"Sin resultados en '{col}'.{hint}")
-                ]
+                return [TextContent(type="text", text=_empty_search_text(col, filters))]
             lines = [f"## Resultados ({len(results)} found)\n"]
             for r in results:
                 content = r["content"] or ""
@@ -619,9 +1097,16 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                     f"article_id: `{r.get('id', '')}`\n"
                     f"Fuente: {r.get('url') or r.get('source', '?')}\n"
                     f"Hash: {r.get('content_hash', '')}\n"
+                    f"{_meta_line(r.get('meta'))}"
                     f"{snippet}{truncated}\n"
                 )
             return [TextContent(type="text", text="\n".join(lines))]
+        except ValueError as exc:
+            # filter_params RECHAZA claves desconocidas y listas vacías con un mensaje
+            # accionable. Si cayera en el `except Exception` de abajo se convertiría en
+            # GENERIC_ERROR y el llamador no sabría que el problema es SU argumento:
+            # buscaría la causa en el corpus o en el servidor.
+            return [TextContent(type="text", text=str(exc))]
         except Exception:
             log.exception("search_docs error")
             return [TextContent(type="text", text=GENERIC_ERROR)]
@@ -812,6 +1297,18 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=str(e))]
         except Exception:
             log.exception("ingest_batch error")
+            return [TextContent(type="text", text=GENERIC_ERROR)]
+
+    elif name == "ingest_kb_objects":
+        try:
+            return [TextContent(type="text", text=_run_ingest_kb_objects(arguments))]
+        except ValueError as e:
+            # Argumentos del llamador: el tope de fichas, kb_name ausente, objects
+            # vacío. Van tal cual y NO como GENERIC_ERROR, o el llamador buscaría la
+            # causa en el servidor en vez de en su propia llamada.
+            return [TextContent(type="text", text=str(e))]
+        except Exception:
+            log.exception("ingest_kb_objects error")
             return [TextContent(type="text", text=GENERIC_ERROR)]
 
     else:
