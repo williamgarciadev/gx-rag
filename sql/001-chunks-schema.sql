@@ -8,6 +8,36 @@
 
 \set ON_ERROR_STOP on
 
+-- La configuracion lexica se crea ACA, antes de la tabla, porque la columna
+-- generada `tsv` la necesita resuelta en el momento del CREATE TABLE.
+--
+-- Vivia solo en el 002, y eso dejaba una trampa: el comando del header de arriba
+-- se presenta como autosuficiente, asi que un install que corriera solo este
+-- archivo nacia con `tsv` en 'simple' mientras pg_retriever.py consulta con
+-- 'es_simple'. Configs distintas = CERO filas en la mitad lexica del RRF, sin
+-- error y sin aviso: la busqueda hibrida degeneraba a densa pura y parecia andar.
+--
+-- El 002 sigue existiendo para las bases ya creadas. Sus dos guards
+-- (pg_ts_config y `expr LIKE '%es_simple%'`) detectan que no hay nada que migrar
+-- y lo dejan como no-op, asi que aplicar 001+002 en orden sigue siendo correcto
+-- y NO reescribe la tabla.
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- No existe CREATE TEXT SEARCH CONFIGURATION IF NOT EXISTS, de ahi el DO block.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_ts_config WHERE cfgname = 'es_simple') THEN
+        CREATE TEXT SEARCH CONFIGURATION es_simple ( COPY = simple );
+        -- unaccent ANTES de simple: normaliza el token y despues lo emite tal
+        -- cual, sin stemming.
+        ALTER TEXT SEARCH CONFIGURATION es_simple
+            ALTER MAPPING FOR asciiword, word, numword, asciihword, hword,
+                              numhword, hword_asciipart, hword_part, hword_numpart
+            WITH unaccent, simple;
+    END IF;
+END
+$$;
+
 CREATE TABLE IF NOT EXISTS chunks (
     -- Id del chunk tal como lo genera indexer.py: "{article_id}_c{i}".
     -- Es texto libre (suele ser una URL), no un entero.
@@ -31,7 +61,8 @@ CREATE TABLE IF NOT EXISTS chunks (
 
     embedding    vector(1024) NOT NULL,
 
-    -- Configuracion 'simple': sin stemming ni stopwords, deliberadamente.
+    -- Configuracion 'es_simple' = simple + unaccent: sin stemming ni stopwords,
+    -- deliberadamente, pero insensible a tildes (ver el bloque de arriba y el 002).
     -- El BM25 que reemplazamos tokeniza con re.findall(r"\w+", text.lower()),
     -- o sea matching literal. 'spanish' aplicaria stemming que el ranking actual
     -- no tiene, y ademas buena parte del corpus (WorkWithPlus) esta en ingles.
@@ -48,7 +79,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     -- densa empata exacto o mejora (nunca pierde). Cual de las dos formulas
     -- ordena MEJOR es una pregunta abierta: no hay set de relevancia etiquetado.
     tsv tsvector GENERATED ALWAYS AS (
-        to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(content, ''))
+        to_tsvector('es_simple', coalesce(title, '') || ' ' || coalesce(content, ''))
     ) STORED
 );
 
@@ -70,4 +101,4 @@ CREATE INDEX IF NOT EXISTS chunks_collection
     ON chunks (collection);
 
 COMMENT ON TABLE  chunks     IS 'Chunks del corpus con embedding denso y vector lexico.';
-COMMENT ON COLUMN chunks.tsv IS 'Config simple (sin stemming). Indexa title||content; el BM25 que reemplaza usaba solo content y otra formula de ranking.';
+COMMENT ON COLUMN chunks.tsv IS 'Config es_simple = simple + unaccent (sin stemming ni stopwords, insensible a tildes). Indexa title||content; el BM25 que reemplaza usaba solo content y otra formula de ranking.';
