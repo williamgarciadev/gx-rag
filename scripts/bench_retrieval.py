@@ -41,6 +41,7 @@ from src.vectorstore.pg_retriever import (  # noqa: E402
     RRF_K,
     _SEARCH_SQL,
     _to_tsquery,
+    filter_params,
 )
 
 # Consultas fijas: el baseline tiene que ser comparable entre corridas, así que no
@@ -82,15 +83,23 @@ def _percentiles(muestras: list[float]) -> tuple[float, float, float]:
 
 
 def _params(query: str, collection: str, top_k: int, qvec: str) -> dict:
-    """Los MISMOS parámetros que arma hybrid_search()."""
+    """Los MISMOS parámetros que arma hybrid_search().
+
+    Los f_* de los filtros de metadatos salen de filter_params(None) en vez de
+    escribirse acá: este script importa `_SEARCH_SQL` directo, así que cada parámetro
+    nuevo del SQL lo rompería, y duplicar la lista de claves garantiza que un día
+    divergen. Con None todos los predicados de _META_FILTER son no-op, o sea que el
+    baseline mide exactamente la búsqueda SIN filtrar.
+    """
     return {
         "qvec": qvec,
         "qtext": _to_tsquery(query),
         "collection": collection,
-        "pool": CANDIDATE_POOL,
+        "pool": max(CANDIDATE_POOL, top_k * 3),
         "rrf_k": RRF_K,
         "top_k": top_k,
         "min_score": None,
+        **filter_params(None),
     }
 
 
