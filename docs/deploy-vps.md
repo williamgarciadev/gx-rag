@@ -85,8 +85,12 @@ curl -s -o /dev/null -w '%{http_code}\n' https://gxrag.wgsoft.com.co/mcp/   # 40
 > `list_methods` acepta `object_type='Transaction'` — o sea que las mentiras de
 > interfaz corregidas **siguen vivas en producción**.
 >
-> No hay migración de base en este lote: no se tocó ningún `sql/*.sql`, así que es
-> un deploy de **solo código**.
+> ~~No hay migración de base en este lote: no se tocó ningún `sql/*.sql`, así que es
+> un deploy de **solo código**.~~
+>
+> 🔴 **Eso valía hasta el 2026-08-11. El lote de `fix/hnsw-filtered-search`
+> (2026-08-19) SÍ trae migración, y el código NO es compatible con una base sin
+> ella.** Ver "Migración obligatoria del lote 2026-08-19" más abajo.
 
 ### Por qué un `git push` no alcanza
 
@@ -431,10 +435,67 @@ curl -s https://gxrag.wgsoft.com.co/mcp/ \
   no el 8000 de la API admin: para curación usá
   `ssh -L 8000:gx-rag-api:8000 vps2-tunel`.
 - ⚠️ **Si alguna vez recreás la base desde cero**, corré **todos** los
-  `sql/0*.sql` en orden. El `001` todavía declara `tsv` con config `'simple'`
+  `sql/0*.sql` en orden. ~~El `001` todavía declara `tsv` con config `'simple'`
   mientras `pg_retriever` consulta `'es_simple'`: con solo el 001, la mitad léxica
-  del RRF se rompe o pierde recall en silencio (hallazgo #29 de
-  `docs/PLAN-optimizacion.md`).
+  del RRF se rompe o pierde recall en silencio~~ → **corregido el 2026-08-19**: el
+  `001` crea la config `es_simple` y declara `tsv` con ella, así que un install que
+  corra solo ese archivo ya nace coherente. El `002` queda como migración histórica y
+  sus guards lo dejan no-op. Test: `tests/test_fresh_schema.py`, que aplica **solo el
+  001** — el punto ciego que la fixture `pg_schema` no podía cubrir porque concatena
+  todos los `sql/0*.sql`.
+
+## Migración obligatoria del lote 2026-08-19 (`fix/hnsw-filtered-search`)
+
+🔴 **Este lote acopla schema y código. Desplegar solo el código deja el sistema PEOR
+que antes, no a medias.** `pg_indexer._UPSERT_SQL` pasó a insertar 12 columnas
+incluyendo `meta`; contra una base sin el `sql/003` **toda ingesta falla** con
+`column "meta" does not exist`, y `search_docs` con `filters` también.
+
+Orden correcto, y no es negociable:
+
+```bash
+# 1. BACKUP antes del DDL. En Windows pg_dump NO está en el PATH (ver la nota de
+#    arriba): usá el de Program Files, y la MISMA major version del servidor.
+"/c/Program Files/PostgreSQL/16/bin/pg_dump.exe" -d "$GXRAG_DSN" -Fc \
+    --no-owner --no-privileges -f gxrag-pre-003.dump
+# Medido en dev sobre 51.211 chunks: 1m8s, 239 MB comprimido.
+
+# 2. Aplicar el DDL. Idempotente (IF NOT EXISTS / DROP CONSTRAINT IF EXISTS),
+#    así que re-aplicarlo es inofensivo.
+psql -d "$GXRAG_DSN" -v ON_ERROR_STOP=1 -f sql/003-chunk-meta.sql
+# Medido en dev: 1,4 s sobre 51.211 filas. Es rápido porque el default de `meta`
+# es CONSTANTE ('{}'::jsonb) → PostgreSQL 11+ no reescribe la tabla, y el CHECK
+# solo aplica a la colección gx_kb_objects, que está vacía.
+
+# 3. Recién ahora, el código.
+docker compose up -d --build
+```
+
+Verificación posterior (si alguna da distinto, el deploy no está completo):
+
+```sql
+SELECT count(*) FROM information_schema.columns
+ WHERE table_name='chunks' AND column_name='meta';            -- 1
+SELECT count(*) FROM pg_indexes WHERE tablename='chunks';      -- 12 (5 previos + 7)
+SELECT count(*) FROM chunks WHERE meta <> '{}'::jsonb;         -- 0 en un deploy limpio
+```
+
+**Reversión** (el DDL es aditivo, así que se deshace sin tocar datos):
+
+```sql
+DROP INDEX IF EXISTS chunks_meta_kb_name, chunks_meta_obj_type,
+  chunks_meta_chunk_kind, chunks_meta_module, chunks_meta_obj_name,
+  chunks_meta_origin, chunks_meta_related_gin;
+ALTER TABLE chunks DROP CONSTRAINT IF EXISTS chunks_kb_meta_required;
+ALTER TABLE chunks DROP COLUMN IF EXISTS meta;   -- ⚠️ borra los metadatos indexados
+```
+
+> **Nota de ambiente, para que no confunda a nadie:** en la máquina de desarrollo el
+> Postgres que sirve al RAG es **PostgreSQL 16 instalado nativamente en Windows**
+> (`C:\Program Files\PostgreSQL\16\bin`, puerto 5433), **no** el contenedor
+> `gx-rag-pg` del `docker-compose.yml`. Los dos son válidos: el compose describe el
+> VPS. La consecuencia práctica es que en dev **no hay volumen `gx-rag-pgdata` que
+> respaldar** — el backup se hace con `pg_dump`, no copiando un volumen.
 
 ## How a developer connects
 
