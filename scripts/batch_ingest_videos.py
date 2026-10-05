@@ -103,7 +103,6 @@ def main() -> int:
                 output_dir=output_dir,
                 module=args.module,
                 transcript_file=transcript,
-                scene_threshold=0.3,
             )
             print(f"    [OK] Generated: {md_path.name} ({len(markdown.split())} words)")
             succeeded += 1
