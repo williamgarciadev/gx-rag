@@ -718,6 +718,11 @@ _VERDICT_GUIDANCE = {
         "un objeto de la KB que ya use la construcción (mirarlo, no recordarlo) o "
         "la wiki oficial. El token quedó en la cola de curación."
     ),
+    "PISTA": (
+        "→ No es un veredicto definitivo: es un indicio. Figura en el catálogo, "
+        "que se nutre de fuentes gx18 y no trae columna de versión. Confirmalo "
+        "contra la KB de esa versión (MCP genexus16) o compilando, antes de usarlo."
+    ),
 }
 
 

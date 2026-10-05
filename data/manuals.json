@@ -1,0 +1,121 @@
+{
+ "root": "F:/ProyectosClaude/docs",
+ "collection": "bt_docs",
+ "documents": [
+  {
+   "file": "Bantotal/MDI-10201-GL-V3R1.20 - Sistema de Préstamos.pdf",
+   "ingest": true,
+   "reason": "Manual funcional del sistema 50 (Préstamos), 689 págs. Foco actual del trabajo; no tiene equivalente en la DB."
+  },
+  {
+   "file": "Bantotal/MDI-10109-GL-V3R1.28 - Sistema de Contrapartes.pdf",
+   "ingest": true,
+   "reason": "Manual funcional de Contrapartes, 225 págs. Semántica de negocio que describe_table no da."
+  },
+  {
+   "file": "Bantotal/MDU-10115-CO-V3R1.1 - Sistema de Precios.pdf",
+   "ingest": true,
+   "reason": "Manual funcional de Precios (tasas y comisiones), 70 págs."
+  },
+  {
+   "file": "Bantotal/MDI-10401-GL-V3R1.4 - Bantotal Servicios 2.6.pdf",
+   "ingest": true,
+   "reason": "Servicios/API de Bantotal, 110 págs. Contratos de servicio, no hay otra fuente."
+  },
+  {
+   "file": "Bantotal/_skipped/MDU-10102-GL-V3R1.2 - Descartes - Diseñador Web UI.pdf",
+   "ingest": true,
+   "reason": "Framework Web UI de Bantotal, 122 págs. Se ingesta el PDF y NO el -extracted.md: el PDF tiene página citable y es más completo (306K vs 285K chars)."
+  },
+  {
+   "file": "Bantotal/_skipped/MDU-10102-GL-V3R1.2 - Descartes - Servidor de Procesos.pdf",
+   "ingest": true,
+   "reason": "Contraparte del anterior, 30 págs. Mismo criterio: PDF sobre el .md derivado."
+  },
+  {
+   "file": "Bantotal/Bantotal_Rapidas.md",
+   "ingest": true,
+   "reason": "Referencia curada de consultas SQL sobre Bantotal. Alta señal, escrita para este trabajo."
+  },
+  {
+   "file": "Bantotal/_skipped/MDU-99000-GL-V2R3.4 - Modelo de Datos Bantotal _ Inventario de Tablas.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del 2026-07-27: 2.558 chunks (42% de bt_docs) que duplican lo que el MCP bantotal-dev responde desde el schema real (describe_table, get_subsystem_map, get_pattern9_fields). Solo competía por el top-k con los manuales funcionales."
+  },
+  {
+   "file": "Bantotal/MDI-10102-GL-V3R1.1 - Descartes.pdf",
+   "ingest": false,
+   "reason": "FUERA: es el manual de INSTALADOR (prerrequisitos, GeneXus 8.0, componentes KB), 10 págs. No aporta a consultas de desarrollo y arriesga respuestas con versiones obsoletas."
+  },
+  {
+   "file": "Bantotal/MDU-10102-Descartes-DisenadorWebUI-extracted.md",
+   "ingest": false,
+   "reason": "FUERA: duplicado del PDF homónimo producido por el pipeline anterior. Sin número de página, desplazaba al PDF citable en el top-3 (evidencia en PENDIENTES §2)."
+  },
+  {
+   "file": "Bantotal/MDU-10102-Descartes-ServidorProcesos-extracted.md",
+   "ingest": false,
+   "reason": "FUERA: mismo caso que el anterior."
+  },
+  {
+   "file": "Bantotal/_skipped/09 - Sistema de Préstamos.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del 2026-07-27: es una presentación de 81 slides, no un manual. Mediana de 293 chars por página y el texto son bullets sin prosa que los conecte — lo contrario de un chunk que se entienda solo. Estaba ingestada (83 chunks)."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/00_README_RepoScriptsLucho.md",
+   "ingest": true,
+   "reason": "Mapa del conocimiento operativo curado. Ya estaba en bt_docs (10 chunks); se declara para que quede registrado."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/01_Convenciones_TSQL_Bantotal.md",
+   "ingest": true,
+   "reason": "Convenciones T-SQL de la operación bancaria. Curado internamente, alta señal."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/02_ScriptsLucho_Rapidas.md",
+   "ingest": true,
+   "reason": "Consultas de referencia rápidas. El archivo curado más grande (108 chunks)."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/10_CostoAmortizado_PatronesUso.md",
+   "ingest": true,
+   "reason": "Patrones de uso de costo amortizado. No hay equivalente en los manuales."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/11_Castigos_Asientos_FPP190.md",
+   "ingest": true,
+   "reason": "Castigos de cartera y asientos (FPP190)."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/12_AlturaMora_FST198_FSD011.md",
+   "ingest": true,
+   "reason": "Altura de mora sobre FST198/FSD011. Complementa el manual de Préstamos con la práctica real."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/13_BandejasProducto_BNJ002_BJR008.md",
+   "ingest": true,
+   "reason": "Bandejas de producto (BNJ002/BJR008)."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/14_Tablon_Consolidacion.md",
+   "ingest": true,
+   "reason": "Tablón de cartera y consolidación."
+  },
+  {
+   "file": "bantotal-curado/scriptslucho/15_Conciliacion_KPMG_XCR_FSH012.md",
+   "ingest": true,
+   "reason": "Conciliación y reportes KPMG (XCR/FSH012)."
+  },
+  {
+   "file": "bantotal-curado/procesos/Envio_de_Mail_PXWFMAIL.pdf",
+   "ingest": false,
+   "reason": "Original de Envio_de_Mail_PXWFMAIL.md. NO se ingiere: el extractor de PDF descarta la página 1 (firma y parámetros), medido el 2026-09-24."
+  },
+  {
+   "file": "bantotal-curado/procesos/Envio_de_Mail_PXWFMAIL.md",
+   "ingest": true,
+   "reason": "Envío de correo por Bantotal: programa PXWFMAIL (firma Parm, separadores) y parámetros SMTP en XWFV02 código 20. Sin valores de credenciales."
+  }
+ ]
+}

@@ -21,7 +21,18 @@ from src.syntax_db.models import (
 
 log = logging.getLogger(__name__)
 
-Verdict = Literal["VÁLIDO", "INVÁLIDO", "NO_VERIFICABLE"]
+Verdict = Literal["VÁLIDO", "INVÁLIDO", "NO_VERIFICABLE", "PISTA"]
+
+CATALOG_SOURCE_VERSION = 18
+
+_INVOCABILITY = {
+    "command": 0,
+    "function": 1,
+    "method": 2,
+    "data type": 3,
+    "event": 4,
+    "property": 5,
+}
 
 MIN_SIMILARITY_TOKEN = 3
 
@@ -106,7 +117,10 @@ def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None)
                 .all()
             )
             if exacta:
-                return exacta
+                return sorted(
+                    exacta,
+                    key=lambda e: _INVOCABILITY.get((e.object_type or "").lower(), 99),
+                )
 
             calificadas = (
                 session.query(GxSyntax)
@@ -119,7 +133,10 @@ def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None)
                 .all()
             )
             if calificadas:
-                return calificadas
+                return sorted(
+                    calificadas,
+                    key=lambda e: _INVOCABILITY.get((e.object_type or "").lower(), 99),
+                )
     return []
 
 
@@ -235,6 +252,13 @@ def _find_similar(session, token: str) -> list[str]:
     return matches
 
 
+def _version_rank(version: str | None) -> int | None:
+    if not version:
+        return None
+    m = re.search(r"\d+", version)
+    return int(m.group()) if m else None
+
+
 def verify_syntax(
     snippet: str,
     language: str = "gx",
@@ -322,6 +346,48 @@ def verify_syntax(
             entry = session.query(GxSyntax).filter(func.lower(GxSyntax.name) == query_token.lower()).first()
 
         if entry:
+            asked = _version_rank(version)
+            since = _version_rank(entry.version_since)
+            if since is not None and asked is not None and asked < since:
+                _log_verdict("verify_syntax", snippet, "INVÁLIDO", entry.id, version, entry.source)
+                return {
+                    "verdict": "INVÁLIDO",
+                    "name": entry.name,
+                    "object_type": entry.object_type,
+                    "version": entry.version_since,
+                    "source": entry.source,
+                    "reason": (
+                        f"'{entry.name}' existe en el catálogo pero a partir de "
+                        f"{entry.version_since}; se consultó por {version}, donde todavía no "
+                        f"está disponible."
+                    ),
+                    "notes": (
+                        "No lo uses en esta versión. Si necesitas el comportamiento, "
+                        "busca la alternativa propia de la versión consultada."
+                    ),
+                }
+
+            if since is None and asked is not None and asked < CATALOG_SOURCE_VERSION:
+                _log_verdict("verify_syntax", snippet, "PISTA", entry.id, version, entry.source)
+                return {
+                    "verdict": "PISTA",
+                    "name": entry.name,
+                    "object_type": entry.object_type,
+                    "signature": entry.signature,
+                    "version": None,
+                    "source": entry.source,
+                    "reason": (
+                        f"'{entry.name}' figura en el catálogo, que se nutre de fuentes "
+                        f"gx{CATALOG_SOURCE_VERSION} y no trae columna de versión. "
+                        f"Se consultó por {version}: el catálogo NO puede confirmarlo "
+                        f"ahí."
+                    ),
+                    "notes": (
+                        "No es un veredicto: es un indicio. Confírmalo contra la KB "
+                        "de esa versión (MCP genexus16) o compilando, antes de usarlo."
+                    ),
+                }
+
             version_note = ""
             if version and not entry.version_since:
                 version_note = (

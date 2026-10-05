@@ -1,0 +1,10 @@
+{
+  "//": "Windows-native MCP config for gx-rag. Copy to .mcp.json in the repo root on Windows.",
+  "//venv": "Assumes the venv lives at .venv\\Scripts\\python.exe (see docs/windows-native-setup.md). Uses a relative path, so launch Claude Code from the repo root; for Claude Desktop use absolute paths + a cwd instead.",
+  "mcpServers": {
+    "gx-rag": {
+      "command": ".venv\\Scripts\\python.exe",
+      "args": ["-m", "src.server"]
+    }
+  }
+}

@@ -20,7 +20,7 @@ import logging
 import re
 import unicodedata
 from collections.abc import Callable, Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -39,15 +39,17 @@ _WWP_PAGE_ID_FOOTER = re.compile(r"\n?Page Id\s*\n\s*(?P<pid>\d+)\s*$")
 _NEWEST_VERSION = "Newest Version"
 
 
-@dataclass(frozen=True)
+@dataclass
 class RawDoc:
-    """A single document extracted from a dump, ready to index."""
+    """A single document extracted from a dump or local manual, ready to index."""
 
-    source_key: str  # canonical URL — used as the ChromaDB article id
+    source_key: str  # canonical URL or local file URI
     title: str
     content: str
     url: str
     page_id: str
+    meta: dict = field(default_factory=dict)
+    chunk_prefix: str = ""
 
 
 @dataclass
@@ -297,6 +299,11 @@ def load_dump(
     report = LoadReport()
     for i, doc in enumerate(docs):
         content_hash = hash_fn(doc.content)
+        kwargs = {}
+        if doc.meta:
+            kwargs["extra_meta"] = doc.meta
+        if doc.chunk_prefix:
+            kwargs["chunk_prefix"] = doc.chunk_prefix
         status = index_fn(
             doc.source_key,
             doc.title,
@@ -306,6 +313,7 @@ def load_dump(
             doc.url,
             content_hash,
             collection,
+            **kwargs,
         )
         report.record(status)
         if on_progress is not None:

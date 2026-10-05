@@ -80,33 +80,20 @@ def _write_chunks(
     collection: str,
     *,
     meta: dict | None = None,
+    extra_meta: dict | None = None,
+    chunk_prefix: str = "",
     chunks: list[tuple[str, str]] | None = None,
 ) -> list[str]:
-    """Chunkea, embebe y escribe usando la conexion RECIBIDA.
-
-    Recibe la conexion en vez de pedirsela al pool porque reindex_if_changed
-    necesita que el DELETE de los chunks viejos y este INSERT vivan en la misma
-    transaccion. Con una conexion propia el INSERT se quedaba esperando el lock
-    que tomo el DELETE de la otra: deadlock, y el pool agotandose de a una
-    conexion por reindexado.
-
-    meta / chunks son KEYWORD-ONLY a proposito. Las 9 posiciones de arriba las
-    consumen llamadores POSICIONALES —bulk_loader.py pasa doc.url DOS VECES, en
-    `source` y en `url`— y hay tests que congelan ese orden. Una posicion 10 y 11
-    en esa cadena es la forma mas barata de que `meta` termine escrito en `genre`
-    sin que nada falle ni ningun test lo note.
-
-    chunks: [(chunk_kind, texto)] ya partido por el llamador, para documentos cuya
-    estructura la conoce el llamador y no el splitter (una ficha de objeto GeneXus
-    se parte por seccion, no por 800 chars). Si es None se usa el splitter de
-    siempre, asi que gx_docs / bt_docs no cambian en nada.
-    """
+    combined_meta = {**(extra_meta or {}), **(meta or {})}
     if chunks is not None:
         kinds = [kind for kind, _ in chunks]
         textos = [texto for _, texto in chunks]
     else:
         textos = _splitter.split_text(content)
         kinds = [None] * len(textos)
+
+    if chunk_prefix:
+        textos = [f"{chunk_prefix}\n{texto}" for texto in textos]
 
     if not textos:
         log.warning("sin chunks para %s", article_id)
@@ -122,9 +109,9 @@ def _write_chunks(
         larga se parte en varios, el filtro por chunk_kind tiene que seguir
         encontrandolos a todos.
         """
-        if meta is None and kinds[i] is None:
+        if not combined_meta and kinds[i] is None:
             return "{}"
-        completa = dict(meta or {})
+        completa = dict(combined_meta)
         if kinds[i] is not None:
             completa["chunk_kind"] = kinds[i]
         return json.dumps(completa, ensure_ascii=False)
@@ -165,6 +152,8 @@ def index_article(
     collection: str = "gx_docs",
     *,
     meta: dict | None = None,
+    extra_meta: dict | None = None,
+    chunk_prefix: str = "",
     chunks: list[tuple[str, str]] | None = None,
 ) -> list[str]:
     """Indexa un articulo. Devuelve los ids de chunk insertados.
@@ -176,7 +165,8 @@ def index_article(
     with get_pool().connection() as conn:
         return _write_chunks(
             conn, article_id, title, content, source, genre, url,
-            content_hash, collection, meta=meta, chunks=chunks,
+            content_hash, collection, meta=meta, extra_meta=extra_meta,
+            chunk_prefix=chunk_prefix, chunks=chunks,
         )
 
 
@@ -191,6 +181,8 @@ def reindex_if_changed(
     collection: str = "gx_docs",
     *,
     meta: dict | None = None,
+    extra_meta: dict | None = None,
+    chunk_prefix: str = "",
     chunks: list[tuple[str, str]] | None = None,
 ) -> str:
     """Indexa de forma idempotente, usando content_hash como clave de cambio.
@@ -231,12 +223,14 @@ def reindex_if_changed(
                 )
             _write_chunks(
                 conn, article_id, title, content, source, genre, url,
-                content_hash, collection, meta=meta, chunks=chunks,
+                content_hash, collection, meta=meta, extra_meta=extra_meta,
+                chunk_prefix=chunk_prefix, chunks=chunks,
             )
             return "reindexed"
 
         _write_chunks(
             conn, article_id, title, content, source, genre, url,
-            content_hash, collection, meta=meta, chunks=chunks,
+            content_hash, collection, meta=meta, extra_meta=extra_meta,
+            chunk_prefix=chunk_prefix, chunks=chunks,
         )
         return "indexed"

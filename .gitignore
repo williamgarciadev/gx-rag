@@ -43,3 +43,4 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 .ruff_cache/
+pytest_temp/

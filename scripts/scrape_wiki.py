@@ -27,6 +27,10 @@ import httpx
 from bs4 import BeautifulSoup
 import html2text
 
+# src.net_guard solo depende de la stdlib y httpx, así que importarlo desde
+# scripts/ no cierra ciclo con src.api -> scripts.scrape_wiki.
+from src.net_guard import BlockedUrlError, assert_fetchable
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Logging
 # ─────────────────────────────────────────────────────────────────────────────
@@ -38,15 +42,16 @@ log = logging.getLogger(__name__)
 # Data classes
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ArticleMetadata:
     url: str
     title: str
     page_id: str | None
-    genre: str          # "reference" | "guide"
-    destination: str    # "gx_syntax" | "gx_docs"
-    source_key: str     # normalized URL (domain-unified)
-    content_hash: str   # SHA256 of normalized raw text
+    genre: str  # "reference" | "guide"
+    destination: str  # "gx_syntax" | "gx_docs"
+    source_key: str  # normalized URL (domain-unified)
+    content_hash: str  # SHA256 of normalized raw text
     version_hint: str | None
     word_count: int
     scraped_at: str
@@ -62,6 +67,7 @@ class ScrapedArticle:
 # ─────────────────────────────────────────────────────────────────────────────
 # URL normalization
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def normalize_wiki_url(url: str) -> str:
     """
@@ -105,17 +111,41 @@ def extract_page_id(url: str) -> str | None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 _REF_INDICATORS = [
-    "syntax", "command", "property", "method", "object", "attribute",
-    "clause", "function", "operator", "event",
+    "syntax",
+    "command",
+    "property",
+    "method",
+    "object",
+    "attribute",
+    "clause",
+    "function",
+    "operator",
+    "event",
 ]
 _GUIDE_INDICATORS = [
-    "how to", "howto:", "tutorial", "guide", "example", "best practice",
-    "optimization", "performance", "tip", "trick", "considerations",
-    "walkthrough", "step by step",
+    "how to",
+    "howto:",
+    "tutorial",
+    "guide",
+    "example",
+    "best practice",
+    "optimization",
+    "performance",
+    "tip",
+    "trick",
+    "considerations",
+    "walkthrough",
+    "step by step",
 ]
 _TUTORIAL_PATTERNS = [
-    "step 1", "step 2", "step 3", "first, ", "adding ",
-    "## summary", "## the challenge", "the following steps",
+    "step 1",
+    "step 2",
+    "step 3",
+    "first, ",
+    "adding ",
+    "## summary",
+    "## the challenge",
+    "the following steps",
 ]
 _STOPWORDS_TITLE = ["category", "table of contents", "index", "home"]
 
@@ -142,7 +172,9 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
         ref += 5
     if any(t in tl for t in _STOPWORDS_TITLE):
         return "guide", "gx_docs"
-    if any(t in tl for t in ["how to", "howto:", "tutorial", "example", "optimization"]):
+    if any(
+        t in tl for t in ["how to", "howto:", "tutorial", "example", "optimization"]
+    ):
         guide += 3
 
     # Patrones de tutorial en el cuerpo (mayor peso: son indicador fuerte)
@@ -160,16 +192,38 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
 # HTML extraction
 # ─────────────────────────────────────────────────────────────────────────────
 
+
+#: Redirect hops allowed before giving up. Enough for the http→https and
+#: wiki→docs hops the real sites use, low enough that a loop ends fast.
+MAX_REDIRECTS = 5
+
+
 def fetch_article(url: str, timeout: float = 45.0) -> httpx.Response:
-    """Descarga un artículo wiki."""
+    """Descarga un artículo wiki, validando cada salto contra el allowlist.
+
+    Los redirects se siguen A MANO. `follow_redirects=True` delega el salto a
+    httpx, que solo revisa la URL inicial: un origen permitido que responda
+    `302 → http://169.254.169.254/` deja el guard atrás sin tocarlo. Validar
+    cada `Location` antes de seguirlo es la única forma de que el allowlist
+    valga para toda la cadena y no nada más para el primer eslabón.
+    """
     headers = {
         "User-Agent": "Mozilla/5.0 (compatible; gx-bt-rag-mcp/0.1)",
         "Accept": "text/html,application/xhtml+xml",
     }
+    current = url
     with httpx.Client(timeout=timeout) as client:
-        resp = client.get(url, headers=headers, follow_redirects=True)
-        resp.raise_for_status()
-        return resp
+        for _ in range(MAX_REDIRECTS + 1):
+            assert_fetchable(current)
+            resp = client.get(current, headers=headers, follow_redirects=False)
+            if not resp.is_redirect:
+                resp.raise_for_status()
+                return resp
+            location = resp.headers.get("location", "")
+            # Un Location relativo se resuelve contra el salto actual; si no,
+            # "/x" perdería el host y el allowlist lo rechazaría por vacío.
+            current = str(httpx.URL(current).join(location))
+    raise BlockedUrlError(f"too many redirects (>{MAX_REDIRECTS}) starting at {url}")
 
 
 def _decompose_safe(element: BeautifulSoup, tag) -> None:
@@ -178,37 +232,76 @@ def _decompose_safe(element: BeautifulSoup, tag) -> None:
         tag.decompose()
 
 
+# SAC (sac.genexus.com) noise: navigation chrome and hidden conditional
+# messages that pollute the article body. Exact ids are page-level (stable);
+# suffixes match the per-instance GeneXus web-component ids (W####<SUFFIX>).
+_SAC_NOISE_EXACT_IDS = ("TABLE6", "TABLAERRORES", "TABLACONTENIDO")
+_SAC_NOISE_ID_SUFFIXES = (
+    "LOGINTXT",  # "ingresando con tu CUENTA GeneXus" login nudge
+    "VOLVERALISTA",  # "VOLVER A LA LISTA"
+    "ERRORLNG",  # hidden "No hay traduccion"
+    "ERRORNOTEXIST",  # hidden "La busqueda no dio resultados"
+    "ERRORACCESSLVL",  # hidden "El SAC no se encuentra disponible"
+)
+
+
+def _clean_sac_content(contenido: BeautifulSoup) -> BeautifulSoup:
+    """Strip nav chrome and hidden messages from a SAC td#CONTENIDO block.
+
+    Removes the "Recuerda que … CUENTA GeneXus" login nudge, the
+    PRIMERA/ANTERIOR/SIGUIENTE/LAST pager, "VOLVER A LA LISTA", and the hidden
+    GeneXus conditional error divs. Keeps the report date, the "SAC #NNNNN"
+    title, Abstract, Descripción Detallada, Work Around and Productos.
+    """
+    for tag in contenido.find_all(["script", "style", "noscript", "iframe", "svg"]):
+        _decompose_safe(contenido, tag)
+
+    for eid in _SAC_NOISE_EXACT_IDS:
+        for tag in contenido.find_all(attrs={"id": eid}):
+            _decompose_safe(contenido, tag)
+
+    for tag in contenido.find_all(
+        attrs={"id": lambda x: x and str(x).endswith(_SAC_NOISE_ID_SUFFIXES)}
+    ):
+        _decompose_safe(contenido, tag)
+
+    return contenido
+
+
 def extract_main_content(soup: BeautifulSoup) -> BeautifulSoup:
     """
     Extrae el contenido principal del artículo wiki o SAC.
 
-    Wiki:        → gx-content-placeholder → MAINTABLE → body
-    SAC:         → td#CONTENIDO (contiene el artículo real, no el wrapper de filtros)
+    SAC:  td#CONTENIDO (cuerpo real del artículo, no el wrapper de filtros)
+    Wiki: gx-content-placeholder → MAINTABLE → body
 
-    Se eliminan solos los elementos ruidosos específicos, nunca contenedores padre.
+    Se eliminan solo los elementos ruidosos específicos, nunca contenedores padre.
     """
-    # ── SAC: el artículo real está en td#CONTENIDO ──
-    contenido_td = soup.find("td", {"id": "CONTENIDO"})
-    if contenido_td:
-        article = contenido_td
-    else:
-        # ── Wiki: gx-content-placeholder → MAINTABLE → body ──
-        article = soup.find("div", {"class": "gx-content-placeholder"})
-        if not article:
-            article = soup.find("div", {"id": "MAINTABLE"})
-        if not article:
-            article = soup.body
-        if not article:
-            return soup
+    # SAC: el artículo real vive en td#CONTENIDO
+    contenido = soup.find("td", {"id": "CONTENIDO"})
+    if contenido:
+        return _clean_sac_content(contenido)
+
+    # gx-content-placeholder contiene el cuerpo del artículo
+    article = soup.find("div", {"class": "gx-content-placeholder"})
+    if not article:
+        article = soup.find("div", {"id": "MAINTABLE"})
+    if not article:
+        article = soup.body
+    if not article:
+        return soup
 
     # Eliminar ruido hijos del artículo
     for tag in article.find_all(["script", "style", "noscript", "iframe", "svg"]):
         _decompose_safe(article, tag)
 
     # Eliminar los divs de navegación específicos
-    for nid in ["TABLEFEEDBACK_MPAGE", "NEXTNODE_MPAGE",
-                "TABLERECENTLINKS_MPAGE", "TABLEINFO_MPAGE",
-                "SacsContainerDiv"]:  # SAC: contenedor de lista, no del artículo individual
+    for nid in [
+        "TABLEFEEDBACK_MPAGE",
+        "NEXTNODE_MPAGE",
+        "TABLERECENTLINKS_MPAGE",
+        "TABLEINFO_MPAGE",
+    ]:
         for tag in article.find_all(attrs={"id": lambda x: x and nid in str(x)}):
             _decompose_safe(article, tag)
 
@@ -247,6 +340,7 @@ def html_to_markdown(html_content: str) -> str:
 # Content hashing
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def compute_hash(text: str) -> str:
     """SHA256 del texto normalizado."""
     return hashlib.sha256(text.strip().encode("utf-8")).hexdigest()
@@ -255,6 +349,7 @@ def compute_hash(text: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # Main scraper
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def scrape(url: str) -> ScrapedArticle:
     """Scrape completo de un artículo wiki."""
@@ -270,9 +365,12 @@ def scrape(url: str) -> ScrapedArticle:
     content_soup = extract_main_content(soup)
     raw_text = content_soup.get_text(separator="\n", strip=True)
 
-    # Extraer título: H1 → primer renglón del contenido → "Unknown"
+    # Extraer título: SAC (*SACTIT) → H1.WikiName → primer renglón → "Unknown"
+    sac_title = content_soup.find(id=lambda x: x and str(x).endswith("SACTIT"))
     h1 = soup.find("h1", {"class": "WikiName"})
-    if h1:
+    if sac_title and sac_title.get_text(strip=True):
+        title = sac_title.get_text(strip=True)
+    elif h1:
         title = h1.get_text(strip=True)
     elif raw_text:
         title = raw_text.split("\n")[0].strip()
@@ -320,53 +418,20 @@ def scrape(url: str) -> ScrapedArticle:
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def main():
     parser = argparse.ArgumentParser(description="Scrape GeneXus wiki article")
     parser.add_argument("url", help="URL del artículo wiki")
-    parser.add_argument("--output-dir", default="data/scraped", help="Directorio de salida")
+    parser.add_argument(
+        "--output-dir", default="data/scraped", help="Directorio de salida"
+    )
     args = parser.parse_args()
 
     article = scrape(args.url)
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # SAC articles: extract numeric article_id from URL path (last path segment before ;;
-    # e.g. .../O:24345;; → 24345. Falls back to content_hash[:12] for wiki.
-    # Extract numeric article_id from URL — two patterns:
-    # 1) PortalParm=S:178:...:O:60933 or path segment O:61672
-    # 2) Article_id is the segment that follows "O:" in the PortalParm or path
-    import urllib.parse
-    parsed = urllib.parse.urlparse(args.url)
-    article_id_from_url = None
-    # Try PortalParm query param first
-    portal = urllib.parse.parse_qs(parsed.query).get('PortalParm', [''])[0]
-    if portal:
-        # Find "O:<digits>" in the PortalParm value (format: S:178:...:O:60933)
-        parts = portal.split(':')
-        for i in range(len(parts) - 1, -1, -1):
-            p = parts[i].strip().rstrip(';').strip()
-            if p.isdigit():
-                if i > 0 and parts[i - 1].strip().rstrip(';').strip() == 'O':
-                    article_id_from_url = p
-                    break
-    if not article_id_from_url:
-        # Fallback: search the raw query string and path for O:<digits> pattern
-        search_in = urllib.parse.unquote(parsed.query + parsed.path)
-        # Match pattern O:number (with possible ; suffixes)
-        import re
-        # GeneXus URLs encode ":" as "%3B" or "%3b" and separate ID with ","
-        # Normalize: decode all URL-encoded chars, replace separators with ':'
-        # This turns "S%3b178%3b94%3b...O%3b,61176%3b%3b" → "S:178:94:...:O:61176:"
-        search_decoded = search_in.replace('%3B', ':').replace('%3b', ':').replace(';', ':').replace(',', ':')
-        # Collapse any sequence of multiple colons into one (e.g. O::61176 → O:61176)
-        search_decoded = re.sub(r':+', ':', search_decoded)
-        # Now find the article_id — pattern "O:<digits>" (SAC), "data=<digits>" (websac), etc.
-        for pattern in (r'O:(\d+)', r'data=(\d+)', r'id=(\d+)'):
-            m = re.search(pattern, search_decoded)
-            if m:
-                article_id_from_url = m.group(1)
-                break
-    safe_name = article_id_from_url or article.metadata.page_id or article.metadata.content_hash[:12]
+    safe_name = article.metadata.page_id or article.metadata.content_hash[:12]
     base = out_dir / safe_name
 
     md_path = base.with_suffix(".md")

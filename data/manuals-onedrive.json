@@ -1,0 +1,161 @@
+{
+  "root": "D:/Users/WGARCIAM/Drive/OneDrive - Banco Contactar/Documentos/Documentación Bantotal",
+  "collection": "bt_docs",
+  "documents": [
+    {
+      "file": "MDI-10110-GL-V3R1.6 - Sistema de Contabilidad.pdf",
+      "ingest": true,
+      "reason": "Manual funcional de Contabilidad. Segundo foco del KB después de Préstamos; los esquemas contables de MDI-10201 remiten a él. 62 capítulos, ~135 chunks."
+    },
+    {
+      "file": "PRD-99000-GL-V2R3.2 - Funcionalidades Bantotal.pdf",
+      "ingest": true,
+      "reason": "Catálogo funcional transversal del core: qué hace cada subsistema. El de mayor rendimiento de texto de toda la carpeta (192 capítulos, ~571 chunks, 41% del corpus previo). Vigilar si diluye el retrieval de los manuales específicos."
+    },
+    {
+      "file": "MDU-10111-GL-V3R1.1 - Sistema de Conciliaciones (1).pdf",
+      "ingest": true,
+      "reason": "Manual de Conciliaciones. 81 capítulos, ~144 chunks. El '(1)' del nombre es del descargador, no una segunda versión."
+    },
+    {
+      "file": "MDU-10308-GL-V3R1.1 - Sistema de Cash Management.pdf",
+      "ingest": true,
+      "reason": "Manual de Cash Management. 32 capítulos, ~60 chunks."
+    },
+    {
+      "file": "MDI-10201-GL-V3R1.5 - Sistema de Seguros.pdf",
+      "ingest": true,
+      "reason": "Manual de Seguros. 27 capítulos, ~57 chunks. OJO: comparte el código MDI-10201 con Préstamos — meta['manual'] no los distingue, solo manual_title y el breadcrumb."
+    },
+    {
+      "file": "MDU-10109-GL-V3R1.11 - Cadena de Cierre.pdf",
+      "ingest": true,
+      "reason": "Cadena de cierre diario. Explica el orden de los procesos batch que tocan las tablas de operaciones. 10 capítulos, ~54 chunks."
+    },
+    {
+      "file": "MDU-10401-GL-V3R1.12 - Bantotal Servicios l Actualización de versión 2_5 a 2_6.pdf",
+      "ingest": true,
+      "reason": "Notas de actualización de Bantotal Servicios 2.5 a 2.6. Corto (2 capítulos, ~5 chunks) pero complementa a MDI-10401, que ya está en el corpus."
+    },
+    {
+      "file": "ETP-10102-GL-V3R1.4 - Información para Gestión Créditos (PSNG9122).pdf",
+      "ingest": true,
+      "reason": "Procedimiento transaccional con el nombre de programa en el título (PSNG9122). Documentos cortos y concretos: responden preguntas puntuales que un manual de 689 páginas entierra."
+    },
+    {
+      "file": "ETP-10110-GL-V2R1.4- Depuración Diaria  (PP017).pdf",
+      "ingest": true,
+      "reason": "Procedimiento de depuración diaria (PP017). Mismo criterio que el resto de los ETP."
+    },
+    {
+      "file": "ETP-10114-PE-V3R1.7 - Reporte Sobrendeudamiento (PDEPE83-PDEPE84-PRIPE189).pdf",
+      "ingest": true,
+      "reason": "Reporte de sobrendeudamiento. Localización PE, no CO — entra igual porque la lógica de cálculo es la misma; el país queda en el nombre del archivo."
+    },
+    {
+      "file": "ETP-10206-CO-V3R1.5 - Funcionalidad de Polizas (HJCCA154).pdf",
+      "ingest": true,
+      "reason": "Funcionalidad de pólizas (HJCCA154). Localización CO — la de Banco Contactar."
+    },
+    {
+      "file": "ETP-10801-UY-V2R2.1 - Lavado de dinero (PBCU031-32-33).pdf",
+      "ingest": true,
+      "reason": "Controles de lavado de dinero. Localización UY: la parametrización difiere de CO, contrastar antes de aplicar lo que diga."
+    },
+    {
+      "file": "ETP-10801-UY-V2R3.3 - Tablón de Créditos  (PRNUY30X).pdf",
+      "ingest": true,
+      "reason": "Tablón de créditos (PRNUY30X). Comparte el código ETP-10801 con el documento de lavado de dinero pese a ser otro tema; distinguir por manual_title."
+    },
+    {
+      "file": "ETP-11600-GL-V3R1.1- Reprogramación Créditos (HPP1919).pdf",
+      "ingest": true,
+      "reason": "Reprogramación de créditos (HPP1919). Directamente relevante al sistema 50."
+    },
+    {
+      "file": "ECP-000302-V3R1.1 - Renovación Pólizas De Seguros (PJCCA311).pdf",
+      "ingest": true,
+      "reason": "Renovación de pólizas (PJCCA311). Solo 3 páginas y 6 imágenes: rinde 1 capítulo de 129 palabras. Entra por ser barato y concreto, no por volumen."
+    },
+    {
+      "file": "MDI-10109-GL-V3R1.25 - Sistema de Contrapartes.pdf",
+      "ingest": false,
+      "reason": "FUERA: es la V3R1.25 y el corpus ya tiene la V3R1.28 (data/manuals.json). Ingestar las dos duplicaría 124 capítulos con versiones en conflicto."
+    },
+    {
+      "file": "MDI-10201-GL-V3R1.20 - Sistema de Préstamos.pdf",
+      "ingest": false,
+      "reason": "FUERA: mismo archivo y misma versión que el ya declarado en data/manuals.json."
+    },
+    {
+      "file": "MDI-10401-GL-V3R1.4 - Bantotal Servicios 2.6 l Publicación de Servicios Bantotal.pdf",
+      "ingest": false,
+      "reason": "FUERA: mismo documento que 'MDI-10401-GL-V3R1.4 - Bantotal Servicios 2.6.pdf', ya en el corpus. Solo cambia el nombre del archivo."
+    },
+    {
+      "file": "MDU-10102-GL-V3R1.2 - Descartes - Diseñador Web UI.pdf",
+      "ingest": false,
+      "reason": "FUERA: ya declarado en data/manuals.json."
+    },
+    {
+      "file": "MDU-10102-GL-V3R1.2 - Descartes - Servidor de Procesos.pdf",
+      "ingest": false,
+      "reason": "FUERA: ya declarado en data/manuals.json."
+    },
+    {
+      "file": "MDU-99000-GL-V2R3.4 - Modelo de Datos Bantotal _ Inventario de Tablas.pdf",
+      "ingest": false,
+      "reason": "FUERA por decisión del 2026-07-27, ya registrada en data/manuals.json: 2.558 chunks que duplican lo que el MCP bantotal-dev responde con datos reales."
+    },
+    {
+      "file": "Curso Contabilidad/CAP-10111-GL-V2R2.1  - Conceptos de Contabilidad.pdf",
+      "ingest": false,
+      "reason": "FUERA por ahora: parsea bien (CAP-10111, V2R2.1) pero es material de curso, no documentación de producto. Quedó fuera del alcance aprobado; revisar si hace falta contexto contable de base."
+    },
+    {
+      "file": "Buenas Prácticas Programación GX16 - Bantotal V3 - Pionero.pdf",
+      "ingest": false,
+      "reason": "FUERA de bt_docs: son buenas prácticas de programación GeneXus, no documentación funcional del core. Su lugar natural es gx_docs, con la clasificación de género correspondiente."
+    },
+    {
+      "file": "instalaciongenexus16ConDescartes.pdf",
+      "ingest": false,
+      "reason": "FUERA: manual de instalación. Mismo criterio con que se excluyó MDI-10102 Descartes (instalador) en data/manuals.json."
+    },
+    {
+      "file": "Curso Contabilidad/Introducción a la Contabilidad Bantotal.pdf",
+      "ingest": false,
+      "reason": "FUERA: material de curso sin código de documento, sin versión y sin numeración de capítulos — se ingestaría con manual='' y el nombre de archivo como título."
+    },
+    {
+      "file": "Curso Contabilidad/NIIF-2019-Completas.pdf",
+      "ingest": false,
+      "reason": "FUERA: son las normas NIIF, no documentación Bantotal. No pertenece a este corpus."
+    },
+    {
+      "file": "Contabilización Batch/Taller - Contabilización batch 19.pdf",
+      "ingest": false,
+      "reason": "FUERA: material de taller sin código ni versión. Revisar aparte si aporta algo que MDI-10110 no cubra."
+    },
+    {
+      "file": "Rutinas/256028_2_1_Devuelve Plan de Pagos Original (RRG0547).pdf",
+      "ingest": false,
+      "reason": "FUERA: ficha de rutina sin convención de nombre. El contenido puede servir, pero primero hay que decidir cómo se citan estas rutinas."
+    },
+    {
+      "file": "Rutinas/sgr_256482.pdf",
+      "ingest": false,
+      "reason": "FUERA: mismo caso, y el nombre no dice de qué rutina se trata."
+    },
+    {
+      "file": "Rutinas/sgr_256482_1408.pdf",
+      "ingest": false,
+      "reason": "FUERA: aparente variante por fecha del anterior; sin resolver cuál es la vigente, ingestar las tres es garantía de contradicción."
+    },
+    {
+      "file": "Rutinas/sgr_256482_1508.pdf",
+      "ingest": false,
+      "reason": "FUERA: misma serie que sgr_256482 y sgr_256482_1408."
+    }
+  ]
+}

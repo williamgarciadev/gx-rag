@@ -5,18 +5,24 @@ Puerto: 8000
 Expone endpoints para scraper, ver estado y gestionar la cola de ingesta.
 """
 
+import ipaddress
 import json
 import logging
 import shutil
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, model_validator
 
 from scripts import scrape_wiki as scraper
+from scripts.scrape_sac import DEFAULT_DELAY, DEFAULT_MAX_MISSES, DEFAULT_MIN_WORDS
+from src import sac_jobs
+from src.auth import bearer_token, client_ip, is_authorized
+from src.config import config
 from src.ingestion.ingestor import ingest, SCRAPED_DIR
+from src.net_guard import BlockedUrlError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -29,13 +35,74 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Endpoints reachable without a token. `/health` is what the container
+# healthcheck curls, so gating it would fail the deploy for no security gain.
+_OPEN_PATHS = frozenset({"/health"})
+
+# Keys are read once at import and parked on app.state so tests can swap them
+# without reaching into module globals.
+app.state.admin_api_keys = config.admin_api_key_set
+
+
+def _is_loopback(host: str) -> bool:
+    """True for a request that originated inside this container/host."""
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+@app.middleware("http")
+async def require_api_key(request: Request, call_next):
+    """Gate every endpoint except `_OPEN_PATHS` behind a bearer token."""
+    if request.method == "OPTIONS" or request.url.path in _OPEN_PATHS:
+        return await call_next(request)
+
+    keys: frozenset[str] = request.app.state.admin_api_keys
+    if not keys:
+        if _is_loopback(client_ip(request.scope)):
+            return await call_next(request)
+        log.warning(
+            "Rejected %s %s from %s: no GX_ADMIN_API_KEYS configured, so only "
+            "loopback is allowed.",
+            request.method,
+            request.url.path,
+            client_ip(request.scope),
+        )
+        return JSONResponse(status_code=401, content={"detail": "unauthorized"})
+
+    if not is_authorized(bearer_token(request.scope), keys):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "unauthorized"},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return await call_next(request)
+
+
+# Added AFTER the auth middleware so CORS wraps the gate
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.allowed_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(BlockedUrlError)
+async def blocked_url_handler(request: Request, exc: BlockedUrlError):
+    """A refused URL is the caller's problem (400), not a server fault (500)."""
+    log.warning(f"{request.method} {request.url.path} blocked URL: {exc}")
+    return JSONResponse(
+        status_code=400,
+        content={
+            "detail": (
+                "URL no permitida: solo se aceptan orígenes de documentación "
+                "autorizados."
+            )
+        },
+    )
 
 
 @app.exception_handler(Exception)
@@ -94,6 +161,56 @@ class ArticleItem(BaseModel):
 class ArticlesResponse(BaseModel):
     count: int
     articles: list[ArticleItem]
+
+
+# Bounds keep the admin UI from launching an abusive outbound crawl.
+_MAX_IDS = 500
+_MAX_RANGE_SPAN = 5000
+_MAX_ARTICLE_ID = 10_000_000
+
+
+class SacScrapeRequest(BaseModel):
+    """Launch a SAC scraping job. `mode` selects which of ids/range/sweep runs."""
+
+    mode: Literal["ids", "range", "sweep"]
+    ids: list[int] | None = None
+    start: int | None = None
+    end: int | None = None
+    min_words: int = Field(DEFAULT_MIN_WORDS, ge=0, le=1000)
+    delay: float = Field(DEFAULT_DELAY, ge=0.1, le=10.0)
+    max_misses: int = Field(DEFAULT_MAX_MISSES, ge=1, le=500)
+    limit: int = Field(0, ge=0, le=10000)
+    dry_run: bool = False
+
+    @model_validator(mode="after")
+    def _check_mode_args(self) -> "SacScrapeRequest":
+        def _valid_id(n: int) -> bool:
+            return 1 <= n <= _MAX_ARTICLE_ID
+
+        if self.mode == "ids":
+            if not self.ids:
+                raise ValueError("mode 'ids' requires a non-empty 'ids' list")
+            if len(self.ids) > _MAX_IDS:
+                raise ValueError(f"at most {_MAX_IDS} ids per job")
+            if not all(_valid_id(n) for n in self.ids):
+                raise ValueError("ids must be between 1 and 10_000_000")
+        elif self.mode == "range":
+            if self.start is None or self.end is None:
+                raise ValueError("mode 'range' requires 'start' and 'end'")
+            if not (_valid_id(self.start) and _valid_id(self.end)):
+                raise ValueError("start/end must be between 1 and 10_000_000")
+            if self.end < self.start:
+                raise ValueError("end must be >= start")
+            if self.end - self.start + 1 > _MAX_RANGE_SPAN:
+                raise ValueError(f"range span exceeds {_MAX_RANGE_SPAN}")
+        elif self.mode == "sweep":
+            if self.start is None or not _valid_id(self.start):
+                raise ValueError("mode 'sweep' requires a valid 'start'")
+        return self
+
+    def to_run_params(self) -> dict:
+        """Keyword args for scrape_sac.run_sac (drops nothing — fields align)."""
+        return self.model_dump()
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
@@ -222,6 +339,41 @@ def list_articles():
             log.warning(f"Failed to read {meta_file}: {exc}")
     articles.sort(key=lambda a: a.scraped_at or "", reverse=True)
     return ArticlesResponse(count=len(articles), articles=articles)
+
+
+# ─── SAC scraping jobs (admin UI) ──────────────────────────────────────────────
+
+
+@app.post("/sac/scrape", tags=["sac"])
+def sac_scrape(req: SacScrapeRequest):
+    """Launch a SAC scraping job in the background. Returns the job id to poll."""
+    job_id = sac_jobs.start_job(req.to_run_params())
+    return {"job_id": job_id, "status": "running", "params": req.to_run_params()}
+
+
+@app.get("/sac/jobs", tags=["sac"])
+def sac_jobs_list():
+    """List SAC jobs (newest first)."""
+    jobs = sac_jobs.list_jobs()
+    return {"count": len(jobs), "jobs": jobs}
+
+
+@app.get("/sac/jobs/{job_id}", tags=["sac"])
+def sac_job_get(job_id: str):
+    """Progress snapshot for a single SAC job."""
+    job = sac_jobs.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job no encontrado")
+    return job
+
+
+@app.post("/sac/jobs/{job_id}/cancel", tags=["sac"])
+def sac_job_cancel(job_id: str):
+    """Request cancellation of a running SAC job (takes effect after the current
+    article finishes)."""
+    if not sac_jobs.cancel_job(job_id):
+        raise HTTPException(status_code=404, detail="Job no encontrado")
+    return {"job_id": job_id, "cancelling": True}
 
 
 # ─── Retrieval endpoints (MCP wrapper support) ─────────────────────────────────
