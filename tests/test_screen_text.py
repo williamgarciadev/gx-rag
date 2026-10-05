@@ -76,6 +76,33 @@ def test_a_repeated_amount_or_date_is_not_a_title(value):
     assert screen_title(lines) == ""
 
 
+def test_header_that_extends_the_tab_title_is_the_title():
+    # Líneas reales del frame de las 03:01 del video de Definición de transacciones:
+    # la pestaña dice el nombre corto y el encabezado le agrega la operación. Con
+    # la comparación exacta no había título y el paso heredaba uno falso
+    # («Autorización de Excepciones»).
+    lines = ["Inicio Accesos :: Menú de Instalación de Bantotal", "Bantotal",
+             "Ingreso de Operaciones", "Ingreso de Operaciones - Depósito en CV",
+             "CONFIRMACION", "Concepto", "Cuenta Vista", "1,000.00", "1,000.00"]
+
+    assert screen_title(lines) == "Ingreso de Operaciones - Depósito en CV"
+
+
+def test_tab_title_truncated_by_the_ocr_still_matches_the_header():
+    # Frame real de las 03:05: la pestaña sale cortada en la segunda lectura.
+    lines = ["Inicio Accesos :: Menú de Instala", "Windows Internet Explorer", "Bantotal",
+             "Ingreso de Operaciones", "Ingreso de Opera"]
+
+    assert screen_title(lines) == "Ingreso de Operaciones"
+
+
+def test_a_one_word_line_does_not_prefix_match_a_longer_one():
+    # «Cuenta» y «Cuenta Vista» son dos etiquetas distintas de la misma grilla.
+    lines = ["Cuenta", "Cuenta Vista", "Moneda", "Moneda Extranjera"]
+
+    assert screen_title(lines) == ""
+
+
 def test_without_a_repeated_title_there_is_no_title():
     # El respaldo "primera línea que no es interfaz" dio basura en 6 de 22
     # secciones del video de Definición de transacciones: «Imprimirt», «errar»,

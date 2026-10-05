@@ -68,14 +68,22 @@ def screen_title(lines: list[str]) -> str:
     Sin repetición devuelve "": adivinar con "la primera línea que no es interfaz"
     dio basura en 6 de 22 secciones de otro video («Imprimirt», «1,000.00», «F12»).
     """
-    seen: set[str] = set()
+    seen: dict[str, str] = {}
     for line in lines:
         key = _line_key(line)
-        # Dos palabras con letras: un importe o una fecha también se repiten
-        # («1,000.00», «28/04/14») y no nombran ninguna pantalla.
-        if sum(t.isalpha() for t in key.split()) >= 2 and key in seen:
-            return line.strip()
-        seen.add(key)
+        for prev_key, prev_line in seen.items():
+            short, long = sorted((prev_key, key), key=len)
+            # Dos palabras con letras en la clave corta: un importe o una fecha
+            # también se repiten («1,000.00», «28/04/14») y no nombran ninguna
+            # pantalla, y «Cuenta» es prefijo de «Cuenta Vista» sin ser su título.
+            if sum(t.isalpha() for t in short.split()) < 2:
+                continue
+            # Prefijo y no igualdad: el encabezado le agrega la operación a la
+            # pestaña («Ingreso de Operaciones - Depósito en CV»), o el OCR corta
+            # la segunda lectura («Ingreso de Opera»). Gana la línea más larga.
+            if long.startswith(short):
+                return max(prev_line, line.strip(), key=len)
+        seen[key] = line.strip()
     return ""
 
 
