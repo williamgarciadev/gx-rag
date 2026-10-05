@@ -8,8 +8,8 @@ Options:
     --transcript FILE       Pre-existing transcript file (.vtt or .srt)
     --module NAME           Bantotal business module (e.g., Cuentas, Préstamos, Contabilidad)
     --title TITLE           Custom title for the document
-    --scene-threshold N     Sensitivity for ffmpeg scene change detection (default: 0.3)
-    --whisper-model SIZE    Whisper model size: tiny, base, small, medium (default: base)
+    --diff-threshold N      Mean thumbnail difference (0-255) that counts as a new screen (default: 6.0)
+    --whisper-model SIZE    faster-whisper model size: tiny, base, small, medium (default: small)
     --index                 Automatically index into PostgreSQL vectorstore
     --keep-frames           Keep extracted keyframes in output directory for visual audit
     --dry-run               Parse and display preview without saving files or writing to DB
@@ -21,7 +21,12 @@ import argparse
 import sys
 from pathlib import Path
 
-from src.ingestion.video_pipeline import VideoIngestPipeline, format_timestamp
+from src.ingestion.video_pipeline import (
+    AudioTranscriber,
+    FrameExtractor,
+    VideoIngestPipeline,
+    format_timestamp,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -54,16 +59,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Custom title for the generated document",
     )
     parser.add_argument(
-        "--scene-threshold",
+        "--diff-threshold",
         type=float,
-        default=0.3,
-        help="Scene change detection sensitivity (default: 0.3)",
+        default=6.0,
+        help="Mean grayscale thumbnail difference (0-255) for a new screen; 6.0 measured in the pilot",
     )
     parser.add_argument(
         "--whisper-model",
         type=str,
-        default="base",
-        help="Whisper model tier (tiny, base, small, medium)",
+        default="small",
+        help="faster-whisper model tier (tiny, base, small, medium); small is what the pilot measured",
     )
     parser.add_argument(
         "--index",
@@ -99,11 +104,14 @@ def main() -> int:
         return 1
 
     output_dir = Path(args.output_dir)
-    pipeline = VideoIngestPipeline()
+    pipeline = VideoIngestPipeline(
+        frame_extractor=FrameExtractor(diff_threshold=args.diff_threshold),
+        transcriber=AudioTranscriber(model_size=args.whisper_model),
+    )
 
     print(f"==> Processing video: {video_path.name}")
     print(f"    Module: {args.module}")
-    print(f"    Scene threshold: {args.scene_threshold}")
+    print(f"    Diff threshold: {args.diff_threshold}")
     if args.transcript:
         print(f"    Transcript source: {args.transcript}")
 
@@ -117,8 +125,6 @@ def main() -> int:
                 title=args.title,
                 module=args.module,
                 transcript_file=Path(args.transcript) if args.transcript else None,
-                scene_threshold=args.scene_threshold,
-                whisper_model=args.whisper_model,
                 keep_temp_frames=False,
             )
             print("\n[DRY-RUN PREVIEW]")
@@ -137,8 +143,6 @@ def main() -> int:
         title=args.title,
         module=args.module,
         transcript_file=Path(args.transcript) if args.transcript else None,
-        scene_threshold=args.scene_threshold,
-        whisper_model=args.whisper_model,
         keep_temp_frames=args.keep_frames,
     )
 

@@ -116,6 +116,16 @@
    "file": "bantotal-curado/procesos/Envio_de_Mail_PXWFMAIL.md",
    "ingest": true,
    "reason": "Envío de correo por Bantotal: programa PXWFMAIL (firma Parm, separadores) y parámetros SMTP en XWFV02 código 20. Sin valores de credenciales."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/curso-contabilidad-clientes-y-contabilidad-2021-04-06.md",
+   "ingest": true,
+   "reason": "Transcripción (audio + texto de pantalla) de la capacitación de contabilidad, clientes y contabilidad del 2021-04-06, generada con el pipeline de video local. Lleva cédulas SIN anonimizar por decisión del usuario."
+  },
+  {
+   "file": "Bantotal/MDU-10403-GL-V3R1.1 - BTSConsumer 2.1.pdf",
+   "ingest": true,
+   "reason": "Manual MDU-10403 de BTSConsumer 2.1 (consumo de servicios Bantotal)."
   }
  ]
 }

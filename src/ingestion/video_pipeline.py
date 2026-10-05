@@ -1,30 +1,48 @@
 """Video ingestion pipeline for Bantotal training and demo videos.
 
-Implements a high-semantic-density extraction pipeline:
-1. Video scene-change keyframe extraction via ffmpeg.
-2. Synchronized audio transcription with timestamps (Whisper, Gemini, or VTT/SRT).
-3. Screen text and table extraction (PaddleOCR / PP-Structure with modular fallback).
-4. Alignment into self-contained Markdown with YAML frontmatter, executive summary,
-   and timestamped chronological steps optimized for LLM RAG retrieval.
+Todo local y en CPU; nada sale de la máquina (sin motores en la nube, a propósito):
+1. Frames por cambio de pantalla con PyAV (`FrameExtractor`); ffmpeg no está instalado.
+2. Transcripción con faster-whisper por bloques reanudables (`AudioTranscriber`), o un
+   transcript existente (VTT/SRT/JSON/Markdown).
+3. OCR de pantalla con PaddleOCR 3.x, con la webcam tapada (`ScreenOCR`).
+4. Armado en Markdown por pantalla, con el texto limpio por `screen_text`: la interfaz
+   una sola vez, los documentos de identidad enmascarados, el título de la pantalla.
+
+Dependencias pesadas en requirements-video.txt; los parámetros por defecto son los que
+midió el piloto «Curso Contabilidad — Clientes y contabilidad» (2026-10-05).
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import re
 import shutil
-import subprocess
-from dataclasses import asdict, dataclass, field
+import wave
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+import numpy as np
+
+from src.ingestion.screen_text import (
+    clean_screen_lines,
+    document_numbers,
+    interface_keys,
+    is_useful_screen,
+    mask_document_numbers,
+    screen_title,
+)
 
 log = logging.getLogger(__name__)
 
 # Bantotal transaction & table patterns (e.g., B701, FSD011, FST900, RTE99, PA01)
 _BT_TABLE_PATTERN = re.compile(r"\b(FS[A-Z0-9]{3,6})\b", re.IGNORECASE)
 _BT_PROGRAM_PATTERN = re.compile(r"\b([A-Z]{1,4}\d{2,5}[A-Z0-9]?)\b")
+# Teclas de función (F12 confirma en Bantotal): tienen forma de programa y no lo son.
+_FUNCTION_KEY = re.compile(r"^F\d{1,2}$")
 
 
 @dataclass
@@ -110,131 +128,102 @@ def extract_bt_identifiers(text: str) -> tuple[list[str], list[str]]:
     raw_tables = sorted(set(t.upper() for t in _BT_TABLE_PATTERN.findall(text)))
     raw_progs = set(_BT_PROGRAM_PATTERN.findall(text))
     # Exclude identifiers that are already identified as tables
-    programs = sorted(p for p in raw_progs if p.upper() not in raw_tables and not p.upper().startswith("FS"))
+    programs = sorted(p for p in raw_progs if p.upper() not in raw_tables and not p.upper().startswith("FS")
+                      and not _FUNCTION_KEY.match(p))
     return programs, raw_tables
 
 
 class FrameExtractor:
-    """Extracts keyframes based on scene changes or periodic sampling using ffmpeg."""
+    """Extrae un frame cada vez que cambia la pantalla, con PyAV (sin ffmpeg instalado).
 
-    def __init__(self, ffmpeg_bin: str = "ffmpeg"):
-        self.ffmpeg_bin = ffmpeg_bin
+    Compara una miniatura en grises contra la del último frame guardado. En una
+    grabación de pantalla eso equivale a "cambió la pantalla". Se decodifica todo
+    el video y se mira una muestra por segundo: solo con los I-frames del códec se
+    pierden pantallas (el GOP del piloto era de ~34 s).
+    """
+
+    THUMBNAIL = (64, 36)  # ancho, alto de la huella que se compara
+
+    def __init__(self, diff_threshold: float = 6.0, min_gap_seconds: float = 3.0,
+                 sample_seconds: float = 1.0):
+        # diff_threshold: diferencia media absoluta (0-255) para "pantalla nueva".
+        # min_gap_seconds: una animación o un parpadeo no es una pantalla nueva.
+        self.diff_threshold = diff_threshold
+        self.min_gap_seconds = min_gap_seconds
+        self.sample_seconds = sample_seconds
 
     def get_duration(self, video_path: Path) -> float:
-        """Get video duration in seconds via ffprobe or ffmpeg."""
-        ffprobe_bin = shutil.which("ffprobe") or "ffprobe"
-        cmd = [
-            ffprobe_bin,
-            "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
-            str(video_path),
-        ]
-        try:
-            res = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            return float(res.stdout.strip())
-        except Exception as e:
-            log.warning(f"Could not get duration via ffprobe: {e}. Defaulting to 0.0")
-            return 0.0
+        import av  # type: ignore
 
-    def extract_keyframes(
-        self,
-        video_path: Path,
-        output_dir: Path,
-        scene_threshold: float = 0.3,
-        fallback_interval: float = 10.0,
-    ) -> list[Keyframe]:
-        """Extract keyframes at scene changes into output_dir.
+        with av.open(str(video_path)) as container:
+            if container.duration is None:
+                raise ValueError(f"El contenedor no declara duración: {video_path}")
+            return container.duration / av.time_base
 
-        Falls back to periodic sampling if scene detection yields fewer than 2 frames.
-        """
+    def extract_keyframes(self, video_path: Path, output_dir: Path) -> list[Keyframe]:
+        import av  # type: ignore
+
         output_dir.mkdir(parents=True, exist_ok=True)
-        img_pattern = output_dir / "frame_%04d.jpg"
-
-        # Pass 1: Scene change detection filter with showinfo
-        cmd = [
-            self.ffmpeg_bin,
-            "-y",
-            "-i", str(video_path),
-            "-vf", f"select='gt(scene,{scene_threshold})',showinfo",
-            "-vsync", "vfr",
-            "-q:v", "2",
-            str(img_pattern),
-        ]
-
         keyframes: list[Keyframe] = []
-        try:
-            proc = subprocess.run(cmd, capture_output=True, text=True)
-            stderr = proc.stderr
-
-            # Parse showinfo output for timestamps: pts_time:12.34
-            pts_matches = re.findall(r"pts_time:([\d\.]+)", stderr)
-            extracted_files = sorted(output_dir.glob("frame_*.jpg"))
-
-            for idx, img_file in enumerate(extracted_files):
-                ts = float(pts_matches[idx]) if idx < len(pts_matches) else idx * fallback_interval
-                keyframes.append(
-                    Keyframe(
-                        index=idx,
-                        timestamp=ts,
-                        timestamp_str=format_timestamp(ts),
-                        image_path=img_file,
-                        scene_score=scene_threshold,
-                    )
-                )
-        except Exception as e:
-            log.error(f"ffmpeg scene extraction failed: {e}")
-
-        # Fallback: if no keyframes detected (e.g. static screen recording), sample every N seconds
-        if len(keyframes) < 2:
-            log.info(f"Few scene changes detected ({len(keyframes)}). Running interval fallback ({fallback_interval}s).")
-            keyframes.clear()
-            fallback_pattern = output_dir / "interval_%04d.jpg"
-            cmd_fallback = [
-                self.ffmpeg_bin,
-                "-y",
-                "-i", str(video_path),
-                "-vf", f"fps=1/{fallback_interval}",
-                "-q:v", "2",
-                str(fallback_pattern),
-            ]
-            subprocess.run(cmd_fallback, capture_output=True, text=True)
-            files = sorted(output_dir.glob("interval_*.jpg"))
-            for idx, img_file in enumerate(files):
-                ts = idx * fallback_interval
-                keyframes.append(
-                    Keyframe(
-                        index=idx,
-                        timestamp=ts,
-                        timestamp_str=format_timestamp(ts),
-                        image_path=img_file,
-                        scene_score=0.0,
-                    )
-                )
-
+        last_print = last_kept_at = last_sample = None
+        with av.open(str(video_path)) as container:
+            stream = container.streams.video[0]
+            stream.thread_type = "AUTO"
+            for frame in container.decode(stream):
+                t = float(frame.time)
+                if last_sample is not None and t - last_sample < self.sample_seconds:
+                    continue
+                last_sample = t
+                print_ = frame.to_ndarray(format="gray", width=self.THUMBNAIL[0],
+                                          height=self.THUMBNAIL[1]).astype(np.int16)
+                diff = float(np.abs(print_ - last_print).mean()) if last_print is not None else 0.0
+                if last_print is not None and (t - last_kept_at < self.min_gap_seconds
+                                               or diff < self.diff_threshold):
+                    continue
+                image_path = output_dir / f"f_{len(keyframes):05d}.png"
+                frame.to_image().save(image_path)
+                keyframes.append(Keyframe(index=len(keyframes), timestamp=t, timestamp_str=format_timestamp(t),
+                                          image_path=image_path, scene_score=diff))
+                last_print, last_kept_at = print_, t
         return keyframes
 
 
 class AudioTranscriber:
-    """Extracts audio and produces synchronized transcript segments."""
+    """Extracts audio and produces synchronized transcript segments.
 
-    def __init__(self, ffmpeg_bin: str = "ffmpeg"):
-        self.ffmpeg_bin = ffmpeg_bin
+    Todo local: faster-whisper en CPU. No hay motor en la nube a propósito: el
+    audio de una capacitación del banco no sale de la máquina.
+    """
+
+    SAMPLE_RATE = 16000  # lo que espera Whisper
+
+    # Contexto para Whisper: sin él escribe «man total» por «Bantotal» (medido en el
+    # video de Definición de transacciones). Solo términos que el audio usa de verdad.
+    DOMAIN_PROMPT = ("Capacitación de Bantotal, core bancario. Módulo, transacción, ordinal, "
+                     "subordinal, rubro, concepto, asiento contable, cuenta vista, Banco Contactar.")
+
+    def __init__(self, model_size: str = "small", model: Any = None, block_seconds: int = 600,
+                 initial_prompt: str = DOMAIN_PROMPT):
+        self.model_size = model_size
+        self._model = model
+        self.block_seconds = block_seconds
+        self.initial_prompt = initial_prompt
 
     def extract_audio(self, video_path: Path, output_audio_path: Path) -> Path:
-        """Extract 16kHz mono PCM WAV for transcription engines."""
+        """Extract 16kHz mono PCM WAV with PyAV (ffmpeg no está instalado en esta máquina)."""
+        import av  # type: ignore
+
         output_audio_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd = [
-            self.ffmpeg_bin,
-            "-y",
-            "-i", str(video_path),
-            "-vn",
-            "-acodec", "pcm_s16le",
-            "-ar", "16000",
-            "-ac", "1",
-            str(output_audio_path),
-        ]
-        subprocess.run(cmd, capture_output=True, check=True)
+        resampler = av.AudioResampler(format="s16", layout="mono", rate=self.SAMPLE_RATE)
+        with av.open(str(video_path)) as container, wave.open(str(output_audio_path), "wb") as out:
+            out.setnchannels(1)
+            out.setsampwidth(2)
+            out.setframerate(self.SAMPLE_RATE)
+            for frame in container.decode(audio=0):
+                for chunk in resampler.resample(frame):
+                    out.writeframes(chunk.to_ndarray().tobytes())
+            for chunk in resampler.resample(None):  # vacía lo que quedó en el resampler
+                out.writeframes(chunk.to_ndarray().tobytes())
         return output_audio_path
 
     @staticmethod
@@ -320,134 +309,107 @@ class AudioTranscriber:
 
         return segments
 
-    def transcribe(
-        self,
-        audio_path: Path,
-        whisper_model: str = "base",
-        gemini_api_key: str | None = None,
-    ) -> list[TranscriptSegment]:
-        """Transcribe audio using local faster-whisper/whisper or Gemini if available."""
-        # 1. Try Gemini if API key provided or present in environment
-        key = gemini_api_key or os.environ.get("GEMINI_API_KEY")
-        if key:
+    def transcribe(self, audio_path: Path, work_dir: Path) -> list[TranscriptSegment]:
+        """Transcribe por bloques de `block_seconds`, reanudable.
+
+        faster-whisper hace segfault con el audio entero de 2 h 38 min (con 60 s
+        funciona, con VAD y sin VAD; medido en el piloto). Por bloques no pasa, y
+        cada bloque terminado queda en `work_dir/bloques/` para no repetirlo si el
+        proceso se corta.
+        """
+        model = self._load_model()
+        blocks_dir = work_dir / "bloques"
+        blocks_dir.mkdir(parents=True, exist_ok=True)
+        segments: list[TranscriptSegment] = []
+        with wave.open(str(audio_path)) as wav:
+            rate = wav.getframerate()
+            n_blocks = math.ceil(wav.getnframes() / (rate * self.block_seconds))
+            for i in range(n_blocks):
+                block_file = blocks_dir / f"b{i:03d}.json"
+                if not block_file.exists():
+                    offset = i * self.block_seconds
+                    wav.setpos(offset * rate)
+                    pcm = wav.readframes(self.block_seconds * rate)
+                    audio = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768
+                    found, _ = model.transcribe(audio, language="es", vad_filter=True,
+                                                vad_parameters={"min_silence_duration_ms": 500},
+                                                initial_prompt=self.initial_prompt)
+                    block = [{"start": offset + s.start, "end": offset + s.end, "text": s.text.strip()}
+                             for s in found]
+                    block_file.write_text(json.dumps(block, ensure_ascii=False), encoding="utf-8")
+                    log.info(f"Bloque {i + 1}/{n_blocks} transcrito ({len(block)} segmentos)")
+                segments += [TranscriptSegment(**d)
+                             for d in json.loads(block_file.read_text(encoding="utf-8"))]
+        return segments
+
+    def _load_model(self) -> Any:
+        if self._model is None:
             try:
-                return self._transcribe_gemini(audio_path, key)
-            except Exception as e:
-                log.warning(f"Gemini transcription failed: {e}. Falling back to Whisper.")
-
-        # 2. Try faster-whisper or whisper
-        try:
-            import whisper  # type: ignore
-
-            log.info(f"Transcribing with OpenAI Whisper ({whisper_model})...")
-            model = whisper.load_model(whisper_model)
-            result = model.transcribe(str(audio_path), language="es")
-            segments = []
-            for seg in result.get("segments", []):
-                segments.append(
-                    TranscriptSegment(
-                        start=float(seg["start"]),
-                        end=float(seg["end"]),
-                        text=seg["text"].strip(),
-                    )
-                )
-            return segments
-        except ImportError:
-            pass
-
-        log.warning(
-            "Neither whisper nor GEMINI_API_KEY available for automatic transcription. "
-            "Pass an existing transcript file via --transcript."
-        )
-        return []
-
-    def _transcribe_gemini(self, audio_path: Path, api_key: str) -> list[TranscriptSegment]:
-        """Transcribe audio using Google Gemini multimodal API."""
-        try:
-            from google import genai  # type: ignore
-            from google.genai import types  # type: ignore
-
-            client = genai.Client(api_key=api_key)
-            uploaded_file = client.files.upload(file=str(audio_path))
-
-            prompt = (
-                "Transcribe this banking training audio in Spanish with precise timestamps. "
-                "Output ONLY a JSON array with objects containing 'start' (float seconds), "
-                "'end' (float seconds), and 'text' (string). "
-                "Example: [{\"start\": 0.0, \"end\": 4.2, \"text\": \"Buenas tardes...\"}]"
-            )
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[uploaded_file, prompt],
-            )
-            text = response.text or ""
-            # Strip markdown json codeblock if present
-            cleaned = re.sub(r"^```json\s*", "", text.strip())
-            cleaned = re.sub(r"```$", "", cleaned.strip())
-            data = json.loads(cleaned)
-            segments = [
-                TranscriptSegment(
-                    start=float(item["start"]),
-                    end=float(item["end"]),
-                    text=item["text"].strip(),
-                )
-                for item in data
-            ]
-            return segments
-        except Exception as e:
-            raise RuntimeError(f"Gemini API transcription failed: {e}") from e
+                from faster_whisper import WhisperModel  # type: ignore
+            except ImportError as e:
+                raise RuntimeError(
+                    "faster-whisper no está instalado (pip install -r requirements-video.txt). "
+                    "Para ingerir sin transcribir, pasa un transcript existente con --transcript."
+                ) from e
+            self._model = WhisperModel(self.model_size, device="cpu", compute_type="int8")
+        return self._model
 
 
 class ScreenOCR:
-    """OCR and Document AI adapter for video frames (PaddleOCR / PP-Structure)."""
+    """OCR de los frames con PaddleOCR 3.x (PP-OCRv6 medium en la 3.7), en CPU.
 
-    def __init__(self, lang: str = "es"):
-        self.lang = lang
-        self._paddle = None
-        self._paddle_available = False
-        self._init_paddle()
+    Tapa la webcam antes del OCR: el recuadro trae el nombre y la cara de quien
+    expone, y ese texto no debe llegar al RAG.
+    """
 
-    def _init_paddle(self) -> None:
+    # Recuadro de la webcam como fracción de la imagen (x0, y0, x1, y1). Medido en
+    # el piloto sobre 1920x1080: (1600, 0, 1920, 185). None desactiva la máscara.
+    WEBCAM_BOX = (1600 / 1920, 0.0, 1.0, 185 / 1080)
+    MIN_CONFIDENCE = 0.80
+
+    def __init__(self, lang: str = "es", engine: Any = None,
+                 webcam_box: tuple[float, float, float, float] | None = WEBCAM_BOX):
+        self.webcam_box = webcam_box
+        self._engine = engine or self._load_engine(lang)
+
+    @staticmethod
+    def _load_engine(lang: str) -> Any:
         try:
-            from paddleocr import PaddleOCR  # type: ignore
+            import truststore  # type: ignore
 
-            self._paddle = PaddleOCR(use_angle_cls=True, lang=self.lang, show_log=False)
-            self._paddle_available = True
-            log.info("PaddleOCR successfully initialized.")
-        except ImportError:
-            log.info("PaddleOCR not installed. Using heuristic text extraction fallback.")
-            self._paddle_available = False
+            truststore.inject_into_ssl()  # la red del banco intercepta TLS al bajar los modelos
+            os.environ.setdefault("PADDLE_PDX_MODEL_SOURCE", "huggingface")
+            from paddleocr import PaddleOCR  # type: ignore
+        except ImportError as e:
+            raise RuntimeError(
+                "paddleocr no está instalado (pip install -r requirements-video.txt). "
+                "Sin OCR el video se ingeriría sin el texto de pantalla."
+            ) from e
+        return PaddleOCR(lang=lang, use_doc_orientation_classify=False, use_doc_unwarping=False,
+                         use_textline_orientation=False,
+                         # paddle 3.3.1 + oneDNN en CPU: NotImplementedError
+                         # ConvertPirAttribute2RuntimeAttribute (medido en el piloto).
+                         enable_mkldnn=False)
+
+    def _masked(self, image_path: Path) -> np.ndarray:
+        from PIL import Image  # type: ignore
+
+        img = np.array(Image.open(image_path).convert("RGB"))
+        if self.webcam_box:
+            h, w = img.shape[:2]
+            x0, y0, x1, y1 = self.webcam_box
+            img[int(y0 * h):int(y1 * h), int(x0 * w):int(x1 * w)] = 255
+        return img
 
     def analyze_frame(self, keyframe: Keyframe) -> ScreenAnalysis:
-        """Run OCR and structure detection on a single keyframe."""
-        if not keyframe.image_path.exists():
-            return ScreenAnalysis(timestamp=keyframe.timestamp, timestamp_str=keyframe.timestamp_str)
-
-        raw_text = ""
-        tables_md: list[str] = []
-
-        if self._paddle_available and self._paddle:
-            try:
-                result = self._paddle.ocr(str(keyframe.image_path), cls=True)
-                lines = []
-                if result and result[0]:
-                    for line_info in result[0]:
-                        text = line_info[1][0]
-                        lines.append(text)
-                raw_text = "\n".join(lines)
-            except Exception as e:
-                log.warning(f"PaddleOCR failed on {keyframe.image_path}: {e}")
-
+        """Run OCR on a single keyframe; keeps the lines above MIN_CONFIDENCE."""
+        result = self._engine.predict(self._masked(keyframe.image_path))[0]
+        lines = [t for t, score in zip(result["rec_texts"], result["rec_scores"])
+                 if score >= self.MIN_CONFIDENCE]
+        raw_text = "\n".join(lines)
         programs, tables = extract_bt_identifiers(raw_text)
-
-        return ScreenAnalysis(
-            timestamp=keyframe.timestamp,
-            timestamp_str=keyframe.timestamp_str,
-            raw_text=raw_text,
-            programs_detected=programs,
-            tables_detected=tables,
-            tables_markdown=tables_md,
-        )
+        return ScreenAnalysis(timestamp=keyframe.timestamp, timestamp_str=keyframe.timestamp_str,
+                              raw_text=raw_text, programs_detected=programs, tables_detected=tables)
 
 
 class VideoSynthesizer:
@@ -458,8 +420,13 @@ class VideoSynthesizer:
         keyframes: list[Keyframe],
         analyses: list[ScreenAnalysis],
         transcript: list[TranscriptSegment],
+        interface_min_frames: int = 5,
     ) -> list[dict[str, Any]]:
-        """Align narration segments with the corresponding active keyframe."""
+        """Align narration segments with the corresponding active keyframe.
+
+        El texto de pantalla sale limpio (`screen_text`): la interfaz una sola vez
+        por video, los documentos enmascarados y el título de la pantalla aparte.
+        """
         if not keyframes and not transcript:
             return []
 
@@ -493,15 +460,39 @@ class VideoSynthesizer:
         timeline_steps: list[dict[str, Any]] = []
 
         sorted_frames = sorted(keyframes, key=lambda k: k.timestamp)
+        lines_by_ts = {
+            kf.timestamp: [l for l in analyses_by_ts[kf.timestamp].raw_text.splitlines() if l.strip()]
+            if kf.timestamp in analyses_by_ts else []
+            for kf in sorted_frames
+        }
+        useful_ts = {ts for ts, lines in lines_by_ts.items() if is_useful_screen(lines)}
 
-        for i, kf in enumerate(sorted_frames):
-            next_ts = sorted_frames[i + 1].timestamp if i + 1 < len(sorted_frames) else float("inf")
+        # Solo una pantalla útil abre un paso (el primer frame siempre, para no
+        # perder la narración inicial); lo dicho frente al recuadro de Teams queda
+        # en el paso anterior.
+        steps = [kf for i, kf in enumerate(sorted_frames) if i == 0 or kf.timestamp in useful_ts]
+        interface = interface_keys([lines_by_ts[ts] for ts in sorted(useful_ts)],
+                                   min_frames=interface_min_frames)
+        ids = document_numbers(list(lines_by_ts.values()))
+        shown: set[str] = set()
+        title = ""
+
+        for i, kf in enumerate(steps):
+            next_ts = steps[i + 1].timestamp if i + 1 < len(steps) else float("inf")
             # All transcript segments that occur during this frame's window
             segs = [s for s in transcript if s.start >= kf.timestamp and s.start < next_ts]
             audio_text = " ".join(s.text for s in segs)
 
             analysis = analyses_by_ts.get(kf.timestamp)
-            screen_text = analysis.raw_text if analysis else ""
+            lines = lines_by_ts[kf.timestamp]
+            is_screen = kf.timestamp in useful_ts
+            # El título sale del texto crudo: sin esto, una cédula en la línea del
+            # título llegaría al encabezado aunque el cuerpo esté enmascarado.
+            own_title = mask_document_numbers(screen_title(lines), ids) if is_screen else ""
+            # Sin título propio (un diálogo de confirmación sobre la misma
+            # pantalla), el paso sigue en la pantalla anterior.
+            title = own_title or title
+            screen_text = "\n".join(clean_screen_lines(lines, interface, shown, ids)) if is_screen else ""
             tbls_md = analysis.tables_markdown if analysis else []
 
             # Gather all detected codes from audio and screen
@@ -515,6 +506,7 @@ class VideoSynthesizer:
             timeline_steps.append({
                 "timestamp": kf.timestamp,
                 "timestamp_str": kf.timestamp_str,
+                "title": title,
                 "audio_text": audio_text,
                 "screen_text": screen_text,
                 "programs": all_progs,
@@ -597,7 +589,7 @@ class VideoSynthesizer:
             ts_str = step["timestamp_str"]
             progs = step.get("programs", [])
             progs_str = f" - Transacción {', '.join(f'`{p}`' for p in progs)}" if progs else ""
-            step_header = f"### [{ts_str}] Paso Operativo{progs_str}"
+            step_header = f"### [{ts_str}] {step.get('title') or 'Paso Operativo'}{progs_str}"
             md_parts.append(step_header)
             md_parts.append("")
 
@@ -609,11 +601,10 @@ class VideoSynthesizer:
 
             screen = step.get("screen_text", "").strip()
             if screen:
-                md_parts.append("**Datos y Estado en Pantalla:**")
-                # Format clean screen lines
+                # Ya viene limpia: sin tope de líneas (el tope de 10 perdía las filas
+                # de las grillas) y en una sola línea, que rinde más en un chunk de 800.
                 lines = [l.strip() for l in screen.splitlines() if l.strip()]
-                for l in lines[:10]:  # Cap lines to preserve high semantic density
-                    md_parts.append(f"- `{l}`")
+                md_parts.append("**Datos y Estado en Pantalla:** " + " · ".join(lines))
                 md_parts.append("")
 
             tbls = step.get("tables_markdown", [])
@@ -646,9 +637,6 @@ class VideoIngestPipeline:
         title: str | None = None,
         module: str = "Bantotal General",
         transcript_file: Path | None = None,
-        scene_threshold: float = 0.3,
-        whisper_model: str = "base",
-        gemini_api_key: str | None = None,
         keep_temp_frames: bool = False,
     ) -> tuple[Path, Path, str]:
         """Run full extraction and write .md + .meta.json into output_dir.
@@ -672,11 +660,10 @@ class VideoIngestPipeline:
         try:
             # 1. Video Duration & Keyframes
             duration = self.extractor.get_duration(video_path)
-            log.info(f"Extracting keyframes for {video_path.name} (scene_threshold={scene_threshold})...")
+            log.info(f"Extracting keyframes for {video_path.name}...")
             keyframes = self.extractor.extract_keyframes(
                 video_path=video_path,
                 output_dir=frames_dir,
-                scene_threshold=scene_threshold,
             )
 
             # 2. Transcription
@@ -687,11 +674,7 @@ class VideoIngestPipeline:
             else:
                 log.info("Extracting audio and generating transcript...")
                 self.transcriber.extract_audio(video_path, audio_path)
-                transcript_segments = self.transcriber.transcribe(
-                    audio_path=audio_path,
-                    whisper_model=whisper_model,
-                    gemini_api_key=gemini_api_key,
-                )
+                transcript_segments = self.transcriber.transcribe(audio_path=audio_path, work_dir=work_dir)
 
             # 3. Screen OCR Analysis
             log.info(f"Analyzing {len(keyframes)} keyframes with OCR...")
@@ -734,8 +717,12 @@ class VideoIngestPipeline:
             meta_path.write_text(json.dumps(meta_dict, indent=2, ensure_ascii=False), encoding="utf-8")
 
             log.info(f"Video ingested successfully: {md_path} ({len(markdown.split())} words)")
-            return md_path, meta_path, markdown
+        except BaseException:
+            # Sin borrar: los bloques de audio ya transcritos son lo que la próxima
+            # corrida reanuda (horas de CPU en un video largo).
+            log.error(f"Ingesta interrumpida; el trabajo parcial queda en {work_dir}")
+            raise
 
-        finally:
-            if not keep_temp_frames and work_dir.exists():
-                shutil.rmtree(work_dir, ignore_errors=True)
+        if not keep_temp_frames:
+            shutil.rmtree(work_dir, ignore_errors=True)
+        return md_path, meta_path, markdown

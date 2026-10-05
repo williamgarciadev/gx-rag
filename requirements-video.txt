@@ -1,0 +1,11 @@
+# Dependencias del pipeline de video (src/ingestion/video_pipeline.py). Van aparte de
+# requirements.txt porque Paddle pesa ~880 MB y la API y el MCP no las necesitan.
+# Versiones: las que corrieron el piloto «Curso Contabilidad» de punta a punta
+# (Python 3.13.2, Windows 11, solo CPU) el 2026-10-05.
+-r requirements.txt
+av==17.1.0             # frames y audio sin ffmpeg (no está instalado en esta máquina)
+Pillow==11.3.0         # frame.to_image() para guardar los PNG
+faster-whisper==1.2.1  # transcripción local; por bloques, ver AudioTranscriber
+paddlepaddle==3.3.1    # con enable_mkldnn=False: oneDNN falla en CPU con esta versión
+paddleocr==3.7.0
+paddlex==3.7.2
