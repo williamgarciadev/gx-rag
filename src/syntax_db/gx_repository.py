@@ -2,8 +2,11 @@
 Repositorio GeneXus — operaciones contra la Syntax DB.
 """
 
-import re
+from __future__ import annotations
+
+import difflib
 import logging
+import re
 from typing import Literal
 
 from sqlalchemy import func
@@ -18,21 +21,10 @@ from src.syntax_db.models import (
 
 log = logging.getLogger(__name__)
 
-
 Verdict = Literal["VÁLIDO", "INVÁLIDO", "NO_VERIFICABLE"]
 
-
-# Largo minimo de token para que la rama de similitud tenga derecho a acusar.
-# Esa rama compara con `name LIKE '%<token[:8]>%'`, asi que con 1-2 caracteres el
-# patron matchea cualquier entrada que los contenga ("Ad" pesca "AddYears", pero
-# tambien "Load") y el INVALIDO que sale de ahi no es informacion: es ruido con
-# forma de veredicto. Por debajo del piso la respuesta honesta es "no se".
 MIN_SIMILARITY_TOKEN = 3
 
-
-# La wiki titula cada pagina "<Nombre> <que es>": "AddYears method", "Printer
-# rule". Nadie escribe eso en un procedure — escribe &fecha.AddYears(5). Estos
-# sufijos son el puente entre el codigo real y el nombre del articulo.
 _ENTRY_SUFFIXES = (
     "method",
     "property",
@@ -47,16 +39,41 @@ _ENTRY_SUFFIXES = (
 
 # &fecha.AddYears(5) -> AddYears   |   &col.Add(&item) -> Add
 _MEMBER_CALL = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(")
-# &var.ResourceName (acceso a propiedad, sin parentesis)
+# &var.ResourceName (acceso a propiedad o método sin paréntesis)
 _MEMBER_ACCESS = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)")
+
+# Patrón receptor.miembro: &fecha.AddYears(...) o Date.AddDays
+_RECEIVER_MEMBER = re.compile(r"([&]?[A-Za-z0-9_]+)?\.\s*([A-Za-z_][A-Za-z0-9_]*)")
+
+
+def _extract_candidate(snippet: str) -> tuple[str | None, str]:
+    """Extrae el receptor (clase/variable) y el identificador de método/función de un snippet.
+
+    Ejemplos:
+    - '&fecha.ToFormattedString(3)' -> ('&fecha', 'ToFormattedString')
+    - 'Date.AddDays(1)'             -> ('Date', 'AddDays')
+    - 'TrimLeftInexistente'         -> (None, 'TrimLeftInexistente')
+    - 'Null(&var)'                  -> (None, 'Null')
+    """
+    s = snippet.strip()
+
+    # 1. Invocación con punto (&var.Metodo(...) o Tipo.Metodo(...) o .Metodo(...))
+    m = _RECEIVER_MEMBER.search(s)
+    if m:
+        receiver, member = m.groups()
+        return receiver, member
+
+    # 2. Llamada a función suelta: Func(...)
+    func_match = re.search(r"^([A-Za-z_][A-Za-z0-9_]*)\s*\(", s)
+    if func_match:
+        return None, func_match.group(1)
+
+    # 3. Token normalizado completo si no hay punto ni llamada
+    return None, _normalize_token(s)
 
 
 def _member_tokens(snippet: str) -> list[str]:
-    """Miembros invocados o accedidos en un snippet, del mas probable al menos.
-
-    Las llamadas van primero: en "&a.B(&c.D())" lo que se esta verificando es
-    normalmente la invocacion, no el objeto sobre el que se apoya.
-    """
+    """Miembros invocados o accedidos en un snippet, del más probable al menos."""
     vistos: list[str] = []
     for rx in (_MEMBER_CALL, _MEMBER_ACCESS):
         for m in rx.findall(snippet):
@@ -65,23 +82,22 @@ def _member_tokens(snippet: str) -> list[str]:
     return vistos
 
 
-def _lookup_entry(session, nombres: list[str]) -> list:
-    """Entradas de gx_syntax que matchean alguno de `nombres`, mejor primero.
-
-    Prueba el nombre pelado y luego "<nombre> <sufijo>", sin distinguir
-    mayusculas: el corpus mezcla "AddItem method" con firmas que escriben
-    control.additem(...).
-
-    Los titulos de la wiki no son uniformes: ademas de "AddYears method" hay
-    "Add method - SDT Collection" y "Business Component Add method". Por eso,
-    si el nombre exacto no aparece, se buscan las variantes calificadas.
-
-    Devuelve una LISTA a proposito. Un mismo miembro puede existir con
-    semanticas distintas (Add sobre coleccion de SDT vs sobre coleccion de BC);
-    quedarse con la primera y callar el resto seria justo el tipo de respuesta
-    con falsa autoridad que este catalogo existe para evitar.
-    """
+def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None) -> list[GxSyntax]:
+    """Entradas de gx_syntax que matchean alguno de `nombres`, mejor primero."""
     for base in nombres:
+        # Si tenemos un tipo receptor conocido (ej. Date), filtrar por él primero
+        if receiver_type and not receiver_type.startswith("&"):
+            exacta_tipo = (
+                session.query(GxSyntax)
+                .filter(
+                    func.lower(GxSyntax.name) == base.lower(),
+                    func.lower(GxSyntax.object_type) == receiver_type.lower(),
+                )
+                .all()
+            )
+            if exacta_tipo:
+                return exacta_tipo
+
         for nombre in [base] + [f"{base} {s}" for s in _ENTRY_SUFFIXES]:
             n = nombre.lower()
             exacta = (
@@ -91,9 +107,7 @@ def _lookup_entry(session, nombres: list[str]) -> list:
             )
             if exacta:
                 return exacta
-            # "Add method - SDT Collection" / "Business Component Add method".
-            # El espacio en los patrones evita que "Add method" pesque
-            # "AddRange method".
+
             calificadas = (
                 session.query(GxSyntax)
                 .filter(
@@ -111,36 +125,12 @@ def _lookup_entry(session, nombres: list[str]) -> list:
 
 def _normalize_token(snippet: str) -> str:
     """Normaliza un snippet a tokens clave para búsqueda."""
-    # Extraer palabras alfanuméricas + guiones bajos
     tokens = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", snippet)
-    # Filtrar palabras comunes de programación
     stop = {
-        "if",
-        "else",
-        "for",
-        "while",
-        "do",
-        "return",
-        "var",
-        "let",
-        "const",
-        "function",
-        "class",
-        "import",
-        "export",
-        "new",
-        "this",
-        "self",
-        "true",
-        "false",
-        "null",
-        "none",
-        "async",
-        "await",
-        "def",
-        "in",
-        "or",
-        "and",
+        "if", "else", "for", "while", "do", "return", "var", "let",
+        "const", "function", "class", "import", "export", "new", "this",
+        "self", "true", "false", "null", "none", "async", "await", "def",
+        "in", "or", "and", "then", "endif", "endfor", "event", "endevent",
     }
     return " ".join(t for t in tokens if t.lower() not in stop).strip()
 
@@ -221,6 +211,30 @@ def _verify_bt_api(snippet: str, token: str, version: str | None) -> dict:
         session.close()
 
 
+def _find_similar(session, token: str) -> list[str]:
+    """Busca identificadores similares en el catálogo para evitar alucinaciones."""
+    all_names = [r[0] for r in session.query(GxSyntax.name).distinct().all()]
+    t_lower = token.lower()
+    matches: list[str] = []
+
+    # 1. Coincidencia por subcadena / prefijo mutuo
+    for n in all_names:
+        n_lower = n.lower()
+        if len(n) >= 3 and (
+            n_lower in t_lower
+            or t_lower.startswith(n_lower)
+            or (len(t_lower) >= 4 and n_lower.startswith(t_lower[:4]))
+        ):
+            if n not in matches:
+                matches.append(n)
+
+    # 2. Distancia Levenshtein / difflib si no hubo coincidencias directas
+    if not matches:
+        matches = difflib.get_close_matches(token, all_names, n=5, cutoff=0.4)
+
+    return matches
+
+
 def verify_syntax(
     snippet: str,
     language: str = "gx",
@@ -230,14 +244,10 @@ def verify_syntax(
     Verifica un snippet contra el catálogo gx_syntax.
     Retorna veredicto con procedencia.
     """
+    receiver, candidate_token = _extract_candidate(snippet)
     token = _normalize_token(snippet)
 
-    # Sin token no hay nada que verificar, y hay que cortar ACA. Mas abajo la
-    # rama de similitud arma `name LIKE '%%'`, que matchea TODAS las filas: un
-    # snippet de puras stopwords ("do", "if else") volvia como INVALIDO con cinco
-    # sugerencias arbitrarias. Un veredicto negativo fabricado, justo en la tool
-    # que existe para no fabricar veredictos.
-    if not token:
+    if not candidate_token and not token:
         _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
         return {
             "verdict": "NO_VERIFICABLE",
@@ -246,122 +256,134 @@ def verify_syntax(
                 "descartar palabras genéricas del lenguaje). No se consultó el "
                 "catálogo: esto no dice nada sobre la construcción."
             ),
-            "token": token,
+            "token": snippet,
         }
 
     # bt_api snippets are verified against the BtApi catalog, NOT GxSyntax.
     if language == "bt_api":
-        return _verify_bt_api(snippet, token, version)
+        return _verify_bt_api(snippet, candidate_token or token, version)
 
     session = get_session()
+    try:
+        query_token = candidate_token or token
 
-    # Búsqueda exacta en nombre
-    entry = session.query(GxSyntax).filter(GxSyntax.name == token).first()
+        # 1. Si el receptor es una clase concreta (ej. Date.AddDays)
+        if receiver and not receiver.startswith("&"):
+            exacta_clase = (
+                session.query(GxSyntax)
+                .filter(
+                    func.lower(GxSyntax.name) == query_token.lower(),
+                    func.lower(GxSyntax.object_type) == receiver.lower(),
+                )
+                .first()
+            )
+            if exacta_clase:
+                entry = exacta_clase
+                _log_verdict("verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source)
+                return {
+                    "verdict": "VÁLIDO",
+                    "name": entry.name,
+                    "object_type": entry.object_type,
+                    "signature": entry.signature,
+                    "version": entry.version_since,
+                    "source": entry.source,
+                    "notes": f"Válido según {entry.source} ({entry.object_type}.{entry.name})",
+                }
 
-    # El snippet suele ser código, no el título de un artículo. Se intenta con
-    # los miembros invocados (&fecha.AddYears(5) → AddYears) y, si el snippet no
-    # tiene punto, con el token pelado — así "AddYears" encuentra "AddYears
-    # method" en vez de caer en la rama de similitud y responder INVÁLIDO.
-    otras: list[str] = []
-    if not entry:
-        matches = _lookup_entry(session, _member_tokens(snippet) or [token])
+            # Si no está en esa clase, verificar si existe en otros tipos (Defecto 5.3)
+            other_entries = (
+                session.query(GxSyntax)
+                .filter(func.lower(GxSyntax.name) == query_token.lower())
+                .all()
+            )
+            if other_entries:
+                other_types = sorted(list(set(e.object_type for e in other_entries)))
+                _log_verdict("verify_syntax", snippet, "INVÁLIDO", None, version, None)
+                return {
+                    "verdict": "INVÁLIDO",
+                    "reason": f"'{query_token}' no pertenece al tipo '{receiver}' (disponible en: {', '.join(other_types)}).",
+                    "sugerencias": other_types,
+                }
+
+        # 2. Búsqueda con sufijos y miembros de llamada
+        candidates_to_try = [query_token]
+        for m in _member_tokens(snippet):
+            if m not in candidates_to_try:
+                candidates_to_try.append(m)
+
+        matches = _lookup_entry(session, candidates_to_try, receiver_type=receiver)
+        otras: list[str] = []
+        entry = None
         if matches:
             entry = matches[0]
             otras = [m.name for m in matches[1:]]
+        else:
+            # Búsqueda exacta directa en name
+            entry = session.query(GxSyntax).filter(func.lower(GxSyntax.name) == query_token.lower()).first()
 
-    if entry:
-        # El veredicto NO esta gateado por version, y hay que DECIRLO donde el
-        # agente concluye. version_since no tiene formato normalizado y, peor, la
-        # unica via al catalogo (promote_candidate) lo escribe hardcodeado en None
-        # (candidate_repository.py:94): medido, las 59 filas del catalogo real
-        # estan en NULL. Callarlo convierte este VALIDO en una firma de version
-        # indeterminada presentada como confirmada, que es una de las cuatro
-        # formas de alucinar que define docs/gx-bt-rag-calidad-y-no-alucinacion.md.
-        version_note = ""
-        if version and not entry.version_since:
-            version_note = (
-                f" OJO: el catálogo no registra versión para esta entrada, así que "
-                f"este veredicto no discrimina versiones — NO es evidencia de que la "
-                f"firma sea la de {version}. Confirmalo contra un objeto real de la KB."
+        if entry:
+            version_note = ""
+            if version and not entry.version_since:
+                version_note = (
+                    f" OJO: el catálogo no registra versión para esta entrada, así que "
+                    f"este veredicto no discrimina versiones — NO es evidencia de que la "
+                    f"firma sea la de {version}. Confirmalo contra un objeto real de la KB."
+                )
+            elif version and version != entry.version_since:
+                version_note = (
+                    f" (versión pedida {version}; catálogo indica {entry.version_since})"
+                )
+            _log_verdict(
+                "verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source
             )
-        elif version and version != entry.version_since:
-            version_note = (
-                f" (versión pedida {version}; catálogo indica {entry.version_since})"
+            ambiguo = (
+                f" Ojo: el catálogo tiene {len(otras) + 1} entradas para este miembro "
+                f"({', '.join(otras)}); se devuelve la primera."
+                if otras
+                else ""
             )
-        session.close()
-        _log_verdict(
-            "verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source
-        )
-        ambiguo = (
-            f" Ojo: el catálogo tiene {len(otras) + 1} entradas para este miembro "
-            f"({', '.join(otras)}); se devuelve la primera."
-            if otras
-            else ""
-        )
-        resultado = {
-            "verdict": "VÁLIDO",
-            "name": entry.name,
-            "object_type": entry.object_type,
-            "signature": entry.signature,
-            "version": entry.version_since,
-            "source": entry.source,
-            "notes": (
-                f"Válido según {entry.source} ({entry.object_type})"
-                f"{version_note}{ambiguo}"
-            ),
-        }
-        if otras:
-            resultado["otras_entradas"] = otras
-        return resultado
+            resultado = {
+                "verdict": "VÁLIDO",
+                "name": entry.name,
+                "object_type": entry.object_type,
+                "signature": entry.signature,
+                "version": entry.version_since,
+                "source": entry.source,
+                "notes": (
+                    f"Válido según {entry.source} ({entry.object_type})"
+                    f"{version_note}{ambiguo}"
+                ),
+            }
+            if otras:
+                resultado["otras_entradas"] = otras
+            return resultado
 
-    # Buscar por similaridad en nombre — solo si el token da para comparar.
-    similar = (
-        (
-            session.query(GxSyntax)
-            .filter(GxSyntax.name.like(f"%{token[:8]}%"))
-            .limit(5)
-            .all()
-        )
-        if len(token) >= MIN_SIMILARITY_TOKEN
-        else []
-    )
+        # 3. Búsqueda por similaridad (tolerante: prefijo + difflib)
+        target_for_similarity = candidate_token or token
+        similar = _find_similar(session, target_for_similarity)
 
-    session.close()
+        if not similar:
+            _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
+            _record_missing(target_for_similarity, None, version)
+            return {
+                "verdict": "NO_VERIFICABLE",
+                "reason": "No encontrado en el catálogo. Verificar manualmente.",
+                "token": target_for_similarity,
+            }
 
-    if not similar:
-        # No encontrado → NO_VERIFICABLE
-        _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
-        _record_missing(token, None, version)
+        # Encontrado similar → INVÁLIDO
+        _log_verdict("verify_syntax", snippet, "INVÁLIDO", None, version, None)
         return {
-            "verdict": "NO_VERIFICABLE",
-            "reason": "No encontrado en el catálogo. Verificar manualmente.",
-            "token": token,
+            "verdict": "INVÁLIDO",
+            "reason": f"'{target_for_similarity}' no coincide exactamente con ninguna entrada del catálogo.",
+            "sugerencias": similar[:5],
         }
-
-    # Encontrado similar → INVÁLIDO
-    _log_verdict("verify_syntax", snippet, "INVÁLIDO", None, version, None)
-    names = [s.name for s in similar]
-    return {
-        "verdict": "INVÁLIDO",
-        "reason": f"'{token}' no coincide exactamente con ninguna entrada del catálogo.",
-        "sugerencias": names[:5],
-    }
+    finally:
+        session.close()
 
 
 def list_methods(object_type: str, version: str | None = None) -> list[str]:
-    """Lista las entradas catalogadas para un object_type.
-
-    `version` se acepta y NO se usa para filtrar, a propósito. Filtrar por
-    `version_since` garantizaba una lista vacía: no es que los datos "hoy" estén
-    en NULL, es que `promote_candidate` —la única vía al catálogo— lo escribe
-    hardcodeado en None (candidate_repository.py:94). Medido sobre el catálogo
-    real: 59 filas, las 59 en NULL. Y una lista vacía acá la lee el agente como
-    "ese objeto no tiene métodos", así que el filtro producía exactamente la
-    alucinación en negativo que este módulo existe para evitar.
-
-    Cuando el catálogo tenga versión normalizada, esto vuelve a filtrar; hasta
-    entonces la interfaz declara que el parámetro no discrimina.
-    """
+    """Lista las entradas catalogadas para un object_type."""
     session = get_session()
     query = session.query(GxSyntax.name).filter(GxSyntax.object_type == object_type)
     results = [r[0] for r in query.distinct().all()]
@@ -370,24 +392,12 @@ def list_methods(object_type: str, version: str | None = None) -> list[str]:
 
 
 def list_object_types() -> list[str]:
-    """Los object_type que EXISTEN en el catálogo, ordenados.
-
-    Alimenta la respuesta vacía de `list_methods`: sin esto, la tool sugería
-    "Transaction" y "Procedure", que no tienen ni una fila (medido: Method 34,
-    Event 9, Command 8, Rule 6, Property 2). Un ejemplo que garantiza cero
-    resultados es peor que ningún ejemplo — manda al agente a concluir que el
-    catálogo está vacío cuando lo que estaba mal era la taxonomía sugerida.
-    """
+    """Lista todos los object_type que existen en el catálogo."""
     session = get_session()
-    rows = (
-        session.query(GxSyntax.object_type)
-        .filter(GxSyntax.object_type.isnot(None))
-        .distinct()
-        .order_by(GxSyntax.object_type)
-        .all()
-    )
+    query = session.query(GxSyntax.object_type).distinct().order_by(GxSyntax.object_type)
+    results = [r[0] for r in query.all() if r[0]]
     session.close()
-    return [r[0] for r in rows]
+    return results
 
 
 def get_signature(
@@ -396,8 +406,8 @@ def get_signature(
     """Obtiene la firma exacta de un método/objeto."""
     session = get_session()
     query = session.query(GxSyntax).filter(
-        GxSyntax.name == name,
-        GxSyntax.object_type == object_type,
+        func.lower(GxSyntax.name) == name.lower(),
+        func.lower(GxSyntax.object_type) == object_type.lower(),
     )
     if version:
         query = query.filter(GxSyntax.version_since == version)

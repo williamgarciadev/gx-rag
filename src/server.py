@@ -182,6 +182,14 @@ READ_TOOLS: list[Tool] = [
                         "filtros no es transferible tal cual."
                     ),
                 },
+                "rerank": {
+                    "type": "boolean",
+                    "description": (
+                        "Opcional. Si es true, reordena los mejores candidatos mediante un modelo "
+                        "Cross-Encoder de atención completa, refinando la precisión semántica final."
+                    ),
+                    "default": False,
+                },
             },
             "required": ["query"],
         },
@@ -1080,9 +1088,10 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=rejection)]
         if rejection := _reject_missing_kb_name(col, filters):
             return [TextContent(type="text", text=rejection)]
+        rerank = bool(arguments.get("rerank", False))
         try:
             results = hybrid_search(
-                q, collection=col, top_k=k, min_score=min_score, filters=filters
+                q, collection=col, top_k=k, min_score=min_score, filters=filters, rerank=rerank
             )
             if not results:
                 return [TextContent(type="text", text=_empty_search_text(col, filters))]
@@ -1091,8 +1100,11 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                 content = r["content"] or ""
                 snippet = content[:snippet_chars]
                 truncated = "…" if len(content) > snippet_chars else ""
+                score_label = f"score={r['score']:.3f}"
+                if r.get("reranked") and "rrf_score" in r:
+                    score_label += f" [reranked, rrf={r['rrf_score']:.3f}]"
                 lines.append(
-                    f"**{r['title']}** (score={r['score']:.3f})\n"
+                    f"**{r['title']}** ({score_label})\n"
                     f"doc_id: `{r['doc_id']}`\n"
                     f"article_id: `{r.get('id', '')}`\n"
                     f"Fuente: {r.get('url') or r.get('source', '?')}\n"

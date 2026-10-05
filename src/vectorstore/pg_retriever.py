@@ -187,6 +187,7 @@ def hybrid_search(
     top_k: int = 5,
     min_score: float | None = None,
     filters: dict | None = None,
+    rerank: bool = False,
 ) -> list[dict]:
     """
     Busqueda hibrida: embeddings densos + full-text, fusionados con RRF.
@@ -204,6 +205,10 @@ def hybrid_search(
     Matiz de calibracion: un filtro selectivo hace que cada mitad devuelva menos
     candidatos, los ranks quedan mejores y los scores SUBEN en promedio, asi que un
     min_score calibrado sin filtros no es directamente transferible.
+
+    rerank: si es True, reordena los mejores candidatos de la fusion RRF usando un
+    Cross-Encoder de atencion completa (sentence-transformers), agregando rerank_score
+    y conservando rrf_score.
     """
     qtext = _to_tsquery(query)
     if not qtext:
@@ -213,16 +218,19 @@ def hybrid_search(
 
     qvec = "[" + ",".join(f"{float(v):.7g}" for v in emb.embed_query(query)) + "]"
 
+    # Si se pide rerank, ampliamos la cantidad de candidatos recuperados de la DB
+    db_top_k = max(CANDIDATE_POOL, top_k * 4) if rerank else top_k
+
     params = {
         "qvec": qvec,
         "qtext": qtext,
         "collection": collection,
-        # El pool acompana a top_k: con el fijo en CANDIDATE_POOL, un top_k > 30
+        # El pool acompana a db_top_k: con el fijo en CANDIDATE_POOL, un db_top_k > 30
         # quedaba capado en silencio por el LIMIT de cada CTE. x3 deja margen para
         # que la fusion tenga de donde elegir.
-        "pool": max(CANDIDATE_POOL, top_k * 3),
+        "pool": max(CANDIDATE_POOL, db_top_k * 3),
         "rrf_k": RRF_K,
-        "top_k": top_k,
+        "top_k": db_top_k,
         "min_score": min_score,
         **fparams,
     }
@@ -242,7 +250,7 @@ def hybrid_search(
             cur.execute(_SEARCH_SQL, params, prepare=False)
             rows = cur.fetchall()
 
-    return [
+    results = [
         {
             # doc_id es el id del chunk — la clave que acepta get_document().
             "doc_id": row[0],
@@ -262,3 +270,10 @@ def hybrid_search(
         }
         for row in rows
     ]
+
+    if rerank and results:
+        from src.vectorstore.reranker import rerank as _rerank_candidates
+
+        return _rerank_candidates(query=query, candidates=results, top_k=top_k)
+
+    return results
