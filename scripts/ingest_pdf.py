@@ -109,19 +109,24 @@ def process_single_pdf(
     if index:
         print(f"==> Indexing into collection '{collection}' via pg_indexer...")
         try:
-            from src.vectorstore.pg_indexer import index_article
+            from scripts.scrape_wiki import compute_hash
+            from src.vectorstore.pg_indexer import reindex_if_changed
+
             source_id = f"manual/{pdf_file.stem}"
-            chunk_ids = index_article(
+            content_hash = compute_hash(markdown)
+            status = reindex_if_changed(
                 article_id=source_id,
                 title=title or f"Manual Bantotal — {pdf_file.stem}",
                 content=markdown,
                 source=str(pdf_file.name),
                 genre="manual_tecnico",
                 url=f"local://manuales/{pdf_file.name}",
-                content_hash="",
+                content_hash=content_hash,
                 collection=collection,
+                extra_meta={"origin": "bt_manual", "module": module},
+                chunk_prefix=f"[{pdf_file.stem} · {module}]",
             )
-            print(f"    Indexed {len(chunk_ids)} chunks into '{collection}'.")
+            print(f"    Vector store status: '{status}' into '{collection}'.")
         except Exception as e:
             print(f"Error during vector store indexing: {e}", file=sys.stderr)
             return 1
