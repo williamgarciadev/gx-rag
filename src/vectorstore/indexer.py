@@ -7,6 +7,9 @@ import logging
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.vectorstore.chroma_client import get_client
 from src.vectorstore import embeddings as emb
+# The retriever caches a BM25 index and cannot afford to detect changes by
+# scanning; the writer stamps a version instead. See retriever.bump_corpus_version.
+from src.vectorstore.retriever import bump_corpus_version
 
 log = logging.getLogger(__name__)
 
@@ -30,10 +33,22 @@ def index_article(
     url: str,
     content_hash: str,
     collection: str = "gx_docs",
+    extra_meta: dict | None = None,
+    chunk_prefix: str | None = None,
 ) -> list[str]:
     """
     Indexa un artículo en ChromaDB.
     Devuelve lista de chunk IDs insertados.
+
+    `extra_meta` añade metadata por chunk (solo str/int/float/bool — ChromaDB
+    rechaza el resto); las claves estructurales tienen prioridad y no se pueden
+    sobreescribir desde ahí.
+
+    `chunk_prefix` es un breadcrumb que se antepone al texto de **cada** chunk
+    (p. ej. `[MDI-10201 Sistema de Préstamos · 1.16.1.1 Mora · p.121]`). Va
+    después del split a propósito: prefijar el artículo completo solo situaría
+    al chunk 0, y cada chunk se recupera por separado. Al quedar en el texto
+    entra también al embedding y al índice BM25.
     """
     # Chunking
     chunks = _splitter.split_text(content)
@@ -41,12 +56,16 @@ def index_article(
         log.warning(f"No chunks generated for {article_id}")
         return []
 
+    if chunk_prefix:
+        chunks = [f"{chunk_prefix}\n{chunk}" for chunk in chunks]
+
     # Embeddings
     embs = emb.embed_texts(tuple(chunks))
 
     # Metadatos por chunk
     metas = [
         {
+            **(extra_meta or {}),
             "id": article_id,
             "title": title,
             "source": source,
@@ -71,6 +90,10 @@ def index_article(
         ids=chunk_ids,
     )
 
+    # Announce BEFORE returning: a caller that indexes and immediately searches
+    # (the /scrape endpoint does exactly that) must not read a stale index.
+    bump_corpus_version()
+
     log.info(f"Indexed {len(chunks)} chunks for {article_id} in {collection}")
     return chunk_ids
 
@@ -84,6 +107,8 @@ def reindex_if_changed(
     url: str,
     content_hash: str,
     collection: str = "gx_docs",
+    extra_meta: dict | None = None,
+    chunk_prefix: str | None = None,
 ) -> str:
     """Index an article idempotently, keyed by content_hash.
 
@@ -99,6 +124,7 @@ def reindex_if_changed(
     col = client.get_or_create_collection(name=collection)
     existing = col.get(where={"id": article_id}, include=["metadatas"])
     existing_ids = existing.get("ids", []) or []
+    passthrough = dict(extra_meta=extra_meta, chunk_prefix=chunk_prefix)
 
     if existing_ids:
         metas = existing.get("metadatas") or [{}]
@@ -107,11 +133,13 @@ def reindex_if_changed(
             return "skipped"
         col.delete(ids=existing_ids)
         index_article(
-            article_id, title, content, source, genre, url, content_hash, collection
+            article_id, title, content, source, genre, url, content_hash, collection,
+            **passthrough,
         )
         return "reindexed"
 
     index_article(
-        article_id, title, content, source, genre, url, content_hash, collection
+        article_id, title, content, source, genre, url, content_hash, collection,
+        **passthrough,
     )
     return "indexed"

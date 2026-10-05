@@ -16,6 +16,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, Session
 from pathlib import Path
 
+from src.paths import SYNTAX_DB_PATH
+
 Base = declarative_base()
 
 
@@ -106,16 +108,16 @@ class SyntaxCandidate(Base):
 _engine = None
 
 
-def get_engine(db_path: str | Path = "data/syntax.db"):
+def get_engine(db_path: str | Path | None = None):
     global _engine
     if _engine is None:
-        path = Path(db_path)
+        path = Path(db_path) if db_path is not None else SYNTAX_DB_PATH
         path.parent.mkdir(parents=True, exist_ok=True)
         _engine = create_engine(f"sqlite:///{path}", echo=False)
         Base.metadata.create_all(_engine)
     return _engine
 
 
-def get_session(db_path: str | Path = "data/syntax.db"):
+def get_session(db_path: str | Path | None = None):
     engine = get_engine(db_path)
     return Session(engine)

@@ -8,9 +8,12 @@ Spanish, so it would likely hurt ranking. Reranking is a separate decision.
 
 import logging
 import re
+import time
+from collections import Counter
 
 from rank_bm25 import BM25Okapi
 
+from src.paths import CHROMA_PATH
 from src.vectorstore import embeddings as emb
 from src.vectorstore.chroma_client import get_client
 
@@ -22,9 +25,17 @@ CANDIDATE_POOL = 30  # candidates pulled from each retriever before fusion
 # per row, so a single unbounded col.get() over a large collection overflows
 # SQLite's variable limit ("too many SQL variables"). Fetch in pages instead.
 _GET_PAGE_SIZE = 5000
+# Chunks kept per source article. A manual chapter runs to dozens of chunks, and
+# without a cap they take the whole result set: "cómo se calcula el interés de
+# mora" returned MDI-10201 §1.10.1.1 three times at top_k=3, burying every other
+# manual that had an answer. Two leaves room for an answer split across a chunk
+# boundary while still surfacing other sources; an agent that wants the rest of
+# the chapter calls get_document with the doc_id.
+_MAX_CHUNKS_PER_ARTICLE = 2
 
-# Cache: collection name -> (doc_count, bm25_index, ids, docs, metas).
-# Rebuilt when the collection's document count changes.
+# Cache: collection name -> (cache_key, bm25_index, ids, docs, metas).
+# Rebuilt when the key changes — see _cache_key on why the document count alone
+# is not a sufficient signal.
 _bm25_cache: dict[str, tuple] = {}
 
 
@@ -59,18 +70,64 @@ def _get_all(col) -> tuple[list[str], list[str], list[dict]]:
     return ids, docs, metas
 
 
+# Marker whose contents change on every corpus write. Lives beside the store so
+# it survives a restart and is visible to OTHER processes — locally, ingestion
+# runs as a separate CLI while the MCP server holds its cache in memory.
+_VERSION_FILE = CHROMA_PATH / ".corpus-version"
+
+
+def bump_corpus_version() -> None:
+    """Announce that the corpus changed. Called by the indexer after any write.
+
+    The WRITER announces because only the writer can do it cheaply. Having the
+    reader detect changes instead means scanning the collection on every query:
+    a first version of this hashed each chunk's (id, content_hash) and cost
+    3.5s per query on gx_docs against a 0.22s warm budget — a detection that
+    costs more than the rebuild it avoids is not a cache, it is a tax.
+    """
+    try:
+        _VERSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _VERSION_FILE.write_text(str(time.time_ns()), encoding="utf-8")
+    except OSError as exc:
+        # Never let a write fail because the marker could not be updated. The
+        # cost of missing it is a stale BM25 index until the next count change.
+        log.warning("Could not stamp the corpus version: %s", exc)
+
+
+def _corpus_version() -> str:
+    """Current corpus version, or "" when nothing has been written yet."""
+    try:
+        return _VERSION_FILE.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def _cache_key(col) -> tuple[int, str]:
+    """Signal for whether the cached BM25 index is still valid.
+
+    Two cheap parts, and both are needed:
+      - `count` catches adds and deletes even from a writer that bypasses the
+        indexer, and it is already read on every search.
+      - `corpus_version` catches a REWRITE, which is the case `count` misses:
+        reindex_if_changed deletes an article's chunks and re-adds them under
+        the same deterministic ids, leaving the count identical while the text
+        underneath changed completely.
+    """
+    return col.count(), _corpus_version()
+
+
 def _get_bm25(col):
     """Build (and cache) a BM25 index over the whole collection."""
     name = col.name
-    count = col.count()
+    key = _cache_key(col)
     cached = _bm25_cache.get(name)
-    if cached and cached[0] == count:
+    if cached and cached[0] == key:
         return cached[1], cached[2], cached[3], cached[4]
 
     ids, docs, metas = _get_all(col)
     bm25 = BM25Okapi([_tokenize(d) for d in docs]) if docs else None
 
-    _bm25_cache[name] = (count, bm25, ids, docs, metas)
+    _bm25_cache[name] = (key, bm25, ids, docs, metas)
     return bm25, ids, docs, metas
 
 
@@ -135,11 +192,20 @@ def hybrid_search(
     ordered = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)
 
     output = []
-    for doc_id, score in ordered[:top_k]:
+    per_article: Counter[str] = Counter()
+    for doc_id, score in ordered:
+        if len(output) >= top_k:
+            break
         if min_score is not None and score < min_score:
-            continue
+            break  # scores descend, so nothing further can qualify either
         doc, meta = lookup.get(doc_id, (None, None))
         meta = meta or {}
+        # Walk past extra chunks of an article already represented, rather than
+        # stopping: the next distinct source may be further down the ranking.
+        article = str(meta.get("id", doc_id))
+        if per_article[article] >= _MAX_CHUNKS_PER_ARTICLE:
+            continue
+        per_article[article] += 1
         output.append(
             {
                 # doc_id is the ChromaDB chunk id — the key get_document() accepts.
@@ -152,6 +218,11 @@ def hybrid_search(
                 # url + content_hash let a consuming agent cite without a 2nd call.
                 "url": meta.get("url", ""),
                 "content_hash": meta.get("content_hash", ""),
+                # Manual provenance ("MDI-10201 p.121, §1.16.1.1"). Empty for
+                # wiki chunks, which have no manual or page to cite.
+                "manual": meta.get("manual", ""),
+                "page": meta.get("page", ""),
+                "section": meta.get("section", ""),
                 "score": round(score, 6),
             }
         )

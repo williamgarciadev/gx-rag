@@ -5,6 +5,8 @@ The ChromaDB collection and the embedding model are faked so these tests
 exercise the fusion logic without loading models or a real vector store.
 """
 
+from collections import Counter
+
 import numpy as np
 import pytest
 
@@ -28,11 +30,15 @@ class _FakeCollection:
     def count(self):
         return len(self._docs)
 
-    def get(self, include=None):
+    def get(self, include=None, limit=None, offset=0):
+        # The retriever scans collections in pages: an unbounded get() overflows
+        # SQLite's variable limit on a large collection. Honour the window, and
+        # return empty past the end so the paging loop terminates.
+        page = self._docs[offset : offset + limit if limit else None]
         return {
-            "ids": [d[0] for d in self._docs],
-            "documents": [d[1] for d in self._docs],
-            "metadatas": [d[2] for d in self._docs],
+            "ids": [d[0] for d in page],
+            "documents": [d[1] for d in page],
+            "metadatas": [d[2] for d in page],
         }
 
     def query(self, query_embeddings, n_results, include):
@@ -95,12 +101,43 @@ def test_result_shape(monkeypatch):
         "score",
         "url",
         "content_hash",
+        "manual",
+        "page",
+        "section",
     }
     assert results[0]["id"] == "a"
     assert results[0]["content"] == "genexus transaction"
     # Provenance the agent needs to cite without a second call.
     assert results[0]["url"] == "http://x"
     assert results[0]["content_hash"] == "H"
+    # Wiki chunks have no manual provenance; the keys stay present but empty.
+    assert (results[0]["manual"], results[0]["page"], results[0]["section"]) == ("", "", "")
+
+
+def test_manual_provenance_is_surfaced_for_pdf_chunks(monkeypatch):
+    # "MDI-10201 p.121, §1.16.1.1" is the citation the consuming KB requires;
+    # without these fields it can only be recovered by parsing the title string.
+    docs = [
+        (
+            "m_c0",
+            "La tasa de mora se toma de la clase de tasa 2.",
+            {
+                "id": "file:///m.pdf#page=121",
+                "title": "MDI-10201 — p.121",
+                "manual": "MDI-10201",
+                "page": 121,
+                "section": "1.16.1.1 Cálculo de Interés de Mora",
+            },
+        )
+    ]
+    col = _FakeCollection(docs, dense_order=["m_c0"])
+    _wire(monkeypatch, col)
+
+    (result,) = retriever.hybrid_search("mora clase de tasa", top_k=5)
+
+    assert result["manual"] == "MDI-10201"
+    assert result["page"] == 121
+    assert result["section"] == "1.16.1.1 Cálculo de Interés de Mora"
 
 
 def test_min_score_filters_out_low_scoring_results(monkeypatch):
@@ -146,13 +183,69 @@ def test_bm25_rescues_document_dense_missed(monkeypatch):
     assert "b" in ids
 
 
-def test_bm25_index_rebuilds_when_count_changes(monkeypatch):
+def test_bm25_index_rebuilds_when_the_collection_changes(monkeypatch):
+    # Asserts on the OUTCOME (the new document is retrievable), not on the cache
+    # key. The previous version compared the key to a document count, which
+    # pinned the mechanism — and that mechanism was the bug: a rewrite keeping
+    # the same count never invalidated. See test_bm25_cache_invalidation.py.
     docs = [("a", "alpha", {"id": "a", "title": "", "source": ""})]
     col = _FakeCollection(docs, dense_order=["a"])
     _wire(monkeypatch, col)
     retriever.hybrid_search("alpha")
-    assert retriever._bm25_cache["gx_docs"][0] == 1  # cached at count=1
+    cached_key = retriever._bm25_cache["gx_docs"][0]
 
     col._docs.append(("b", "beta", {"id": "b", "title": "", "source": ""}))
-    retriever.hybrid_search("beta")
-    assert retriever._bm25_cache["gx_docs"][0] == 2  # rebuilt at count=2
+    results = retriever.hybrid_search("beta")
+
+    assert retriever._bm25_cache["gx_docs"][0] != cached_key
+    assert any(r["content"] == "beta" for r in results)
+
+
+def test_one_article_cannot_fill_the_whole_result_set(monkeypatch):
+    # A manual chapter yields dozens of chunks. Before the cap, "interés de mora"
+    # returned MDI-10201 §1.10.1.1 three times at top_k=3 and buried the other
+    # manuals that had an answer.
+    docs = [
+        (f"cap_c{i}", f"mora interés cálculo parte {i}", {"id": "cap", "title": "Cap"})
+        for i in range(5)
+    ] + [
+        ("otro_c0", "mora interés en otro manual", {"id": "otro", "title": "Otro"}),
+        ("tercero_c0", "mora interés en un tercero", {"id": "tercero", "title": "Tercero"}),
+    ]
+    col = _FakeCollection(docs, dense_order=[d[0] for d in docs])
+    _wire(monkeypatch, col)
+
+    results = retriever.hybrid_search("mora interés", top_k=4)
+
+    counts = Counter(r["id"] for r in results)
+    assert counts["cap"] <= retriever._MAX_CHUNKS_PER_ARTICLE
+    # The slots freed by the cap go to the other sources, not to nothing.
+    assert len(results) == 4
+    assert {"otro", "tercero"} <= set(counts)
+
+
+def test_the_cap_still_allows_an_answer_split_across_two_chunks(monkeypatch):
+    docs = [
+        ("cap_c0", "la tasa de mora se toma de la clase", {"id": "cap", "title": "Cap"}),
+        ("cap_c1", "de tasa 2 según la parametrización", {"id": "cap", "title": "Cap"}),
+    ]
+    col = _FakeCollection(docs, dense_order=["cap_c0", "cap_c1"])
+    _wire(monkeypatch, col)
+
+    results = retriever.hybrid_search("tasa de mora", top_k=5)
+
+    assert [r["doc_id"] for r in results] == ["cap_c0", "cap_c1"]
+
+
+def test_a_chunk_without_an_article_id_is_capped_on_its_own_id(monkeypatch):
+    # Metadata may lack 'id'; falling back to the chunk id keeps each such chunk
+    # independent instead of collapsing them all into one pseudo-article.
+    docs = [
+        ("x_c0", "mora uno", {"title": "X"}),
+        ("x_c1", "mora dos", {"title": "X"}),
+        ("x_c2", "mora tres", {"title": "X"}),
+    ]
+    col = _FakeCollection(docs, dense_order=["x_c0", "x_c1", "x_c2"])
+    _wire(monkeypatch, col)
+
+    assert len(retriever.hybrid_search("mora", top_k=3)) == 3

@@ -1,0 +1,167 @@
+{
+  "total": 12,
+  "recall": {
+    "1": 0.16666666666666666,
+    "5": 0.6666666666666666,
+    "10": 0.75
+  },
+  "mrr": 0.375,
+  "cases": [
+    {
+      "question": "¿Qué es el API object y para qué sirve?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?46151"
+      ],
+      "collection": "gx_docs",
+      "rank": 1,
+      "recall": {
+        "1": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "API object definir servicio REST exponer métodos",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?46151"
+      ],
+      "collection": "gx_docs",
+      "rank": 4,
+      "recall": {
+        "1": 0.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Cómo declaro el HTTP method de un servicio en un API object?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?46151"
+      ],
+      "collection": "gx_docs",
+      "rank": 15,
+      "recall": {
+        "1": 0.0,
+        "5": 0.0,
+        "10": 0.0
+      }
+    },
+    {
+      "question": "¿Qué es un Business Component en GeneXus?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?5846"
+      ],
+      "collection": "gx_docs",
+      "rank": 10,
+      "recall": {
+        "1": 0.0,
+        "5": 0.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Para qué se usa un Data Provider?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?5270"
+      ],
+      "collection": "gx_docs",
+      "rank": 2,
+      "recall": {
+        "1": 0.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Qué es un Procedure en GeneXus y cuándo lo uso?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?6293"
+      ],
+      "collection": "gx_docs",
+      "rank": null,
+      "recall": {
+        "1": 0.0,
+        "5": 0.0,
+        "10": 0.0
+      }
+    },
+    {
+      "question": "¿Qué es un SDT o Structured Data Type?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?10021"
+      ],
+      "collection": "gx_docs",
+      "rank": 2,
+      "recall": {
+        "1": 0.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Qué métodos tiene una colección de SDT?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?24589"
+      ],
+      "collection": "gx_docs",
+      "rank": null,
+      "recall": {
+        "1": 0.0,
+        "5": 0.0,
+        "10": 0.0
+      }
+    },
+    {
+      "question": "¿Qué es una Transacción en GeneXus?",
+      "expected": [
+        "https://wiki.genexus.com/commwiki/servlet/wiki?1908"
+      ],
+      "collection": "gx_docs",
+      "rank": 3,
+      "recall": {
+        "1": 0.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Cómo se calcula el interés de mora en Bantotal?",
+      "expected": [
+        "file:///F:/ProyectosClaude/docs/Bantotal/MDI-10201-GL-V3R1.20%20-%20Sistema%20de%20Pr%C3%A9stamos.pdf#ch=23"
+      ],
+      "collection": "bt_docs",
+      "rank": 2,
+      "recall": {
+        "1": 0.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Qué configura el ordinal 45 de comisión por mora?",
+      "expected": [
+        "file:///F:/ProyectosClaude/docs/Bantotal/MDI-10201-GL-V3R1.20%20-%20Sistema%20de%20Pr%C3%A9stamos.pdf#ch=98"
+      ],
+      "collection": "bt_docs",
+      "rank": 1,
+      "recall": {
+        "1": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    },
+    {
+      "question": "¿Cómo funciona la condonación de mora?",
+      "expected": [
+        "file:///F:/ProyectosClaude/docs/Bantotal/MDI-10201-GL-V3R1.20%20-%20Sistema%20de%20Pr%C3%A9stamos.pdf#ch=132"
+      ],
+      "collection": "bt_docs",
+      "rank": 4,
+      "recall": {
+        "1": 0.0,
+        "5": 1.0,
+        "10": 1.0
+      }
+    }
+  ]
+}

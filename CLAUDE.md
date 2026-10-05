@@ -38,7 +38,17 @@ npm run build
 
 **Must run in a venv, not the global interpreter.** A stray global package (`notebooklm_skill`) ships a top-level `scripts` package that shadows this repo's `scripts/` (which has no `__init__.py`, so it's only an implicit namespace package) — that breaks `from scripts import scrape_wiki` in `src/api.py`. A venv isolates the project and avoids the collision. Docker is unaffected (clean base image).
 
-**Tests**: `tests/` contains only `__init__.py` — there are no tests or pytest config yet. Do not claim test coverage exists.
+**Tests**: `pytest.ini` + test modules under `tests/` — **249 tests** as of 2026-08-31 (`.venv/Scripts/python.exe -m pytest -q`). Markers: `unit` (fast, isolated) and `integration`. The syntax-DB tests seed the module-level engine singleton with a temp SQLite path via the `temp_db` fixture, so they never touch `data/syntax.db`.
+
+**Retrieval evaluation** — the tests above check structure, NOT quality: chunking was once redesigned page→chapter with all of them staying green. Quality is measured separately:
+
+```bash
+.venv/Scripts/python.exe scripts/eval_retrieval.py --json eval/despues.json
+```
+
+`eval/gold.jsonl` holds questions with their expected **article ids** (never chunk ids — those change whenever chunking is retuned, which would expire the gold set against the exact regression it exists to catch). Every case needs a `note` explaining why that answer is right, so a future miss is diagnosable as bad retrieval vs. a bad question. `eval/baseline.json` is the reference run — **Recall@1 0.167 · Recall@5 0.667 · Recall@10 0.750 · MRR 0.375** over 12 cases.
+
+**Run it before and after any change to chunking, the embedding model, `RRF_K`, `CANDIDATE_POOL` or the per-article cap.** Growing the gold set is the cheapest quality work here: every case starts as a retrieval failure someone actually hit.
 
 ## Architecture
 
@@ -53,8 +63,13 @@ Data flow:
 2. **Classify** (`classify_genre()` in the same file): heuristic keyword scoring decides `genre` (reference vs guide) and therefore the destination collection — reference → `gx_syntax` catalog, guide → `gx_docs` retrieval.
 3. **Ingest** (`src/ingestion/ingestor.py`): writes `.md` + `.meta.json` to `data/scraped/` AND indexes into ChromaDB.
 4. **Index** (`src/vectorstore/indexer.py`): chunks with `langchain-text-splitters`, embeds with `intfloat/multilingual-e5-large`, stores in ChromaDB at `data/chroma/`.
-5. **Retrieve** (`src/vectorstore/retriever.py::hybrid_search`): **dense (e5) + BM25 (`rank-bm25`) fused with Reciprocal Rank Fusion** (RRF_K=60). BM25 index is cached per-collection and rebuilt when the doc count changes. The reranker (`cross-encoder/ms-marco-MiniLM-L-6-v2` in config) is **intentionally not wired** — it is English-trained and the corpus is Spanish; deferred pending a multilingual model decision.
-6. **Validate** (`src/syntax_db/`): SQLite catalog at `data/syntax.db` (SQLAlchemy). `gx_repository.verify_syntax()` gives a binary verdict — exact match → VÁLIDO, fuzzy-only match → INVÁLIDO, nothing similar → NO_VERIFICABLE. Every verdict is logged to `validation_log`; near-misses go to `missing_methods` for human curation.
+5. **Retrieve** (`src/vectorstore/retriever.py::hybrid_search`): **dense (e5) + BM25 (`rank-bm25`) fused with Reciprocal Rank Fusion** (RRF_K=60). BM25 index is cached per-collection, keyed on `(doc count, corpus version)` — the count alone misses a rewrite, since `reindex_if_changed` re-adds chunks under the same ids, so the writer stamps a version marker (`retriever.bump_corpus_version`, called by the indexer). Detection must stay O(1): scanning the collection to detect changes cost 3.5s/query against a 0.22s warm budget. The reranker (`cross-encoder/ms-marco-MiniLM-L-6-v2` in config) is **intentionally not wired** — it is English-trained and the corpus is Spanish; deferred pending a multilingual model decision.
+6. **Validate** (`src/syntax_db/`): SQLite catalog at `data/syntax.db` (SQLAlchemy). `gx_repository.verify_syntax()` returns one of **four** verdicts — VÁLIDO, INVÁLIDO, PISTA, NO_VERIFICABLE. Every verdict is logged to `validation_log`; near-misses go to `missing_methods` for human curation.
+   - `_normalize_token()` reduces a snippet to **the name being called**, most specific first: method on a receiver (`&Texto.Length()` → `Length`), then function call (`Trim(&x)` → `Trim`), then bare identifier. It must stay one word — so the 1481 multi-word names (mostly properties) are reachable via `list_methods` and the near-miss suggestions, never via exact match.
+   - **Version gate**: `version_since` means "exists FROM this version onwards". Asking for an *older* version yields INVÁLIDO.
+   - **PISTA — the versionless case, and the common one.** The sources (`~/.claude/genexus/corpus/*.tsv`, the wiki) carry no version column, so almost every row has `version_since = NULL`. Treating that absence as "don't gate" returned VÁLIDO to a GX16 question: a *false valid*, worse than a false positive because nothing surfaces it — the code just fails to compile later (`Abs()` exists in GX18, raises `src0294` in GX16). Returning INVÁLIDO would be equally wrong (`Trim`, `Format` do exist in GX16). So a versionless row asked about a version older than `CATALOG_SOURCE_VERSION` (18) answers **PISTA**: the name and signature still reach the caller, the certainty does not. Confirm against the GX16 KB (`mcp__genexus16__genexus_api`) or by compiling. On GX16 the catalog therefore *cuts* inventions but does not *confirm* what exists.
+   - Name collisions across sources (`Call` is a command AND a property) resolve by `_INVOCABILITY`: a verified snippet is code being called, so the invocable row wins over a same-named property.
+   - **The catalog is NOT in git** (regenerable binary that changes on every verdict). Populate it with `.venv/Scripts/python.exe scripts/load_catalog.py --apply` — 2614 rows from the four corpus TSVs; dry-run by default, idempotent.
 
 **Two-layer anti-hallucination principle (core design rule — do not mix the layers):** retrieval (ChromaDB, fuzzy, scored) *mitigates* hallucination; validation (syntax.db, closed catalog, binary verdict) *cuts* it.
 
@@ -79,5 +94,6 @@ Data directories (bind-mounted into the API container): `data/chroma/` (ChromaDB
 
 - Chunk-size mismatch: `config.py` declares 1000/200 but `indexer.py` hardcodes 800/100 — the config values are not actually used by the indexer.
 - Retrieval `score` is now the Reciprocal Rank Fusion score (rank-based), not a calibrated similarity — higher is better, but the absolute value is not a probability.
+- **e5 prefixes are deliberately NOT wired.** `embeddings.embed_query` / `embed_passages` exist and are tested, but `indexer` and `retriever` still embed raw text. This looks like a bug — the model card asks for `query: ` / `passage: ` — so it was A/B'd against the gold set on 2026-08-31 (`scripts/ab_e5_prefix.py`, 1156 chunks per arm, identical content): Recall@5 and @10 unchanged, Recall@1 −0.111, MRR −0.056. The hypothesis did not clear its own bar, and rebuilding `gx_docs` costs ~5h of CPU (measured: ~1.1 chunks/s, dropping to ~0.5 under load). Before rewiring this, re-run the A/B with a larger gold set — do not "fix" it from the model card alone. n=9 there, so the deltas are one case flipping; the point is the absence of evidence FOR, not proof against.
 - Nested env-var overrides in `config.py` are likely non-functional (nested pydantic-settings classes don't inherit the `GX_` prefix consistently).
 - `docs/gx-bt-rag-mcp-stack.md` specs richer tool signatures (e.g. `min_score`, `snippet_mode`) and a `cross_ref` collection that are not implemented.

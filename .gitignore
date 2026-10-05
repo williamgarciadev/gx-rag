@@ -15,6 +15,13 @@ data/scraped/
 data/chroma/
 data/raw/
 
+# Catálogo de sintaxis: binario SQLite, regenerable, y cambia en CADA
+# verificación porque validation_log registra todos los veredictos. Versionarlo
+# metía un blob nuevo en cada commit. Se reconstruye con:
+#   .venv/Scripts/python.exe scripts/load_catalog.py --apply
+data/syntax.db
+data/*.bak-*
+
 # Entorno
 .env
 .env.local

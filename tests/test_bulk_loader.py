@@ -102,7 +102,7 @@ def test_load_dump_tallies_index_statuses():
     statuses = iter(["indexed", "skipped", "reindexed"])
 
     def fake_index(
-        article_id, title, content, source, genre, url, content_hash, collection
+        article_id, title, content, source, genre, url, content_hash, collection, **kw
     ):
         # dumps must land in retrieval only, never the syntax catalog
         assert genre == "guide"
@@ -117,6 +117,30 @@ def test_load_dump_tallies_index_statuses():
     assert report.indexed == 1
     assert report.skipped == 1
     assert report.reindexed == 1
+
+
+def test_load_dump_forwards_per_doc_metadata_and_breadcrumb():
+    # RawDoc.page_id used to die here: load_dump never passed it on, so the page
+    # a Bantotal answer must cite only survived inside the title string.
+    doc = bl.RawDoc(
+        source_key="u1",
+        title="t1",
+        content="c1",
+        url="u1",
+        page_id="41",
+        meta={"manual": "MDI-10201", "page": 41},
+        chunk_prefix="[MDI-10201 · p.41]",
+    )
+    seen = {}
+
+    def fake_index(*args, **kw):
+        seen.update(kw)
+        return "indexed"
+
+    bl.load_dump([doc], index_fn=fake_index, hash_fn=lambda t: "h")
+
+    assert seen["extra_meta"] == {"manual": "MDI-10201", "page": 41}
+    assert seen["chunk_prefix"] == "[MDI-10201 · p.41]"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -171,6 +195,23 @@ def test_reindex_skips_when_hash_unchanged(_indexer, monkeypatch):
     assert status == "skipped"
     assert calls == []  # never re-embedded
     assert col.deleted is None
+
+
+def test_reindex_forwards_metadata_and_breadcrumb_to_the_indexer(_indexer, monkeypatch):
+    indexer, calls = _indexer
+    col = _FakeCol({"ids": [], "metadatas": []})
+    _wire_client(monkeypatch, indexer, col)
+
+    indexer.reindex_if_changed(
+        "a", "t", "content", "src", "guide", "url", "H",
+        collection="bt_docs",
+        extra_meta={"manual": "MDI-10201"},
+        chunk_prefix="[MDI-10201 · p.41]",
+    )
+
+    (_, kwargs), = calls
+    assert kwargs["extra_meta"] == {"manual": "MDI-10201"}
+    assert kwargs["chunk_prefix"] == "[MDI-10201 · p.41]"
 
 
 def test_reindex_reindexes_when_hash_differs(_indexer, monkeypatch):

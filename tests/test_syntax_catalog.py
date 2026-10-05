@@ -140,3 +140,153 @@ def test_verify_bt_api_routes_to_bt_apis_table(temp_db):
     assert verify_syntax("GetBalance", language="bt_api")["verdict"] == "VÁLIDO"
     # ... while the default gx language does NOT find it in the empty GxSyntax table.
     assert verify_syntax("GetBalance", language="gx")["verdict"] == "NO_VERIFICABLE"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tokenizer — a snippet must resolve to the NAME BEING CALLED
+#
+# The old tokenizer joined every word of the snippet with a space, so
+# `Trim(&Variable)` became the token `"Trim Variable"` and could never equal a
+# one-word `GxSyntax.name`. Every call returned NO_VERIFICABLE regardless of the
+# catalog, which made the whole "cut" layer inert.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _seed(session, name, **kw):
+    from src.syntax_db.models import GxSyntax
+
+    session.add(GxSyntax(name=name, object_type=kw.pop("object_type", "Function"), **kw))
+    session.commit()
+
+
+def test_a_function_call_resolves_to_the_function_name_not_its_arguments(temp_db):
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Trim", source="wiki")
+    session.close()
+
+    result = verify_syntax("Trim(&Variable)")
+
+    assert result["verdict"] == "VÁLIDO"
+    assert result["name"] == "Trim"
+
+
+def test_a_method_chain_resolves_to_the_method_not_the_receiver(temp_db):
+    """`&Texto.Length()` must ask about Length, not about "Texto Length"."""
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Length", object_type="Method", source="wiki")
+    session.close()
+
+    assert verify_syntax("&Texto.Length()")["verdict"] == "VÁLIDO"
+
+
+def test_a_bare_name_still_resolves(temp_db):
+    """Regression: the simplest input has to keep working."""
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Len", source="wiki")
+    session.close()
+
+    assert verify_syntax("Len")["verdict"] == "VÁLIDO"
+
+
+def test_an_unknown_call_is_still_not_verifiable(temp_db):
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Trim", source="wiki")
+    session.close()
+
+    assert verify_syntax("NoExisteEsto(&x)")["verdict"] == "NO_VERIFICABLE"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Version gate — `version_since` means "exists FROM this version onwards"
+#
+# The catalog is GX18-sourced while the Bantotal KBs are GX16. Returning VÁLIDO
+# for a GX18-only name when the caller asked for gx16 is a FALSE VALID, which is
+# worse than a false positive because nothing surfaces it: the code just fails
+# to compile later. Real case: `Abs()` exists in GX18 and raises `src0294
+# Unknown function` in GX16.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_a_name_introduced_later_is_not_valid_in_an_older_version(temp_db):
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Abs", version_since="gx18", source="wiki")
+    session.close()
+
+    result = verify_syntax("Abs(&DifDias)", version="gx16")
+
+    assert result["verdict"] == "INVÁLIDO"
+    assert "gx18" in str(result).lower()  # the reason must name the version gap
+
+
+def test_a_name_that_predates_the_asked_version_is_valid(temp_db):
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Trim", version_since="gx16", source="wiki")
+    session.close()
+
+    assert verify_syntax("Trim(&x)", version="gx18")["verdict"] == "VÁLIDO"
+
+
+def test_the_same_version_is_valid(temp_db):
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Trim", version_since="gx16", source="wiki")
+    session.close()
+
+    assert verify_syntax("Trim(&x)", version="gx16")["verdict"] == "VÁLIDO"
+
+
+def test_an_entry_without_version_data_answers_a_hint_not_a_verdict(temp_db):
+    """Missing version data is neither a yes nor a no.
+
+    This test used to assert VÁLIDO here, reasoning that gating on absence would
+    make the catalog unusable — true, and most rows do carry no version_since.
+    But the alternative it picked was a FALSE VALID against a GX16 KB, which is
+    the one failure mode nothing surfaces. PISTA keeps the row usable (name,
+    signature and source all reach the caller) without claiming what the catalog
+    cannot prove. See gx_repository.CATALOG_SOURCE_VERSION.
+    """
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Trim", source="wiki")  # version_since is NULL
+    session.close()
+
+    result = verify_syntax("Trim(&x)", version="gx16")
+
+    assert result["verdict"] == "PISTA"
+    # Still usable: the catalog's knowledge is not withheld, only its certainty.
+    assert result["name"] == "Trim"
+    assert result["source"] == "wiki"
+    assert "notes" in result
+
+
+def test_no_version_asked_means_no_gate(temp_db):
+    from src.syntax_db.models import get_session
+    from src.syntax_db.gx_repository import verify_syntax
+
+    session = get_session()
+    _seed(session, "Abs", version_since="gx18", source="wiki")
+    session.close()
+
+    assert verify_syntax("Abs(&x)")["verdict"] == "VÁLIDO"

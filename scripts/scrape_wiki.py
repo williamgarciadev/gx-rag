@@ -27,6 +27,10 @@ import httpx
 from bs4 import BeautifulSoup
 import html2text
 
+# src.net_guard solo depende de la stdlib y httpx, así que importarlo desde
+# scripts/ no cierra ciclo con src.api -> scripts.scrape_wiki.
+from src.net_guard import BlockedUrlError, assert_fetchable
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Logging
 # ─────────────────────────────────────────────────────────────────────────────
@@ -189,16 +193,37 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+#: Redirect hops allowed before giving up. Enough for the http→https and
+#: wiki→docs hops the real sites use, low enough that a loop ends fast.
+MAX_REDIRECTS = 5
+
+
 def fetch_article(url: str, timeout: float = 45.0) -> httpx.Response:
-    """Descarga un artículo wiki."""
+    """Descarga un artículo wiki, validando cada salto contra el allowlist.
+
+    Los redirects se siguen A MANO. `follow_redirects=True` delega el salto a
+    httpx, que solo revisa la URL inicial: un origen permitido que responda
+    `302 → http://169.254.169.254/` deja el guard atrás sin tocarlo. Validar
+    cada `Location` antes de seguirlo es la única forma de que el allowlist
+    valga para toda la cadena y no nada más para el primer eslabón.
+    """
     headers = {
         "User-Agent": "Mozilla/5.0 (compatible; gx-bt-rag-mcp/0.1)",
         "Accept": "text/html,application/xhtml+xml",
     }
+    current = url
     with httpx.Client(timeout=timeout) as client:
-        resp = client.get(url, headers=headers, follow_redirects=True)
-        resp.raise_for_status()
-        return resp
+        for _ in range(MAX_REDIRECTS + 1):
+            assert_fetchable(current)
+            resp = client.get(current, headers=headers, follow_redirects=False)
+            if not resp.is_redirect:
+                resp.raise_for_status()
+                return resp
+            location = resp.headers.get("location", "")
+            # Un Location relativo se resuelve contra el salto actual; si no,
+            # "/x" perdería el host y el allowlist lo rechazaría por vacío.
+            current = str(httpx.URL(current).join(location))
+    raise BlockedUrlError(f"too many redirects (>{MAX_REDIRECTS}) starting at {url}")
 
 
 def _decompose_safe(element: BeautifulSoup, tag) -> None:

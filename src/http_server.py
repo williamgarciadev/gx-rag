@@ -29,7 +29,6 @@ Run locally (dev only — no TLS):
 """
 
 import contextlib
-import hmac
 import logging
 import time
 from collections.abc import AsyncIterator
@@ -45,6 +44,10 @@ from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
+# Shared with src.api so the constant-time comparison has exactly one copy.
+# NOTE: behind a reverse proxy, `client_ip` is the proxy — configure trusted
+# X-Forwarded-For handling before relying on it to identify a real client.
+from src.auth import bearer_token, client_ip, is_authorized
 from src.server import PUBLIC_TOOL_NAMES, READ_TOOLS, dispatch_tool
 
 log = logging.getLogger(__name__)
@@ -63,30 +66,6 @@ def _content_length(scope: Scope) -> int:
             except ValueError:
                 return 0
     return 0
-
-
-def _bearer_token(scope: Scope) -> str | None:
-    """Extract the Bearer token from the ASGI request headers, if present."""
-    for key, value in scope.get("headers", []):
-        if key == b"authorization":
-            raw = value.decode("latin-1")
-            if raw.lower().startswith("bearer "):
-                return raw[len("bearer ") :].strip()
-    return None
-
-
-def _is_authorized(token: str | None, valid_keys: frozenset[str]) -> bool:
-    """Constant-time membership check. Fails closed when no keys are configured."""
-    if not valid_keys or token is None:
-        return False
-    return any(hmac.compare_digest(token, key) for key in valid_keys)
-
-
-def _client_ip(scope: Scope) -> str:
-    """TCP peer host. (Behind a reverse proxy in prod, configure trusted
-    X-Forwarded-For handling so this reflects the real client, not the proxy.)"""
-    client = scope.get("client")
-    return client[0] if client else "unknown"
 
 
 class _RateWindow:
@@ -207,7 +186,7 @@ def create_app(
         )
 
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
-        ip = _client_ip(scope)
+        ip = client_ip(scope)
         # Stop brute-forcing BEFORE the auth check, so failed attempts are capped.
         if auth_failures.count(ip) >= max_auth_failures:
             await _reject(
@@ -220,8 +199,8 @@ def create_app(
             )
             return
 
-        token = _bearer_token(scope)
-        if not _is_authorized(token, valid_keys):
+        token = bearer_token(scope)
+        if not is_authorized(token, valid_keys):
             auth_failures.hit(ip)
             await _reject(
                 scope,

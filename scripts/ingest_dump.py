@@ -12,6 +12,7 @@ import argparse
 import itertools
 import sys
 
+from scripts._console import use_utf8_stdout
 from src.ingestion.bulk_loader import (
     RawDoc,
     load_dump,
@@ -47,7 +48,6 @@ def _dry_run(docs) -> None:
     for d in samples:
         print(f"    - [{d.page_id}] {d.title[:60]}  ({len(d.content)} chars)  {d.url}")
 
-
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Bulk-load a documentation dump.")
     p.add_argument("file", help="Path to the dump .txt file")
@@ -56,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args(argv)
+    use_utf8_stdout()
 
     docs = _iter_docs(args.file, args.format, args.limit)
 

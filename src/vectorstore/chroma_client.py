@@ -7,15 +7,22 @@ from chromadb.config import Settings as ChromaSettings
 from pathlib import Path
 import logging
 
+from src.paths import CHROMA_PATH
+
 log = logging.getLogger(__name__)
 
 _client = None
 
 
-def get_client(persist_path: str | Path = "data/chroma") -> chromadb.PersistentClient:
+def default_persist_path() -> Path:
+    """Absolute path to the store, independent of the caller's cwd."""
+    return CHROMA_PATH
+
+
+def get_client(persist_path: str | Path | None = None) -> chromadb.PersistentClient:
     global _client
     if _client is None:
-        path = Path(persist_path)
+        path = Path(persist_path) if persist_path is not None else default_persist_path()
         path.mkdir(parents=True, exist_ok=True)
         _client = chromadb.PersistentClient(
             path=str(path),

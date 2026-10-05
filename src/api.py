@@ -5,6 +5,7 @@ Puerto: 8000
 Expone endpoints para scraper, ver estado y gestionar la cola de ingesta.
 """
 
+import ipaddress
 import json
 import logging
 import shutil
@@ -18,7 +19,10 @@ from pydantic import BaseModel, Field, HttpUrl, model_validator
 from scripts import scrape_wiki as scraper
 from scripts.scrape_sac import DEFAULT_DELAY, DEFAULT_MAX_MISSES, DEFAULT_MIN_WORDS
 from src import sac_jobs
+from src.auth import bearer_token, client_ip, is_authorized
+from src.config import config
 from src.ingestion.ingestor import ingest, SCRAPED_DIR
+from src.net_guard import BlockedUrlError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -31,13 +35,93 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Endpoints reachable without a token. `/health` is what the container
+# healthcheck curls, so gating it would fail the deploy for no security gain.
+_OPEN_PATHS = frozenset({"/health"})
+
+# Keys are read once at import and parked on app.state so tests can swap them
+# without reaching into module globals.
+app.state.admin_api_keys = config.admin_api_key_set
+
+
+def _is_loopback(host: str) -> bool:
+    """True for a request that originated inside this container/host.
+
+    The threat this API faces is a *neighbouring container* on the shared
+    `infra_gateway` network, and one of those never arrives over loopback. So
+    loopback stays open when no key is configured: local development keeps
+    working untouched while the actual attack path is closed. Configure a key
+    and the gate applies to everyone, loopback included.
+    """
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+@app.middleware("http")
+async def require_api_key(request: Request, call_next):
+    """Gate every endpoint except `_OPEN_PATHS` behind a bearer token."""
+    # Preflight carries no Authorization header by design; gating it would break
+    # CORS for legitimate callers without stopping anyone.
+    if request.method == "OPTIONS" or request.url.path in _OPEN_PATHS:
+        return await call_next(request)
+
+    keys: frozenset[str] = request.app.state.admin_api_keys
+    if not keys:
+        if _is_loopback(client_ip(request.scope)):
+            return await call_next(request)
+        log.warning(
+            "Rejected %s %s from %s: no GX_ADMIN_API_KEYS configured, so only "
+            "loopback is allowed.",
+            request.method,
+            request.url.path,
+            client_ip(request.scope),
+        )
+        return JSONResponse(status_code=401, content={"detail": "unauthorized"})
+
+    if not is_authorized(bearer_token(request.scope), keys):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "unauthorized"},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return await call_next(request)
+
+
+# Added AFTER the auth middleware on purpose: Starlette makes the
+# last-registered middleware the OUTERMOST one, so this ordering lets CORS wrap
+# the gate — preflight is answered and 401s still carry their CORS headers.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # NOT "*". With allow_credentials=True, Starlette answers a wildcard by
+    # echoing the request's own Origin, so "*" grants every site the curator
+    # visits — a drive-by path to /scrape, which writes to the corpus.
+    allow_origins=config.allowed_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(BlockedUrlError)
+async def blocked_url_handler(request: Request, exc: BlockedUrlError):
+    """A refused URL is the caller's problem (400), not a server fault (500).
+
+    The reason is deliberately generic: `str(exc)` names the host and whether it
+    resolved privately, which is the internal-network map an SSRF probe is
+    fishing for. It goes to the log, not to the response.
+    """
+    log.warning(f"{request.method} {request.url.path} blocked URL: {exc}")
+    return JSONResponse(
+        status_code=400,
+        content={
+            "detail": (
+                "URL no permitida: solo se aceptan orígenes de documentación "
+                "autorizados."
+            )
+        },
+    )
 
 
 @app.exception_handler(Exception)

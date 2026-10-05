@@ -9,10 +9,10 @@ from pathlib import Path
 from dataclasses import asdict
 
 from scripts.scrape_wiki import ScrapedArticle
+from src.paths import SCRAPED_DIR
 
 log = logging.getLogger(__name__)
 
-SCRAPED_DIR = Path("data/scraped")
 SCRAPED_DIR.mkdir(parents=True, exist_ok=True)
 
 

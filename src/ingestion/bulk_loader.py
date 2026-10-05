@@ -16,7 +16,7 @@ Two dump formats are supported:
 import logging
 import re
 from collections.abc import Callable, Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,14 @@ class RawDoc:
     content: str
     url: str
     page_id: str
+    # Extra ChromaDB metadata (str/int/float/bool only — Chroma rejects the rest).
+    # Web dumps leave this empty; local manuals fill in manual/version/page/section
+    # so retrieval can filter and cite without parsing the title string.
+    meta: dict = field(default_factory=dict)
+    # Breadcrumb prepended to every chunk's *text*. Metadata is for filtering;
+    # this is what situates the chunk for whoever reads it, and it reaches the
+    # embedding and the BM25 index too.
+    chunk_prefix: str = ""
 
 
 @dataclass
@@ -167,6 +175,8 @@ def load_dump(
             doc.url,
             content_hash,
             collection,
+            extra_meta=doc.meta,
+            chunk_prefix=doc.chunk_prefix,
         )
         report.record(status)
         if on_progress is not None:
