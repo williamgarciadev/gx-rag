@@ -13,7 +13,9 @@ afirmación falsa aguas abajo. Al tocar una descripción o un mensaje acá,
 mantené esa propiedad.
 """
 
+import json
 import logging
+import re
 
 from collections.abc import Awaitable, Callable, Sequence
 
@@ -879,6 +881,42 @@ def reject_non_public_collection(collection: str | None) -> str | None:
     )
 
 
+_CHUNK_ID = re.compile(r"_c\d+$")
+
+
+def _article_not_found_text(article_id: str, collection: str) -> str:
+    """Texto de get_article sin hit: dice POR QUÉ, no solo que no está.
+
+    El default de `collection` es gx_docs, así que el fallo típico es un artículo
+    de bt_docs pedido sin la colección: «Artículo no encontrado.» a secas se leía
+    como «ese documento no existe». Busca el id en las demás colecciones públicas
+    y declara si la consultada está vacía o si el id es de un chunk.
+    """
+    from src.vectorstore.pg_collections import collection_counts, get_article
+
+    lineas = [f"No hay ningún artículo con id '{article_id}' en '{collection}'."]
+    otras = [c for c in sorted(PUBLIC_COLLECTIONS)
+             if c != collection and get_article(article_id, collection=c)]
+    if otras:
+        lineas.append(
+            f"SÍ está en: {', '.join(otras)}. Repite la llamada con "
+            f"collection='{otras[0]}' (el default es gx_docs)."
+        )
+    elif dict(collection_counts()).get(collection, 0) == 0:
+        lineas.append(f"La colección '{collection}' está vacía en este deployment.")
+    if _CHUNK_ID.search(article_id):
+        lineas.append(
+            "Ese id parece de un CHUNK (termina en _cN): eso va a get_document. "
+            "El article_id es el mismo sin el sufijo."
+        )
+    if not otras:
+        lineas.append(
+            "No concluyas que el documento no existe: verifica el id contra el "
+            "article_id que devolvió search_docs."
+        )
+    return "\n".join(lineas)
+
+
 def _reject_unknown_collection(collection: str) -> str | None:
     """Mensaje de rechazo si la colección no existe; None si es válida.
 
@@ -1189,7 +1227,8 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             art = get_article(article_id, collection=collection)
             if not art:
-                return [TextContent(type="text", text="Artículo no encontrado.")]
+                return [TextContent(type="text",
+                                    text=_article_not_found_text(article_id, collection))]
             return [
                 TextContent(
                     type="text",
@@ -1213,7 +1252,13 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             verdict = verify_syntax(snippet, language=lang, version=version)
             return [
-                TextContent(type="text", text=f"{verdict}\n{_verdict_guidance(verdict)}")
+                TextContent(
+                    type="text",
+                    # JSON en una línea y no el repr del dict: parseable por el
+                    # cliente y sin las comillas simples de Python.
+                    text=f"{json.dumps(verdict, ensure_ascii=False, default=str)}\n"
+                    f"{_verdict_guidance(verdict)}",
+                )
             ]
         except Exception:
             log.exception("%s failed", name)

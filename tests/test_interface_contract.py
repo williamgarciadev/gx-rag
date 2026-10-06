@@ -244,3 +244,67 @@ def test_a_misspelled_collection_is_named_as_such(store_must_not_be_touched, too
     assert "desconocida" in out.lower()
     assert "gx_docs" in out, "must list the valid collections"
     assert "Sin resultados" not in out
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Respuestas que el agente lee: get_article sin hit y el veredicto de verify_syntax
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def article_only_in(monkeypatch):
+    """Simula un store donde `art` existe solo en la colección indicada."""
+    from src.vectorstore import pg_collections
+
+    def _install(home: str | None, counts: dict[str, int]):
+        monkeypatch.setattr(
+            pg_collections, "get_article",
+            lambda article_id, collection="gx_docs":
+                {"title": "T"} if (article_id == "art" and collection == home) else None,
+        )
+        monkeypatch.setattr(pg_collections, "collection_counts", lambda: list(counts.items()))
+
+    return _install
+
+
+def test_get_article_miss_names_the_collection_where_the_article_lives(article_only_in):
+    """El default es gx_docs: un agente que buscó en bt_docs y llamó get_article sin
+    `collection` recibía «Artículo no encontrado.» y lo leía como ausencia."""
+    article_only_in("bt_docs", {"gx_docs": 10, "bt_docs": 5})
+
+    out = _call("get_article", article_id="art")
+
+    assert "bt_docs" in out
+    assert "collection" in out
+
+
+def test_get_article_miss_on_an_empty_collection_says_it_is_empty(article_only_in):
+    article_only_in(None, {"gx_docs": 0, "bt_docs": 5})
+
+    out = _call("get_article", article_id="nada", collection="gx_docs")
+
+    assert "vacía" in out
+
+
+def test_get_article_miss_with_a_chunk_id_points_to_get_document(article_only_in):
+    article_only_in(None, {"gx_docs": 10})
+
+    out = _call("get_article", article_id="wiki/foo_c3")
+
+    assert "get_document" in out
+
+
+def test_verify_syntax_verdict_is_json(monkeypatch):
+    """El veredicto salía como repr de un dict de Python ({'verdict': 'VÁLIDO'}):
+    legible, pero no parseable, y con comillas simples que ningún cliente espera."""
+    import json
+
+    from src.syntax_db import gx_repository
+
+    monkeypatch.setattr(gx_repository, "verify_syntax",
+                        lambda snippet, language="gx", version=None:
+                            {"verdict": "VÁLIDO", "name": "Trim"})
+
+    first_line = _call("verify_syntax", snippet="Trim(&x)").splitlines()[0]
+
+    assert json.loads(first_line)["verdict"] == "VÁLIDO"
