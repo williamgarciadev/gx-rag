@@ -14,22 +14,18 @@ Estado del corpus al cierre de esa migración:
 
 ---
 
-## 1. El catálogo de `verify_syntax` está VACÍO (0 filas) — ALTA
+## 1. El catálogo de `verify_syntax` — ✅ POBLADO Y ACTIVO (2026-10-06)
 
-**Por qué importa**: es la capa que **corta** la alucinación. El diseño del proyecto separa
-explícitamente retrieval (difuso, mitiga) de validación (catálogo cerrado, veredicto binario).
-Con el catálogo vacío, `verify_syntax` devuelve `NO_VERIFICABLE` **para todo** → la mitad "dura"
-del anti-alucinación no está operativa y el sistema depende solo del retrieval.
-
-**Evidencia (corregida 2026-07-27 — SQL directo sobre `data/syntax.db`)**:
+**Estado actual en PostgreSQL (2026-10-06)**:
+El catálogo cuenta con **765 filas**, 706 con `version_since` y **96 `object_type`** (tipos de datos del lenguaje y categorías wiki).
 
 | Tabla | Filas |
 |---|---|
-| `gx_syntax` | **0** |
+| `gx_syntax` | **765** |
 | `bt_apis` | **0** |
-| `validation_log` | 5 |
-| `missing_methods` | 5 |
-| `syntax_candidates` | 0 |
+| `validation_log` | 56 |
+| `missing_methods` | 11 |
+| `syntax_candidates` | 814 |
 
 ⚠️ **La evidencia anterior de este ítem ("26 chunks") era incorrecta**: confundía dos stores
 **homónimos** — la *colección Chroma* `gx_syntax` (26 chunks, artículos wiki) con la *tabla SQLite*
@@ -198,11 +194,13 @@ medir el delta de conteo antes de reemplazar.
 
 ---
 
-## 6. Reranker no cableado — INFO
+## 6. Reranker multilingüe cableado — ✅ RESUELTO (2026-10-06)
 
-`cross-encoder/ms-marco-MiniLM-L-6-v2` está en config pero **deliberadamente desconectado**:
-entrenado en inglés, corpus mayormente español. Decisión pendiente de un modelo multilingüe.
-No es deuda accidental — está documentado como intencional.
+Se cableó `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1` en `src/config.py`, `src/vectorstore/reranker.py`
+y `src/server.py` (`search_docs(rerank=True)`). El modelo cuenta con entrenamiento multilingüe nativo
+en español, atención cruzada completa sobre candidatos y fallback explícito a RRF etiquetado si el
+modelo no está disponible.
+
 
 ---
 

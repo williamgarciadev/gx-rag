@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guía para trabajar en este repo. **Verificado contra el código el 2026-08-11**; lo fechado así se
+Guía para trabajar en este repo. **Verificado contra el código el 2026-10-06**; lo fechado así se
 midió, no se supone.
 
 ## What This Is
@@ -24,7 +24,7 @@ Estado: **Fase 1** (caracterización de corpus + ingesta de wiki). Progreso vivo
 |---|---|
 | La arquitectura real, con clasificación de evidencia por afirmación | **`RAG_SYSTEM_MAP.md`** — reconstruido desde el código, es el mapa autoritativo |
 | El QUÉ SE QUERÍA (hay requisitos escritos y sin implementar) | `docs/` — ⚠️ `docs/CLAUDE.md` es **spec de planeación, no realidad** |
-| Auditar el repo contra sus propios docs | `docs/PROMPT-auditoria-agente.md` |
+| Auditar el repo contra sus propios docs | `docs/PROMPT-auditoria-agente.md` y `docs/AUDITORIA-2026-10-05.md` |
 | **Trabajo de optimización en curso** (hallazgos medidos, fases, coordinación entre agentes) | **`docs/PLAN-optimizacion.md`** — empezá por su sección "Cómo arrancar" |
 
 ## Commands
@@ -35,12 +35,17 @@ docker compose up
 # Servicios: gx-rag-api (FastAPI, puerto host 8000), gx-rag-ui (nginx :80 interno, sin puerto host)
 
 # Backend local — SIEMPRE en venv (ver nota abajo)
+# Linux/Mac:
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API (puerto canónico 8000, igual que el Dockerfile)
-.venv/bin/python -m src.server                        # MCP server (stdio) — entrypoint aparte, NO lo levanta compose
+.venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API
+.venv/bin/python -m src.server                        # MCP server (stdio)
+.venv/bin/python -m pytest tests/ -q                 # Tests — 438 passing al 2026-10-06
 
-# Tests — 82 passing al 2026-08-11 16:30. Corré esto antes de creerle al número:
-.venv/bin/python -m pytest tests/ -q
+# Windows (PowerShell):
+python -m venv .venv; .venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\uvicorn src.api:app --reload --port 8000
+.venv\Scripts\python -m src.server
+.venv\Scripts\pytest tests/ -q                        # Tests — 438 passing al 2026-10-06
 # Marcadores (pytest.ini, --strict-markers): unit | integration
 
 # Ingesta
@@ -72,9 +77,9 @@ Sin ruff ni mypy configurados.
 
 Dos entrypoints sobre un mismo core de ingesta/retrieval:
 
-- **`src/server.py`** — MCP server (SDK oficial `mcp`, stdio). **7 tools**, separadas por permiso:
+- **`src/server.py`** — MCP server (SDK oficial `mcp`, stdio). **8 tools**, separadas por permiso:
   - `READ_TOOLS` (5): `search_docs`, `get_article`, `get_document`, `verify_syntax`, `list_methods`.
-  - `WRITE_TOOLS` (2): `add_from_url`, `ingest_batch`. **Mutan el corpus ⇒ quedan FUERA del
+  - `WRITE_TOOLS` (3): `add_from_url`, `ingest_batch`, `ingest_kb_objects`. **Mutan el corpus ⇒ quedan FUERA del
     transporte público** (`add_from_url` es un vector de SSRF y la ingesta exige gate humano).
     `PUBLIC_TOOL_NAMES` se deriva de `READ_TOOLS`, así que esa frontera no puede desincronizarse.
 - **`src/api.py`** — FastAPI "Ingestor API" para la UI admin: `/`, `/health`, `/status`, `/scrape`,
@@ -99,9 +104,9 @@ Flujo de datos:
    **Postgres**. `reindex_if_changed()` compara `content_hash` y saltea sin re-embeddear.
 5. **Retrieve** (`src/vectorstore/pg_retriever.py::hybrid_search`): **denso (pgvector) + full-text
    (`ts_rank_cd`) fusionados con RRF (`RRF_K=60`), resuelto EN SQL** con un CTE por criterio. El
-   reranker (`cross-encoder/ms-marco-MiniLM-L-6-v2`) está **declarado en `config.py` y no usado por
-   ningún módulo**: es English-trained y el corpus es español, diferido hasta decidir un modelo
-   multilingüe.
+   reranker (`cross-encoder/mmarco-mMiniLMv2-L12-H384-v1`) está **cableado y disponible vía `rerank=True`**:
+   es multilingüe (soporta español de forma nativa), calcula atención cruzada completa sobre candidatos
+   y provee fallback explícito a RRF si el modelo no está disponible.
 6. **Valida** (`src/syntax_db/`): catálogo curado vía SQLAlchemy. **Vive en Postgres si `GXRAG_DSN`
    está definida, y cae a SQLite (`data/syntax.db`) si no** (`models.py:113-140`) — o sea que en este
    entorno vive en Postgres, no en el archivo. `gx_repository.verify_syntax()` da veredicto binario —
@@ -220,17 +225,19 @@ sesiones sí.
   WorkWithPlus (`docs.workwithplus.com`). GeneXus tiene un pattern nativo *Work With for Web* y WWP
   (DVelop) es otro producto: una query sobre "el pattern" devuelve los dos entremezclados. **Filtrá
   por procedencia (la url del hit), no por presencia.**
-- **Estado del corpus, medido 2026-08-11**: `gx_docs` 50.063 chunks · `bt_docs` **1.122** (manual
-  funcional Bantotal, en español — ya NO está vacía) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
+- **Estado del corpus, medido 2026-10-06**: `gx_docs` 50.063 chunks · `bt_docs` **1.569** (manual
+  funcional Bantotal, videos de buenas prácticas y manuales técnicos Cadena de Cierre/RTE) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
   avisa qué colecciones tienen contenido cuando pegás en una vacía.
-- **El catálogo del validador (`gx_syntax`, SQL) tiene 59 entradas y `version_since` NULL en las 59.**
-  No es un accidente de los datos: `promote_candidate` —la única vía al catálogo— lo escribe
-  hardcodeado en `None` (`candidate_repository.py:94`). Por eso **`version` no filtra** en
-  `verify_syntax` ni en `list_methods`: filtrar garantizaba una lista vacía, que el agente leía como
-  "ese objeto no tiene métodos". Las tools lo declaran explícitamente.
-- **`object_type` NO es el tipo de objeto GeneXus.** Los valores reales del catálogo son `Method`(34),
-  `Event`(9), `Command`(8), `Rule`(6), `Property`(2) — **no hay `Transaction` ni `Procedure`**. Pedir
-  esos dos devuelve vacío por taxonomía equivocada, no por falta de datos.
+- **El catálogo del validador (`gx_syntax`, SQL) tiene 765 entradas, 706 con `version_since` y 96 `object_type`.**
+  Las fuentes principales provienen de GeneXus 18 (incluyendo `gxtypes.xml`). Para una versión previa
+  como `gx16` (las KBs Bantotal), un método no diferenciable por versión sale como veredicto `PISTA`
+  (no `VÁLIDO`), indicando que debe verificarse contra un objeto de la KB. `list_methods` no filtra
+  por versión pero lista los métodos disponibles por tipo.
+- **`object_type` NO es el tipo de objeto GeneXus (Transaction, Procedure...).** Contiene 96 tipos reales
+  divididos en dos familias: (1) tipos de dato del lenguaje con sus métodos (`DateTime`, `Date`,
+  `Character`, `Collection`, `File`, `BusinessComponent`, etc.); (2) categorías de la wiki (`Method`,
+  `Event`, `Command`, `Rule`, `Property`). Pedir `Transaction` o `Procedure` devuelve vacío por
+  taxonomía ajena al catálogo.
 - **El `tsv` de la base viva usa la config `es_simple`** (= `simple` + `unaccent`, ver
   `sql/002-unaccent-tsv.sql`), y `pg_retriever` consulta con esa misma config. ⚠️ Pero
   `sql/001-chunks-schema.sql` todavía declara `'simple'`: **un install fresco que corra solo el 001
