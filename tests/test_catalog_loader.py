@@ -156,3 +156,31 @@ def test_a_collision_resolves_to_the_invocable_row(temp_db):
     load_entries(_entries(("Call", "property"), ("Call", "command")))
 
     assert verify_syntax("Call(&p)")["object_type"] == "command"
+
+
+def test_a_word_inside_another_construct_name_is_not_valid(temp_db):
+    # «Component» no es un construct: es una palabra dentro del título de otro.
+    # Medido 2026-10-05: el LIKE '% n %' devolvía «Refresh Web Component command»
+    # y el veredicto salía VÁLIDO, la única afirmación fuerte del sistema.
+    from src.syntax_db.gx_repository import verify_syntax
+
+    load_entries(_entries(("Refresh Web Component command", "Command"),
+                          ("Refresh Grid event", "Event")))
+
+    for token in ("Component", "Grid"):
+        assert verify_syntax(token)["verdict"] != "VÁLIDO", token
+    # Con receptor se acepta «Dueño Miembro method/property/event», pero un
+    # command no es miembro de nada.
+    assert verify_syntax("&wc.Component")["verdict"] != "VÁLIDO"
+
+
+def test_the_head_word_of_a_qualified_title_is_still_valid(temp_db):
+    # Los títulos de la wiki califican el construct después de su nombre:
+    # «Add method - SDT Collection» ES el Add de una colección.
+    from src.syntax_db.gx_repository import verify_syntax
+
+    load_entries(_entries(("Add method - SDT Collection", "Method"),
+                          ("Refresh command in web", "Command")))
+
+    assert verify_syntax("&col.Add(&item)")["name"] == "Add method - SDT Collection"
+    assert verify_syntax("Refresh")["verdict"] == "VÁLIDO"

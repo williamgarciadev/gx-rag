@@ -48,6 +48,9 @@ _ENTRY_SUFFIXES = (
     "attribute",
 )
 
+# Sufijos de título que nombran un MIEMBRO de otra cosa (un command no lo es).
+_MEMBER_SUFFIXES = ("method", "property", "event")
+
 # &fecha.AddYears(5) -> AddYears   |   &col.Add(&item) -> Add
 _MEMBER_CALL = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(")
 # &var.ResourceName (acceso a propiedad o método sin paréntesis)
@@ -122,13 +125,19 @@ def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None)
                     key=lambda e: _INVOCABILITY.get((e.object_type or "").lower(), 99),
                 )
 
+            # Los títulos de la wiki tienen dos formas, y solo esas valen:
+            # «Miembro calificador» («Add method - SDT Collection»), y, si el
+            # snippet invoca un MIEMBRO (&col.Add), «Dueño Miembro tipo»
+            # («Business Component Add method»). Un LIKE '% n %' abierto daba
+            # VÁLIDO a «Component» con «Refresh Web Component command»: una
+            # palabra dentro del nombre de otro construct no es ese construct.
+            forma = func.lower(GxSyntax.name).like(f"{n} %")
+            if receiver_type:
+                for sufijo in _MEMBER_SUFFIXES:
+                    forma = forma | func.lower(GxSyntax.name).like(f"% {base.lower()} {sufijo}")
             calificadas = (
                 session.query(GxSyntax)
-                .filter(
-                    func.lower(GxSyntax.name).like(f"{n} %")
-                    | func.lower(GxSyntax.name).like(f"% {n}")
-                    | func.lower(GxSyntax.name).like(f"% {n} %")
-                )
+                .filter(forma)
                 .order_by(GxSyntax.name)
                 .all()
             )
