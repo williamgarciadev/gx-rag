@@ -252,32 +252,40 @@ READ_TOOLS: list[Tool] = [
         name="verify_syntax",
         description=(
             "Verifica una firma/método/comando contra el catálogo estructurado "
-            "(SQL, curado a mano). Devuelve VÁLIDO / INVÁLIDO / NO_VERIFICABLE.\n"
-            "🔴 CÓMO LEER EL VEREDICTO — acá se cometen los errores más caros. "
-            "NINGUNO de los tres es simétrico: solo VÁLIDO es una afirmación.\n"
-            "  VÁLIDO         = está en el catálogo curado. Afirmalo, con su source.\n"
-            "  INVÁLIDO       = NO matcheó exacto Y existen entradas PARECIDAS. Es\n"
-            "                   un detector de TYPO (mirá 'sugerencias'), NO una\n"
+            "(SQL). Devuelve VÁLIDO / PISTA / INVÁLIDO / NO_VERIFICABLE.\n"
+            "🔴 CÓMO LEER EL VEREDICTO — aquí se cometen los errores más caros. "
+            "NINGUNO es simétrico: solo VÁLIDO es una afirmación.\n"
+            "  VÁLIDO         = está en el catálogo. Afírmalo, con su source. Antes,\n"
+            "                   compara el `name` devuelto con lo que preguntaste:\n"
+            "                   si es una entrada más larga que solo CONTIENE tu\n"
+            "                   término, el acierto es parcial y no lo afirmes.\n"
+            "  PISTA          = está en el catálogo, pero preguntaste por una versión\n"
+            "                   anterior a la de sus fuentes (GeneXus 18). Es un\n"
+            "                   indicio, no un veredicto: confírmalo contra la KB de\n"
+            "                   esa versión o compilando antes de usarlo.\n"
+            "  INVÁLIDO       = NO coincidió exacto Y existen entradas PARECIDAS. Es\n"
+            "                   un detector de TYPO (mira 'sugerencias'), NO una\n"
             "                   prueba de que la construcción no exista. Se calcula\n"
             "                   por similitud contra un catálogo incompleto: un\n"
             "                   nombre válido no catalogado que se parezca a otra\n"
-            "                   entrada cae acá. Tratalo como '¿quisiste decir X?'.\n"
+            "                   entrada cae aquí. Tómalo como '¿quisiste decir X?'.\n"
             "  NO_VERIFICABLE = 'NO SÉ'. No es inválido ni inexistente.\n"
-            "El catálogo cubre una fracción mínima de GeneXus, así que "
-            "NO_VERIFICABLE es la respuesta ESPERADA para casi todo, y para "
-            "construcciones perfectamente válidas.\n"
-            "Ante NO_VERIFICABLE o INVÁLIDO, verificá por otra vía antes de "
-            "afirmar: (1) leé un objeto de la KB real que ya use la construcción — "
+            "QUÉ HAY: los métodos de los tipos de dato del lenguaje (DateTime, "
+            "Collection, File, BusinessComponent…), extraídos del gxtypes.xml de un "
+            "install de GeneXus 18, y comandos, funciones y eventos de la wiki. Son "
+            "cientos de entradas, no miles, y el tamaño depende del deployment: "
+            "GeneXus es mucho más grande, así que NO_VERIFICABLE es la respuesta "
+            "ESPERADA para muchas construcciones perfectamente válidas.\n"
+            "Ante NO_VERIFICABLE o INVÁLIDO, verifica por otra vía antes de "
+            "afirmar: (1) lee un objeto de la KB real que ya use la construcción — "
             "mirarlo, no recordarlo; (2) la wiki oficial para la semántica. "
-            "Es distinto de search_docs, que RECUPERA prosa: acá hay veredicto "
+            "Es distinto de search_docs, que RECUPERA prosa: aquí hay veredicto "
             "contra catálogo cerrado. Cada token no encontrado se registra en la "
             "cola de curación (con hit_count), así que preguntar sirve incluso "
             "cuando la respuesta es 'no sé'.\n"
-            "El catálogo es CHICO y curado a mano (decenas de entradas, no miles), "
-            "y su tamaño depende del deployment: por eso NO_VERIFICABLE es la "
-            "respuesta esperada. El catálogo de endpoints Bantotal (`bt_apis`) "
-            "suele estar vacío, y mientras lo esté `language='bt_api'` sólo puede "
-            "devolver NO_VERIFICABLE — usá `list_methods` para ver qué hay."
+            "El catálogo de endpoints Bantotal (`bt_apis`) suele estar vacío, y "
+            "mientras lo esté `language='bt_api'` solo puede devolver "
+            "NO_VERIFICABLE — usa `list_methods` para ver qué hay."
         ),
         inputSchema={
             "type": "object",
@@ -298,11 +306,12 @@ READ_TOOLS: list[Tool] = [
                 "version": {
                     "type": "string",
                     "description": (
-                        "Versión de GeneXus (gx16, gx18). NO filtra ni discrimina: "
-                        "el catálogo no registra versión en ninguna entrada, así que "
-                        "un VÁLIDO no prueba que la firma sea la de esa versión. Se "
-                        "acepta para que quede en la auditoría y la respuesta lo "
-                        "aclara."
+                        "Versión de GeneXus (gx16, gx18). SÍ cambia el veredicto: "
+                        "las fuentes del catálogo son de GeneXus 18, así que con una "
+                        "versión anterior (gx16, la de las KBs Bantotal) un acierto "
+                        "sale PISTA y no VÁLIDO. Ninguna entrada registra desde qué "
+                        "versión existe, así que tampoco discrimina upgrades: un "
+                        "VÁLIDO con gx18 no prueba que el método exista en tu Upgrade."
                     ),
                 },
             },
@@ -318,11 +327,14 @@ READ_TOOLS: list[Tool] = [
             "incompleto, así que una lista vacía —o parcial— es lo normal. "
             "Nunca la presentes como el conjunto completo de métodos de un objeto "
             "ni concluyas de su ausencia que un método no existe.\n"
-            "🔴 EL object_type NO ES EL TIPO DE OBJETO GENEXUS. Es la categoría de "
-            "la entrada catalogada, y se compara exacto: Method, Event, Command, "
-            "Rule, Property. Pedir 'Transaction' o 'Procedure' devuelve vacío "
-            "porque no son categorías del catálogo, no porque no haya nada. La "
-            "respuesta vacía lista las categorías que existen en este deployment."
+            "🔴 EL object_type NO ES EL TIPO DE OBJETO GENEXUS (Transaction, "
+            "Procedure…). Hay dos familias, y se compara exacto: (1) TIPOS DE DATO "
+            "del lenguaje, con sus métodos — DateTime, Date, Character, Varchar, "
+            "Collection, File, BusinessComponent, HttpClient, XMLReader…; (2) "
+            "categorías de la wiki — Method, Event, Command, Rule, Property. Pedir "
+            "'Transaction' o 'Procedure' devuelve vacío porque no son valores del "
+            "catálogo, no porque no haya nada. La respuesta vacía lista TODOS los "
+            "object_type que existen en este deployment: úsala para elegir."
         ),
         inputSchema={
             "type": "object",
@@ -330,8 +342,9 @@ READ_TOOLS: list[Tool] = [
                 "object_type": {
                     "type": "string",
                     "description": (
-                        "Categoría de la entrada, exacta: Method | Event | Command "
-                        "| Rule | Property."
+                        "Valor exacto: un tipo de dato del lenguaje (DateTime, "
+                        "Collection, File, BusinessComponent…) o una categoría de "
+                        "la wiki (Method, Event, Command, Rule, Property)."
                     ),
                 },
                 "version": {

@@ -90,17 +90,33 @@ def test_get_document_does_not_promise_a_whole_document():
     assert "completo" not in tool.input_schema["properties"]["doc_id"]["description"].lower()
 
 
-def test_version_is_declared_as_non_discriminating():
-    """The catalog has no normalized version, so `version` cannot gate anything.
+def test_verify_syntax_declares_that_an_older_version_gets_a_hint():
+    """`version` SÍ cambia el veredicto de verify_syntax: por debajo de la versión
+    de las fuentes del catálogo (GX18), un acierto sale PISTA y no VÁLIDO.
 
-    Measured: 59 rows, 59 NULLs — and promote_candidate hardcodes
-    version_since=None (candidate_repository.py:94), so it is unreachable by
-    construction, not by accident.
+    El 2026-10-05 la descripción decía "NO filtra ni discrimina" mientras el código
+    devolvía INVÁLIDO a los 706 métodos de gxtypes por gx16 (version_since tenía la
+    versión del install). Arreglados los datos, lo que queda es PISTA, y un agente
+    que no sepa que existe ese veredicto lo lee como un VÁLIDO débil o un error.
     """
-    for name in ("verify_syntax", "list_methods"):
-        described = _read_tool(name).input_schema["properties"]["version"]["description"]
-        assert "no" in described.lower(), name
-        assert "discrimina" in described.lower() or "filtra" in described.lower(), name
+    tool = _read_tool("verify_syntax")
+    described = tool.input_schema["properties"]["version"]["description"]
+
+    assert "PISTA" in described
+    assert "PISTA" in tool.description, "the verdict list must include PISTA"
+
+
+def test_list_methods_declares_that_version_is_ignored():
+    """list_methods no filtra por versión (gx_repository.list_methods la ignora)."""
+    described = _read_tool("list_methods").input_schema["properties"]["version"]["description"]
+
+    assert "ignora" in described.lower()
+
+
+def test_verify_syntax_does_not_claim_a_tiny_catalog():
+    """Medido 2026-10-05: 765 entradas. "Decenas de entradas" ya no es cierto, y
+    un agente que cree el catálogo diminuto descarta un VÁLIDO como casualidad."""
+    assert "decenas de entradas" not in _read_tool("verify_syntax").description
 
 
 def test_list_methods_does_not_offer_object_types_the_catalog_lacks():
@@ -115,7 +131,10 @@ def test_list_methods_does_not_offer_object_types_the_catalog_lacks():
 
     assert "Transaction" not in declared
     assert "Procedure" not in declared
-    for real in ("Method", "Event", "Command", "Rule", "Property"):
+    # Medido 2026-10-05: 96 object_type. Los de la wiki son categorías; los de
+    # gxtypes son tipos de dato del lenguaje (DateTime 33, Collection 16…). Si la
+    # descripción solo nombra las categorías, el agente nunca pide un tipo de dato.
+    for real in ("Method", "Command", "DateTime", "Collection"):
         assert real in declared, real
     # If the prose mentions them at all, it must be to warn.
     if "Transaction" in tool.description:

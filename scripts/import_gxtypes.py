@@ -119,9 +119,13 @@ def import_entries(
                 category="method",
                 signature=entry.signature(),
                 description=entry.description(),
-                version_since=version,
+                # `version` es la del install del que salió el XML, no desde cuándo
+                # existe el método: guardada en version_since, verify_syntax la leía
+                # como «disponible a partir de» y daba INVÁLIDO a todo método por gx16.
+                # Va a la procedencia, y sin versión el veredicto para gx16 es PISTA.
+                version_since=None,
                 source=SOURCE,
-                source_doc_id=doc_id,
+                source_doc_id=f"GeneXus {version}/{doc_id}",
                 kb_scope="global",
             )
             for entry in entries
@@ -135,7 +139,8 @@ def import_entries(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--xml", required=True, type=Path, help="Ruta a gxtypes.xml")
-    parser.add_argument("--version", required=True, help="Versión de GeneXus del install")
+    parser.add_argument("--version", required=True,
+                        help="Versión de GeneXus del install (va a la procedencia, no a version_since)")
     parser.add_argument("--doc-id", default=DEFAULT_DOC_ID, help="Procedencia a registrar")
     parser.add_argument("--db", default="data/syntax.db", help="Ruta a syntax.db")
     parser.add_argument("--dry-run", action="store_true", help="Parsea y reporta sin escribir")
