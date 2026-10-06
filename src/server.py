@@ -18,6 +18,7 @@ import logging
 import re
 
 from collections.abc import Awaitable, Callable, Sequence
+from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -28,6 +29,7 @@ from mcp.types import (
     PaginatedRequestParams,
     TextContent,
     Tool,
+    ToolAnnotations,
 )
 
 # A nivel de modulo y no diferido como el resto de los src.*: los enums de las
@@ -37,6 +39,59 @@ from mcp.types import (
 # no arrastra Postgres ni e5 al arranque.
 from src.ingestion import kb_fichas
 from src.ingestion.kb_loader import KB_MAX_INLINE
+
+
+VERIFY_SYNTAX_OUTPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "verdict": {
+            "type": "string",
+            "enum": ["VÁLIDO", "PISTA", "INVÁLIDO", "NO_VERIFICABLE"],
+            "description": "Veredicto de la verificación de sintaxis.",
+        },
+        "match": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "object_type": {"type": "string"},
+                "signature": {"type": "string"},
+                "description": {"type": "string"},
+                "source": {"type": "string"},
+                "version_since": {"type": "string"},
+            },
+        },
+        "reason": {"type": "string"},
+        "sugerencias": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "token": {"type": "string"},
+        "pista_motivo": {"type": "string"},
+    },
+    "required": ["verdict"],
+}
+
+
+class ToolResult(list):
+    """Lista de TextContent que preserva metadatos MCP (is_error, structured_content)
+    para el despachador de tools, manteniendo compatibilidad total con código y tests
+    que indexan o iteran sobre el resultado como list[TextContent]."""
+
+    def __init__(
+        self,
+        content: Sequence[TextContent],
+        *,
+        is_error: bool = False,
+        structured_content: Any = None,
+    ):
+        super().__init__(content)
+        self.is_error = is_error
+        self.structured_content = structured_content
+
+
+def error_result(message: str) -> ToolResult:
+    return ToolResult([TextContent(type="text", text=message)], is_error=True)
+
 
 # Logging
 logging.basicConfig(
@@ -208,6 +263,7 @@ READ_TOOLS: list[Tool] = [
             },
             "required": ["query"],
         },
+        annotations=ToolAnnotations(read_only_hint=True),
     ),
     Tool(
         name="get_article",
@@ -232,6 +288,7 @@ READ_TOOLS: list[Tool] = [
             },
             "required": ["article_id"],
         },
+        annotations=ToolAnnotations(read_only_hint=True),
     ),
     Tool(
         name="get_document",
@@ -262,6 +319,7 @@ READ_TOOLS: list[Tool] = [
             },
             "required": ["doc_id"],
         },
+        annotations=ToolAnnotations(read_only_hint=True),
     ),
     Tool(
         name="verify_syntax",
@@ -332,6 +390,8 @@ READ_TOOLS: list[Tool] = [
             },
             "required": ["snippet"],
         },
+        outputSchema=VERIFY_SYNTAX_OUTPUT_SCHEMA,
+        annotations=ToolAnnotations(read_only_hint=True),
     ),
     Tool(
         name="list_methods",
@@ -373,6 +433,7 @@ READ_TOOLS: list[Tool] = [
             },
             "required": ["object_type"],
         },
+        annotations=ToolAnnotations(read_only_hint=True),
     ),
 ]
 
@@ -415,6 +476,7 @@ WRITE_TOOLS: list[Tool] = [
             },
             "required": ["url"],
         },
+        annotations=ToolAnnotations(read_only_hint=False, open_world_hint=True),
     ),
     Tool(
         name="ingest_batch",
@@ -465,6 +527,7 @@ WRITE_TOOLS: list[Tool] = [
             },
             "required": ["file", "format"],
         },
+        annotations=ToolAnnotations(read_only_hint=False, open_world_hint=False, idempotent_hint=True),
     ),
     Tool(
         name="ingest_kb_objects",
@@ -525,7 +588,7 @@ WRITE_TOOLS: list[Tool] = [
                                     + " | ".join(kb_fichas.KB_OBJ_TYPES_SUGERIDOS)
                                     + ". No es un enum cerrado: la KB tiene decenas "
                                     "de tipos y se acepta cualquiera."
-                                ),
+                                    ),
                             },
                             "module": {"type": "string"},
                             "kb_hash": {
@@ -587,12 +650,19 @@ WRITE_TOOLS: list[Tool] = [
             },
             "required": ["kb_name", "objects"],
         },
+        annotations=ToolAnnotations(read_only_hint=False, open_world_hint=False, idempotent_hint=True),
     ),
 ]
 
 
+ALL_TOOLS: list[Tool] = [*READ_TOOLS, *WRITE_TOOLS]
+
 # Tool names allowed on the public internet-facing transport (read-only).
-PUBLIC_TOOL_NAMES = frozenset(t.name for t in READ_TOOLS)
+# Se deriva de la anotación read_only_hint declarada en cada Tool: la frontera
+# lectura/escritura es visible tanto para clientes MCP como para el router interno.
+PUBLIC_TOOL_NAMES = frozenset(
+    t.name for t in ALL_TOOLS if t.annotations and t.annotations.read_only_hint
+)
 
 
 # Colecciones que NO se sirven en el transporte público, y su complemento.
@@ -1098,7 +1168,7 @@ def _run_ingest_batch(arguments: dict) -> str:
     )
 
 
-ToolDispatcher = Callable[[str, dict], Awaitable[list[TextContent]]]
+ToolDispatcher = Callable[[str, dict], Awaitable[Sequence[TextContent]]]
 
 
 def register_tools(
@@ -1124,8 +1194,16 @@ def register_tools(
 
     async def _call(_ctx, params: CallToolRequestParams) -> CallToolResult:
         # arguments es opcional en el protocolo; los dispatchers esperan un dict.
-        content = await dispatch(params.name, params.arguments or {})
-        return CallToolResult(content=list(content))
+        res = await dispatch(params.name, params.arguments or {})
+        if isinstance(res, CallToolResult):
+            return res
+        is_error = getattr(res, "is_error", False)
+        structured_content = getattr(res, "structured_content", None)
+        return CallToolResult(
+            content=list(res),
+            isError=is_error,
+            structuredContent=structured_content,
+        )
 
     srv.add_request_handler("tools/list", PaginatedRequestParams, _list)
     srv.add_request_handler("tools/call", CallToolRequestParams, _call)
@@ -1162,9 +1240,9 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         # Antes de embeddear: rechazar acá evita además pagar la carga de e5-large
         # (~2.2 GB en frío) por un argumento que ya sabemos inválido.
         if rejection := _reject_unknown_collection(col):
-            return [TextContent(type="text", text=rejection)]
+            return error_result(rejection)
         if rejection := _reject_missing_kb_name(col, filters):
-            return [TextContent(type="text", text=rejection)]
+            return error_result(rejection)
         rerank = bool(arguments.get("rerank", False))
         max_per_article_raw = arguments.get("max_per_article")
         try:
@@ -1211,10 +1289,10 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             # accionable. Si cayera en el `except Exception` de abajo se convertiría en
             # GENERIC_ERROR y el llamador no sabría que el problema es SU argumento:
             # buscaría la causa en el corpus o en el servidor.
-            return [TextContent(type="text", text=str(exc))]
+            return error_result(str(exc))
         except Exception:
             log.exception("search_docs error")
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "get_document":
         from src.vectorstore.pg_collections import get_document
@@ -1222,7 +1300,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         doc_id = arguments.get("doc_id", "")
         collection = arguments.get("collection", "gx_docs")
         if rejection := _reject_unknown_collection(collection):
-            return [TextContent(type="text", text=rejection)]
+            return error_result(rejection)
         try:
             doc = get_document(doc_id, collection=collection)
             if not doc:
@@ -1252,7 +1330,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             ]
         except Exception:
             log.exception("%s failed", name)
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "get_article":
         from src.vectorstore.pg_collections import get_article
@@ -1260,7 +1338,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         article_id = arguments.get("article_id", "")
         collection = arguments.get("collection", "gx_docs")
         if rejection := _reject_unknown_collection(collection):
-            return [TextContent(type="text", text=rejection)]
+            return error_result(rejection)
         try:
             art = get_article(article_id, collection=collection)
             if not art:
@@ -1278,7 +1356,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             ]
         except Exception:
             log.exception("%s failed", name)
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "verify_syntax":
         from src.syntax_db.gx_repository import verify_syntax
@@ -1288,18 +1366,17 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         version = arguments.get("version")
         try:
             verdict = verify_syntax(snippet, language=lang, version=version)
-            return [
-                TextContent(
-                    type="text",
-                    # JSON en una línea y no el repr del dict: parseable por el
-                    # cliente y sin las comillas simples de Python.
-                    text=f"{json.dumps(verdict, ensure_ascii=False, default=str)}\n"
-                    f"{_verdict_guidance(verdict)}",
-                )
-            ]
+            text = (
+                f"{json.dumps(verdict, ensure_ascii=False, default=str)}\n"
+                f"{_verdict_guidance(verdict)}"
+            )
+            return ToolResult(
+                [TextContent(type="text", text=text)],
+                structured_content=verdict,
+            )
         except Exception:
             log.exception("%s failed", name)
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "list_methods":
         from src.syntax_db.gx_repository import list_methods, list_object_types
@@ -1340,7 +1417,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             ]
         except Exception:
             log.exception("%s failed", name)
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "add_from_url":
         from scripts.scrape_wiki import scrape
@@ -1348,17 +1425,14 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
 
         url = arguments.get("url", "")
         if not url:
-            return [TextContent(type="text", text="URL requerida.")]
+            return error_result("URL requerida.")
 
         override = arguments.get("collection")
         if override and override not in WRITABLE_COLLECTIONS:
-            return [
-                TextContent(
-                    type="text",
-                    text=f"Colección '{override}' inválida. "
-                    f"Válidas: {', '.join(sorted(WRITABLE_COLLECTIONS))}.",
-                )
-            ]
+            return error_result(
+                f"Colección '{override}' inválida. "
+                f"Válidas: {', '.join(sorted(WRITABLE_COLLECTIONS))}."
+            )
         try:
             article = scrape(url)
             auto = article.metadata.destination
@@ -1393,23 +1467,18 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             ]
         except Exception:
             log.exception("add_from_url error")
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "ingest_batch":
         try:
             return [TextContent(type="text", text=_run_ingest_batch(arguments))]
         except FileNotFoundError:
-            return [
-                TextContent(
-                    type="text",
-                    text=f"No existe el archivo: {arguments.get('file', '')}",
-                )
-            ]
+            return error_result(f"No existe el archivo: {arguments.get('file', '')}")
         except ValueError as e:
-            return [TextContent(type="text", text=str(e))]
+            return error_result(str(e))
         except Exception:
             log.exception("ingest_batch error")
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     elif name == "ingest_kb_objects":
         try:
@@ -1418,13 +1487,13 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
             # Argumentos del llamador: el tope de fichas, kb_name ausente, objects
             # vacío. Van tal cual y NO como GENERIC_ERROR, o el llamador buscaría la
             # causa en el servidor en vez de en su propia llamada.
-            return [TextContent(type="text", text=str(e))]
+            return error_result(str(e))
         except Exception:
             log.exception("ingest_kb_objects error")
-            return [TextContent(type="text", text=GENERIC_ERROR)]
+            return error_result(GENERIC_ERROR)
 
     else:
-        return [TextContent(type="text", text=f"Tool '{name}' no implementada.")]
+        return error_result(f"Tool '{name}' no implementada.")
 
 
 # El cableado va aca, despues de dispatch_tool: register_tools recibe la funcion

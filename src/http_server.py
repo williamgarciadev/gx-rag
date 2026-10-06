@@ -49,6 +49,7 @@ from src.server import (
     PUBLIC_TOOL_NAMES,
     READ_TOOLS,
     dispatch_tool,
+    error_result,
     register_tools,
     reject_non_public_collection,
 )
@@ -104,12 +105,7 @@ def build_public_server() -> Server:
     async def guarded_dispatch(name: str, arguments: dict) -> list[TextContent]:
         if name not in PUBLIC_TOOL_NAMES:
             log.warning("Blocked non-public tool on HTTP transport: %s", name)
-            return [
-                TextContent(
-                    type="text",
-                    text=f"Tool '{name}' no disponible en el endpoint público.",
-                )
-            ]
+            return error_result(f"Tool '{name}' no disponible en el endpoint público.")
         # Segunda dimensión del gate: la TOOL puede ser pública y la COLECCION no.
         # search_docs / get_article / get_document reciben `collection` como
         # parámetro, así que sin este chequeo una colección privada quedaba a un
@@ -120,7 +116,7 @@ def build_public_server() -> Server:
                 arguments.get("collection"),
                 name,
             )
-            return [TextContent(type="text", text=rechazo)]
+            return error_result(rechazo)
         return await dispatch_tool(name, arguments)
 
     # Solo READ_TOOLS se listan, y guarded_dispatch vuelve a chequear al invocar:

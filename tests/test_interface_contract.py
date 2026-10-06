@@ -364,3 +364,64 @@ def test_search_sql_partitions_by_article_id():
     assert "%(max_per_article)s" in _SEARCH_SQL
 
 
+def test_tool_annotations_govern_public_boundary():
+    """ToolAnnotations define las fronteras de lectura/escritura (Oportunidad A).
+    PUBLIC_TOOL_NAMES debe derivarse exactamente de read_only_hint=True."""
+    from src import server as srv
+
+    for tool in srv.READ_TOOLS:
+        assert tool.annotations is not None, f"{tool.name} sin annotations"
+        assert tool.annotations.read_only_hint is True, f"{tool.name} debe ser read-only"
+
+    add_tool = next(t for t in srv.WRITE_TOOLS if t.name == "add_from_url")
+    assert add_tool.annotations is not None
+    assert add_tool.annotations.read_only_hint is False
+    assert add_tool.annotations.open_world_hint is True
+
+    # PUBLIC_TOOL_NAMES refleja el conjunto de tools de sólo lectura
+    read_only_names = {t.name for t in srv.ALL_TOOLS if t.annotations and t.annotations.read_only_hint}
+    assert srv.PUBLIC_TOOL_NAMES == read_only_names
+
+
+def test_verify_syntax_declares_output_schema_and_structured_content(monkeypatch):
+    """verify_syntax debe declarar outputSchema y retornar structuredContent (Oportunidad B)."""
+    import asyncio
+    from src import server as srv
+    from src.syntax_db import gx_repository
+
+    verify_tool = next(t for t in srv.READ_TOOLS if t.name == "verify_syntax")
+    assert verify_tool.output_schema is not None
+    assert "verdict" in verify_tool.output_schema.get("properties", {})
+
+    # Mock de verify_syntax para verificar structuredContent
+    monkeypatch.setattr(
+        gx_repository,
+        "verify_syntax",
+        lambda *args, **kwargs: {"verdict": "VÁLIDO", "match": {"name": "AddDays"}},
+    )
+
+    res = asyncio.run(srv.dispatch_tool("verify_syntax", {"snippet": "&d.AddDays(1)"}))
+    assert hasattr(res, "structured_content")
+    assert res.structured_content == {"verdict": "VÁLIDO", "match": {"name": "AddDays"}}
+    assert getattr(res, "is_error", False) is False
+
+
+def test_error_rejections_and_failures_carry_is_error_flag():
+    """Los rechazos de argumentos y fallos internos deben marcar is_error=True (Oportunidad B)."""
+    import asyncio
+    from src import server as srv
+
+    # 1. Rechazo por colección desconocida
+    res_col = asyncio.run(srv.dispatch_tool("search_docs", {"query": "q", "collection": "inexistente"}))
+    assert getattr(res_col, "is_error", False) is True
+
+    # 2. Rechazo por falta de kb_name en gx_kb_objects
+    res_kb = asyncio.run(srv.dispatch_tool("search_docs", {"query": "q", "collection": "gx_kb_objects"}))
+    assert getattr(res_kb, "is_error", False) is True
+
+    # 3. Tool inexistente
+    res_unk = asyncio.run(srv.dispatch_tool("tool_fantasma", {}))
+    assert getattr(res_unk, "is_error", False) is True
+
+
+
