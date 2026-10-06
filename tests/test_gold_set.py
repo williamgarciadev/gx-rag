@@ -79,3 +79,22 @@ def test_multiple_expected_documents_are_allowed(tmp_path):
     (case,) = load_gold(_write(tmp_path, _case(expected=["a", "b"])))
 
     assert case.expected == frozenset({"a", "b"})
+
+
+def test_a_case_without_filters_has_none(tmp_path):
+    (case,) = load_gold(_write(tmp_path, _case()))
+
+    assert case.filters is None
+
+
+def test_a_case_carries_its_filters(tmp_path):
+    (case,) = load_gold(_write(tmp_path, _case(filters={"origin": "gx_wiki"})))
+
+    assert case.filters == {"origin": "gx_wiki"}
+
+
+def test_filters_that_are_not_an_object_are_rejected(tmp_path):
+    # Un "filters": "gx_wiki" mal escrito no puede convertirse en una búsqueda
+    # sin filtro que el caso cree filtrada.
+    with pytest.raises(ValueError, match="filters"):
+        load_gold(_write(tmp_path, _case(filters="gx_wiki")))

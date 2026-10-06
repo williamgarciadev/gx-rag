@@ -25,7 +25,9 @@ def ranked_article_ids(
     malformed row is still rankable instead of vanishing and understating recall.
     """
     ordered: list[str] = []
-    for hit in search_fn(case.question, collection=case.collection, top_k=top_k):
+    hits = search_fn(case.question, collection=case.collection, top_k=top_k,
+                     filters=case.filters)
+    for hit in hits:
         article = hit.get("id") or hit.get("doc_id", "")
         if article and article not in ordered:
             ordered.append(article)

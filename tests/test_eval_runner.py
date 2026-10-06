@@ -14,12 +14,13 @@ from src.evaluation.runner import ranked_article_ids, run_gold
 pytestmark = pytest.mark.unit
 
 
-def _case(question="q", collection="gx_docs", expected=("a",)):
+def _case(question="q", collection="gx_docs", expected=("a",), filters=None):
     return GoldCase(
         question=question,
         collection=collection,
         expected=frozenset(expected),
         note="n",
+        filters=filters,
     )
 
 
@@ -27,8 +28,8 @@ def _search(hits):
     """Fake retriever returning `hits`, recording how it was called."""
     calls = []
 
-    def _fn(query, collection="gx_docs", top_k=5):
-        calls.append((query, collection, top_k))
+    def _fn(query, collection="gx_docs", top_k=5, filters=None):
+        calls.append((query, collection, top_k, filters))
         return hits
 
     return _fn, calls
@@ -65,7 +66,19 @@ def test_the_case_collection_and_depth_reach_the_retriever():
 
     ranked_article_ids(_case(collection="bt_docs"), top_k=20, search_fn=search)
 
-    assert calls == [("q", "bt_docs", 20)]
+    assert calls == [("q", "bt_docs", 20, None)]
+
+
+def test_the_case_filters_reach_the_retriever():
+    # En gx_docs los tickets SAC son más de la mitad del corpus y la tool le pide
+    # al agente filtrar origin=gx_wiki. Sin pasar el filtro, el set gold medía una
+    # búsqueda que ningún agente bien instruido hace: 2 de 9 casos encontrados
+    # sin filtro, 8 de 9 con él (medido 2026-10-06).
+    search, calls = _search([])
+
+    ranked_article_ids(_case(filters={"origin": "gx_wiki"}), top_k=20, search_fn=search)
+
+    assert calls == [("q", "gx_docs", 20, {"origin": "gx_wiki"})]
 
 
 def test_run_gold_scores_every_case():

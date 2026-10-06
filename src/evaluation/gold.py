@@ -12,6 +12,12 @@ Two mandatory fields, both learned from `ingestion/manifest.py`:
   exactly the regression it exists to catch.
 - `note`: why this is the right answer. A miss six months from now has to be
   diagnosable — is retrieval broken, or was the question badly written?
+
+Optional `filters`: the same object `search_docs` accepts. A case measures the
+search an agent following the tool's instructions would run, and in gx_docs
+that means `origin=gx_wiki`: SAC tickets are over half the collection, and the
+unfiltered search found 2 of 9 gold articles where the filtered one found 8
+(measured 2026-10-06).
 """
 
 import json
@@ -25,6 +31,7 @@ class GoldCase:
     collection: str
     expected: frozenset[str]
     note: str
+    filters: dict | None = None
 
 
 def load_gold(path: str | Path) -> list[GoldCase]:
@@ -41,12 +48,16 @@ def load_gold(path: str | Path) -> list[GoldCase]:
             raise ValueError(f"{path}: line {number} has no 'expected' documents")
         if not raw.get("note"):
             raise ValueError(f"{path}: line {number} has no 'note'")
+        filters = raw.get("filters")
+        if filters is not None and not isinstance(filters, dict):
+            raise ValueError(f"{path}: line {number} has 'filters' that is not an object")
         cases.append(
             GoldCase(
                 question=raw["question"],
                 collection=raw.get("collection", "gx_docs"),
                 expected=frozenset(raw["expected"]),
                 note=raw["note"],
+                filters=filters,
             )
         )
     return cases
