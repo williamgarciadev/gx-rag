@@ -24,16 +24,6 @@ from src.syntax_db.catalog_loader import load_entries, parse_catalog_tsv
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def temp_db(tmp_path, monkeypatch):
-    from src.syntax_db import models
-
-    monkeypatch.setattr(models, "_engine", None)
-    models.get_engine(tmp_path / "test.db")
-    yield
-    monkeypatch.setattr(models, "_engine", None)
-
-
 def _tsv(tmp_path, name, lines):
     path = tmp_path / name
     # CRLF, like the real corpus files.

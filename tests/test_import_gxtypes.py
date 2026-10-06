@@ -15,17 +15,6 @@ pytestmark = pytest.mark.unit
 INSTALL_VERSION = "18.0.15.188745"
 
 
-@pytest.fixture
-def temp_db(tmp_path, monkeypatch):
-    from src.syntax_db import models
-
-    monkeypatch.setattr(models, "_engine", None)
-    db = tmp_path / "test.db"
-    models.get_engine(db)
-    yield db
-    monkeypatch.setattr(models, "_engine", None)
-
-
 def _import_add_days(db):
     from scripts.import_gxtypes import DEFAULT_DOC_ID, MethodEntry, import_entries
 

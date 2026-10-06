@@ -115,6 +115,27 @@ def pg_schema(pg_dsn):
 
 
 @pytest.fixture
+def temp_db(tmp_path, monkeypatch):
+    """Catálogo de sintaxis en un SQLite temporal. Devuelve la ruta.
+
+    Defensa en profundidad. Con solo sembrar el singleton no alcanzaba: el .env
+    de la raíz define GXRAG_DSN, get_engine() lo priorizaba sobre el path
+    recibido y los tests escribían en la base REAL. Ahora el argumento explícito
+    gana (models.get_engine), y además se saca la variable del entorno para que
+    un descuido futuro no vuelva a apuntar a producción. Vivía copiado en tres
+    archivos de test, y dos de las copias habían perdido el delenv.
+    """
+    from src.syntax_db import models
+
+    monkeypatch.delenv("GXRAG_DSN", raising=False)
+    monkeypatch.setattr(models, "_engine", None)
+    db = tmp_path / "test.db"
+    models.get_engine(db)  # siembra el singleton con la base temporal
+    yield db
+    monkeypatch.setattr(models, "_engine", None)
+
+
+@pytest.fixture
 def pg_store(pg_dsn, pg_schema, monkeypatch):
     """Apunta pg_retriever / pg_collections / pg_indexer al schema de prueba.
 
