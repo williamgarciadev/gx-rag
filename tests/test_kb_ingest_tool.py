@@ -14,6 +14,8 @@ import asyncio
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 import src.server as srv
 from src.ingestion.kb_loader import KB_MAX_INLINE, load_fichas
 

@@ -18,6 +18,8 @@ import sys
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 # El script vive en scripts/ y no es un paquete: se carga por ruta.
 _RUTA = pathlib.Path(__file__).resolve().parent.parent / "scripts" / "bootstrap_kb.py"
 _spec = importlib.util.spec_from_file_location("bootstrap_kb", _RUTA)

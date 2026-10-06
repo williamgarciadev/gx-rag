@@ -16,6 +16,13 @@ from src.http_server import create_app
 
 pytestmark = pytest.mark.integration
 
+
+def _app(**kwargs):
+    """Helper to build app with allowed_hosts defaulting to ['*'] for test isolation."""
+    kwargs.setdefault("allowed_hosts", ["*"])
+    return create_app(**kwargs)
+
+
 # A minimal MCP initialize request. Streamable HTTP requires the client to accept
 # both JSON and SSE; the server (json_response=True) answers with plain JSON.
 _INIT_REQUEST = {
@@ -46,7 +53,7 @@ def mcp_client():
     manager's task group — without it the transport is not running. A known API
     key is injected so authenticated requests can exercise the transport.
     """
-    with TestClient(create_app(api_keys={TEST_API_KEY})) as client:
+    with TestClient(_app(api_keys={TEST_API_KEY})) as client:
         yield client
 
 
@@ -99,7 +106,7 @@ def test_request_with_valid_bearer_is_accepted(mcp_client):
 
 def test_app_with_no_keys_configured_denies_everything(monkeypatch):
     """Fail closed: if no API keys are configured, the endpoint rejects all."""
-    with TestClient(create_app(api_keys=set())) as client:
+    with TestClient(_app(api_keys=set())) as client:
         response = client.post("/mcp/", headers=_MCP_HEADERS, json=_INIT_REQUEST)
 
     assert response.status_code == 401
@@ -109,7 +116,7 @@ def test_rate_limit_returns_429_when_exceeded():
     """Requests beyond the per-minute budget are throttled with 429."""
     limit = 2
     with TestClient(
-        create_app(api_keys={TEST_API_KEY}, rate_limit_per_minute=limit)
+        _app(api_keys={TEST_API_KEY}, rate_limit_per_minute=limit)
     ) as client:
         codes = [
             client.post("/mcp/", headers=_MCP_HEADERS, json=_INIT_REQUEST).status_code
@@ -131,7 +138,7 @@ def test_health_endpoint_is_public(mcp_client):
 def test_untrusted_host_header_is_rejected():
     """TrustedHostMiddleware blocks Host headers outside the allowlist."""
     with TestClient(
-        create_app(api_keys={TEST_API_KEY}, allowed_hosts=["gxrag.wgsoft.com.co"])
+        _app(api_keys={TEST_API_KEY}, allowed_hosts=["gxrag.wgsoft.com.co"])
     ) as client:
         # TestClient sends Host: testserver, which is NOT in the allowlist.
         response = client.post("/mcp/", headers=_MCP_HEADERS, json=_INIT_REQUEST)
@@ -147,7 +154,7 @@ def test_oversized_request_body_is_rejected():
         "method": "initialize",
         "params": {"padding": "A" * 300_000},
     }
-    with TestClient(create_app(api_keys={TEST_API_KEY})) as client:
+    with TestClient(_app(api_keys={TEST_API_KEY})) as client:
         response = client.post("/mcp/", headers=_MCP_HEADERS, json=huge)
 
     assert response.status_code == 413
@@ -173,7 +180,7 @@ def test_config_accepts_strong_api_keys():
 def test_repeated_auth_failures_are_throttled():
     """Brute-forcing keys must hit an IP-keyed 429, not endless 401s (C1)."""
     with TestClient(
-        create_app(api_keys={TEST_API_KEY}, max_auth_failures_per_minute=2)
+        _app(api_keys={TEST_API_KEY}, max_auth_failures_per_minute=2)
     ) as client:
         bad = {**_MCP_HEADERS, "Authorization": "Bearer guess"}
         codes = [
@@ -209,7 +216,7 @@ def test_public_tool_error_does_not_leak_exception_detail(mcp_client, monkeypatc
 def test_rate_limit_is_per_key():
     """One key exhausting its budget must not throttle a different key."""
     with TestClient(
-        create_app(api_keys={"k1", "k2"}, rate_limit_per_minute=1)
+        _app(api_keys={"k1", "k2"}, rate_limit_per_minute=1)
     ) as client:
         h1 = {**_MCP_HEADERS, "Authorization": "Bearer k1"}
         h2 = {**_MCP_HEADERS, "Authorization": "Bearer k2"}

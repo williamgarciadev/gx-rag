@@ -9,6 +9,8 @@ import json
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from src.ingestion.manifest import iter_manifest_paths, load_manifest
 
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from src.ingestion import kb_fichas as kf
 
 KB = "MatikaErp_3003"

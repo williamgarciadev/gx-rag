@@ -14,7 +14,11 @@ alguien se acuerde.
 
 from __future__ import annotations
 
+import pytest
+
 import src.server as srv
+
+pytestmark = pytest.mark.unit
 
 
 def test_the_kb_collection_is_not_public():

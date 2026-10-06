@@ -13,6 +13,9 @@ chapter only opens on an "N.0 …" heading.
 """
 
 import fitz  # pymupdf
+import pytest
+
+pytestmark = pytest.mark.integration
 
 from src.ingestion.local_loader import iter_supported_files, parse_local_docs
 

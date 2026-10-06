@@ -13,6 +13,8 @@ import asyncio
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 import src.server as srv
 
 

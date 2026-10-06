@@ -7,6 +7,10 @@ ChromaDB, a missing syntax catalog, a stray data/ dir next to the caller.
 
 import os
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 from src import paths
 
 

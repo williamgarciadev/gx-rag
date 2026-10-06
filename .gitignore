@@ -15,6 +15,7 @@ data/scraped/
 data/scraped_sac/
 data/chroma/
 data/raw/
+data/manuales_processed/
 
 # Entorno
 .env
