@@ -12,8 +12,10 @@ DECISIÓN DE DISEÑO — se cronometran las dos mitades POR SEPARADO:
 
 Sin esa separación no se sabe cuál domina, y la Fase 2 optimizaría a ciegas: si el
 embedding es el 90% del tiempo, reescribir los CTE del SQL no mueve el total y el
-trabajo se desperdicia. Reusa `_SEARCH_SQL` y `get_pool()` de los módulos reales
-—no duplica el SQL— para que el baseline mida lo que corre en producción.
+trabajo se desperdicia. Llama a las MISMAS funciones que hybrid_search
+(`search_params`, `query_vector`, `execute_search` de pg_retriever) en vez de
+ejecutar el SQL por su cuenta: la copia anterior corría sin SET LOCAL, sin
+prepare=False y sin el perfil de embedding, y medía un plan que producción no usa.
 
     .venv/Scripts/python.exe scripts/bench_retrieval.py
     .venv/Scripts/python.exe scripts/bench_retrieval.py --explain
@@ -36,13 +38,9 @@ dotenv.load_dotenv(".env", override=False)
 
 from src.vectorstore import embeddings as emb  # noqa: E402
 from src.vectorstore.pg_client import get_pool  # noqa: E402
-from src.vectorstore.pg_retriever import (  # noqa: E402
-    CANDIDATE_POOL,
-    RRF_K,
-    _SEARCH_SQL,
-    _to_tsquery,
-    filter_params,
-)
+# Por el MÓDULO y no por nombre: el bench mide las funciones de producción, y así
+# un cambio en pg_retriever le llega sin tocar este script.
+from src.vectorstore import pg_retriever  # noqa: E402
 
 # Consultas fijas: el baseline tiene que ser comparable entre corridas, así que no
 # se sortean. Mezcla deliberada de una sola palabra, varias palabras e
@@ -82,31 +80,6 @@ def _percentiles(muestras: list[float]) -> tuple[float, float, float]:
     return pct(0.50), pct(0.95), pct(0.99)
 
 
-def _params(query: str, collection: str, top_k: int, qvec: str) -> dict:
-    """Los MISMOS parámetros que arma hybrid_search().
-
-    Los f_* de los filtros de metadatos salen de filter_params(None) en vez de
-    escribirse acá: este script importa `_SEARCH_SQL` directo, así que cada parámetro
-    nuevo del SQL lo rompería, y duplicar la lista de claves garantiza que un día
-    divergen. Con None todos los predicados de _META_FILTER son no-op, o sea que el
-    baseline mide exactamente la búsqueda SIN filtrar.
-    """
-    return {
-        "qvec": qvec,
-        "qtext": _to_tsquery(query),
-        "collection": collection,
-        "pool": max(CANDIDATE_POOL, top_k * 3),
-        "rrf_k": RRF_K,
-        "top_k": top_k,
-        "min_score": None,
-        **filter_params(None),
-    }
-
-
-def _vector_literal(query: str) -> str:
-    return "[" + ",".join(f"{float(v):.7g}" for v in emb.embed(query)) + "]"
-
-
 def entorno() -> None:
     """Lo que hay que registrar para que el baseline sea interpretable después."""
     print("== Entorno ==")
@@ -141,7 +114,8 @@ def entorno() -> None:
         )
         filas = cur.fetchall()
     print(f"  corpus          : {' · '.join(f'{c} {n}' for c, n in filas)}")
-    print(f"  RRF_K={RRF_K}  CANDIDATE_POOL={CANDIDATE_POOL}  modelo={emb.EMBEDDING_MODEL}")
+    print(f"  RRF_K={pg_retriever.RRF_K}  CANDIDATE_POOL={pg_retriever.CANDIDATE_POOL}  "
+          f"modelo={emb.EMBEDDING_MODEL}  perfil={emb.EMB_PROFILE}")
 
 
 def medir(collection: str, queries: list[str], repeat: int, top_k: int) -> None:
@@ -154,6 +128,9 @@ def medir(collection: str, queries: list[str], repeat: int, top_k: int) -> None:
     for q in queries:
         t_embed: list[float] = []
         t_sql: list[float] = []
+        # Sin filtros: el baseline mide la búsqueda SIN filtrar. Se arma fuera del
+        # cronómetro porque es lo mismo en cada repetición y no cuesta nada medible.
+        params = pg_retriever.search_params(q, collection, top_k)
         for _ in range(repeat):
             # cache_clear() antes de cronometrar: `embed_texts` tiene lru_cache, así
             # que sin esto la 2ª repetición mide un HIT de caché (~0,6 ms) en vez del
@@ -162,11 +139,9 @@ def medir(collection: str, queries: list[str], repeat: int, top_k: int) -> None:
             # es la consulta NUEVA, que es lo que paga un agente cada vez.
             emb.embed_texts.cache_clear()
             ini = time.perf_counter()
-            qvec = _vector_literal(q)
+            qvec = pg_retriever.query_vector(q)
             medio = time.perf_counter()
-            with get_pool().connection() as conn, conn.cursor() as cur:
-                cur.execute(_SEARCH_SQL, _params(q, collection, top_k, qvec))
-                cur.fetchall()
+            pg_retriever.execute_search({**params, "qvec": qvec})
             fin = time.perf_counter()
             t_embed.append((medio - ini) * 1000)
             t_sql.append((fin - medio) * 1000)
@@ -192,21 +167,17 @@ def medir(collection: str, queries: list[str], repeat: int, top_k: int) -> None:
 def explain(collection: str, query: str, top_k: int) -> None:
     """EXPLAIN (ANALYZE, BUFFERS) del SQL real, para el hallazgo #1."""
     print(f"\n== EXPLAIN ANALYZE — {collection} — {query!r} ==")
-    qvec = _vector_literal(query)
-    with get_pool().connection() as conn, conn.cursor() as cur:
-        cur.execute(
-            "EXPLAIN (ANALYZE, BUFFERS) " + _SEARCH_SQL,
-            _params(query, collection, top_k, qvec),
-        )
-        for (linea,) in cur.fetchall():
-            # El `Order By` del Index Scan trae el vector de consulta ENTERO: 1024
-            # floats que ocupan ~14 KB y hacen ilegible justo la línea que importa
-            # (la que dice si se usó el índice). Se recorta.
-            if "::vector" in linea and len(linea) > 200:
-                ini = linea.index("'[")
-                fin = linea.index("]'") + 2
-                linea = linea[:ini] + "'[…1024 dims…]'" + linea[fin:]
-            print(f"  {linea}")
+    params = {**pg_retriever.search_params(query, collection, top_k),
+              "qvec": pg_retriever.query_vector(query)}
+    for (linea,) in pg_retriever.execute_search(params, explain=True):
+        # El `Order By` del Index Scan trae el vector de consulta ENTERO: 1024
+        # floats que ocupan ~14 KB y hacen ilegible justo la línea que importa
+        # (la que dice si se usó el índice). Se recorta.
+        if "::vector" in linea and len(linea) > 200:
+            ini = linea.index("'[")
+            fin = linea.index("]'") + 2
+            linea = linea[:ini] + "'[…1024 dims…]'" + linea[fin:]
+        print(f"  {linea}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -223,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     # contarla mezclaría el arranque en frío con la latencia de servicio. El costo
     # del arranque en frío es un hallazgo aparte (#8), no parte del baseline.
     ini = time.perf_counter()
-    emb.embed("warm up")
+    pg_retriever.query_vector("warm up")
     print(f"\n  (warm-up del modelo: {(time.perf_counter() - ini) * 1000:.0f} ms — NO cuenta)")
 
     objetivo = {args.collection: QUERIES[args.collection]} if args.collection else QUERIES

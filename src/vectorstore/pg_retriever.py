@@ -182,6 +182,70 @@ def _to_tsquery(query: str) -> str:
     return " | ".join(tokens)
 
 
+# Las tres piezas de una búsqueda, públicas para que scripts/bench_retrieval.py
+# mida EXACTAMENTE lo que corre acá en vez de reimplementarlo: el bench copiaba
+# el SQL y divergió en tres puntos (sin SET LOCAL, sin prepare=False, sin el
+# perfil de embedding), así que comparaba planes distintos. Van en este orden a
+# propósito: los filtros se validan ANTES de embeber, y un argumento rechazado
+# no paga la carga del modelo (~2 GB).
+
+
+def search_params(
+    query: str,
+    collection: str,
+    top_k: int,
+    *,
+    min_score: float | None = None,
+    filters: dict | None = None,
+) -> dict | None:
+    """Parámetros del SQL de búsqueda, sin el vector. None si la consulta no deja
+    ningún término para la mitad léxica. Valida `filters` (ValueError)."""
+    qtext = _to_tsquery(query)
+    if not qtext:
+        return None
+    return {
+        "qtext": qtext,
+        "collection": collection,
+        # El pool acompana a top_k: con el fijo en CANDIDATE_POOL, un top_k > 30
+        # quedaba capado en silencio por el LIMIT de cada CTE. x3 deja margen para
+        # que la fusion tenga de donde elegir.
+        "pool": max(CANDIDATE_POOL, top_k * 3),
+        "rrf_k": RRF_K,
+        "top_k": top_k,
+        "min_score": min_score,
+        **filter_params(filters),
+    }
+
+
+def query_vector(query: str) -> str:
+    """Literal pgvector de la consulta, con el perfil de embedding (embed_query)."""
+    return "[" + ",".join(f"{float(v):.7g}" for v in emb.embed_query(query)) + "]"
+
+
+def execute_search(params: dict, *, explain: bool = False) -> list[tuple]:
+    """Ejecuta _SEARCH_SQL como producción: dentro de una transacción con el
+    ajuste de HNSW, y sin preparar la sentencia.
+
+    explain=True devuelve las líneas de EXPLAIN (ANALYZE, BUFFERS) del MISMO
+    camino: un plan sacado fuera de esta transacción describe uno que producción
+    nunca ejecuta."""
+    sql = "EXPLAIN (ANALYZE, BUFFERS) " + _SEARCH_SQL if explain else _SEARCH_SQL
+    with get_pool().connection() as conn:
+        # SET LOCAL exige un bloque de transaccion, y conn.transaction() lo ACOTA:
+        # una conexion que se devolviera al pool con iterative_scan pegado se lo
+        # llevaria al siguiente que la tome, cambiando el plan de consultas ajenas.
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute(_TUNING_SQL)
+            # prepare=False: a la 5a ejecucion psycopg3 auto-prepara la sentencia y el
+            # plan puede volverse GENERICO. Con plan generico los parametros son
+            # incognitas y las guardas `%(f_x)s::text[] IS NULL OR ...` ya no se
+            # colapsan en tiempo de planificacion: se pierden los indices
+            # chunks_meta_* y el CTE lexico pasa a seq scan. El acantilado aparece en
+            # la 6a consulta, no en la 1a, que es la peor forma de descubrirlo.
+            cur.execute(sql, params, prepare=False)
+            return cur.fetchall()
+
+
 def hybrid_search(
     query: str,
     collection: str = "gx_docs",
@@ -211,45 +275,14 @@ def hybrid_search(
     Cross-Encoder de atencion completa (sentence-transformers), agregando rerank_score
     y conservando rrf_score.
     """
-    qtext = _to_tsquery(query)
-    if not qtext:
-        return []
-
-    fparams = filter_params(filters)
-
-    qvec = "[" + ",".join(f"{float(v):.7g}" for v in emb.embed_query(query)) + "]"
-
     # Si se pide rerank, ampliamos la cantidad de candidatos recuperados de la DB
     db_top_k = max(CANDIDATE_POOL, top_k * 4) if rerank else top_k
 
-    params = {
-        "qvec": qvec,
-        "qtext": qtext,
-        "collection": collection,
-        # El pool acompana a db_top_k: con el fijo en CANDIDATE_POOL, un db_top_k > 30
-        # quedaba capado en silencio por el LIMIT de cada CTE. x3 deja margen para
-        # que la fusion tenga de donde elegir.
-        "pool": max(CANDIDATE_POOL, db_top_k * 3),
-        "rrf_k": RRF_K,
-        "top_k": db_top_k,
-        "min_score": min_score,
-        **fparams,
-    }
-
-    with get_pool().connection() as conn:
-        # SET LOCAL exige un bloque de transaccion, y conn.transaction() lo ACOTA:
-        # una conexion que se devolviera al pool con iterative_scan pegado se lo
-        # llevaria al siguiente que la tome, cambiando el plan de consultas ajenas.
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute(_TUNING_SQL)
-            # prepare=False: a la 5a ejecucion psycopg3 auto-prepara la sentencia y el
-            # plan puede volverse GENERICO. Con plan generico los parametros son
-            # incognitas y las guardas `%(f_x)s::text[] IS NULL OR ...` ya no se
-            # colapsan en tiempo de planificacion: se pierden los indices
-            # chunks_meta_* y el CTE lexico pasa a seq scan. El acantilado aparece en
-            # la 6a consulta, no en la 1a, que es la peor forma de descubrirlo.
-            cur.execute(_SEARCH_SQL, params, prepare=False)
-            rows = cur.fetchall()
+    params = search_params(query, collection, db_top_k, min_score=min_score, filters=filters)
+    if params is None:
+        return []
+    params["qvec"] = query_vector(query)
+    rows = execute_search(params)
 
     results = [
         {
