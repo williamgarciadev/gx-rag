@@ -51,3 +51,4 @@ def test_rerank_handles_model_failure_gracefully():
 
     assert len(results) == 1
     assert results[0]["doc_id"] == "c1"
+    assert results[0].get("rerank_fallback") is True

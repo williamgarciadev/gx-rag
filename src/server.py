@@ -188,7 +188,10 @@ READ_TOOLS: list[Tool] = [
                     "type": "boolean",
                     "description": (
                         "Opcional. Si es true, reordena los mejores candidatos mediante un modelo "
-                        "Cross-Encoder de atención completa, refinando la precisión semántica final."
+                        "Cross-Encoder multilingüe de atención completa (mmarco-mMiniLMv2). "
+                        "Nota: el score reportado pasa a ser el del Cross-Encoder (logit de relevancia), "
+                        "preservando el score RRF original en rrf_score. Si el modelo no puede cargarse, "
+                        "hace fallback a RRF con indicación explícita."
                     ),
                     "default": False,
                 },
@@ -1167,6 +1170,8 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                 score_label = f"score={r['score']:.3f}"
                 if r.get("reranked") and "rrf_score" in r:
                     score_label += f" [reranked, rrf={r['rrf_score']:.3f}]"
+                elif r.get("rerank_fallback"):
+                    score_label += " [fallback RRF: reranker no disponible]"
                 lines.append(
                     f"**{r['title']}** ({score_label})\n"
                     f"doc_id: `{r['doc_id']}`\n"

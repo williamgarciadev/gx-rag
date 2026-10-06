@@ -14,7 +14,7 @@ class VectorStoreConfig(BaseSettings):
     # scripts/migrate_chroma_to_pg.py, que lee el ChromaDB de origen.
     path: Path = Path("data/chroma")
     embedding_model: str = "intfloat/multilingual-e5-large"
-    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    reranker_model: str = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
     chunk_size: int = 1000
     chunk_overlap: int = 200
 

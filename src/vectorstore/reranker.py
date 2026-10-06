@@ -64,8 +64,13 @@ def rerank(
     try:
         model = get_reranker(model_name)
     except Exception as e:
-        log.warning(f"Reranker unavailable ({e}), returning unreranked candidates.")
-        return candidates[:top_k]
+        log.warning(f"Reranker unavailable ({e}), returning unreranked candidates with fallback tag.")
+        fallback = []
+        for c in candidates[:top_k]:
+            item = dict(c)
+            item["rerank_fallback"] = True
+            fallback.append(item)
+        return fallback
 
     # Prepare (query, passage) pairs. Include title and snippet for holistic matching.
     pairs = [
@@ -76,8 +81,13 @@ def rerank(
     try:
         scores = model.predict(pairs)
     except Exception as e:
-        log.error(f"Prediction failed in CrossEncoder rerank: {e}")
-        return candidates[:top_k]
+        log.error(f"Prediction failed in CrossEncoder rerank ({e}), returning unreranked candidates with fallback tag.")
+        fallback = []
+        for c in candidates[:top_k]:
+            item = dict(c)
+            item["rerank_fallback"] = True
+            fallback.append(item)
+        return fallback
 
     reranked = []
     for candidate, score in zip(candidates, scores):
