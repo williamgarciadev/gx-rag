@@ -126,6 +126,11 @@
    "file": "Bantotal/MDU-10403-GL-V3R1.1 - BTSConsumer 2.1.pdf",
    "ingest": true,
    "reason": "Manual MDU-10403 de BTSConsumer 2.1 (consumo de servicios Bantotal)."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/definicion-de-transacciones-ejercicio1-parte-a.md",
+   "ingest": true,
+   "reason": "Transcripción (audio + texto de pantalla) del tutorial DLYA «Definición de transacciones, Ejercicio 1 parte A» (módulo 150 docente): sinónimos de subordinales, retoma para confirmación, autorización de excepciones, consulta de asiento HW004. Generado con el pipeline de video local; muestra el host de capacitación de DLYA y usuarios de ese ambiente docente, no datos del banco."
   }
  ]
 }
