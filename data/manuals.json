@@ -131,6 +131,16 @@
    "file": "bantotal-curado/capacitaciones/definicion-de-transacciones-ejercicio1-parte-a.md",
    "ingest": true,
    "reason": "Transcripción (audio + texto de pantalla) del tutorial DLYA «Definición de transacciones, Ejercicio 1 parte A» (módulo 150 docente): sinónimos de subordinales, retoma para confirmación, autorización de excepciones, consulta de asiento HW004. Generado con el pipeline de video local; muestra el host de capacitación de DLYA y usuarios de ese ambiente docente, no datos del banco."
+  },
+  {
+   "file": "Bantotal/ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).pdf",
+   "ingest": false,
+   "reason": "Original de ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).md. NO se ingiere: el extractor de PDF arranca en la pág. 3 y pierde la pág. 2 (Objetivo, Pre-requisitos, inicio del Paso 1), medido el 2026-10-06"
+  },
+  {
+   "file": "Bantotal/ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).md",
+   "ingest": true,
+   "reason": "Especificación técnica oficial de PIF00540/PIF00541: consumo genérico de servicios REST vía BTConsumer, códigos de error y casos de prueba"
   }
  ]
 }
