@@ -120,13 +120,20 @@ fused AS (
     SELECT chunk_id, SUM(1.0 / (%(rrf_k)s + rank)) AS score
     FROM (SELECT * FROM dense UNION ALL SELECT * FROM lexical) AS r
     GROUP BY chunk_id
+),
+ranked_articles AS (
+    SELECT c.chunk_id, c.article_id, c.title, c.content,
+           c.source, c.url, c.content_hash, c.meta, f.score,
+           ROW_NUMBER() OVER (PARTITION BY c.article_id ORDER BY f.score DESC) AS article_rank
+    FROM fused f
+    JOIN chunks c USING (chunk_id)
+    WHERE %(min_score)s::float8 IS NULL OR f.score >= %(min_score)s::float8
 )
-SELECT c.chunk_id, c.article_id, c.title, c.content,
-       c.source, c.url, c.content_hash, c.meta, f.score
-FROM fused f
-JOIN chunks c USING (chunk_id)
-WHERE %(min_score)s::float8 IS NULL OR f.score >= %(min_score)s::float8
-ORDER BY f.score DESC
+SELECT chunk_id, article_id, title, content,
+       source, url, content_hash, meta, score
+FROM ranked_articles
+WHERE %(max_per_article)s::int IS NULL OR %(max_per_article)s::int <= 0 OR article_rank <= %(max_per_article)s::int
+ORDER BY score DESC
 LIMIT %(top_k)s
 """
 
@@ -197,22 +204,25 @@ def search_params(
     *,
     min_score: float | None = None,
     filters: dict | None = None,
+    max_per_article: int | None = None,
 ) -> dict | None:
     """Parámetros del SQL de búsqueda, sin el vector. None si la consulta no deja
     ningún término para la mitad léxica. Valida `filters` (ValueError)."""
     qtext = _to_tsquery(query)
     if not qtext:
         return None
+    multiplier = 4 if (max_per_article and max_per_article > 0) else 3
     return {
         "qtext": qtext,
         "collection": collection,
-        # El pool acompana a top_k: con el fijo en CANDIDATE_POOL, un top_k > 30
-        # quedaba capado en silencio por el LIMIT de cada CTE. x3 deja margen para
-        # que la fusion tenga de donde elegir.
-        "pool": max(CANDIDATE_POOL, top_k * 3),
+        # El pool acompaña a top_k: con el fijo en CANDIDATE_POOL, un top_k > 30
+        # quedaba capado en silencio por el LIMIT de cada CTE. Con max_per_article
+        # activo, usamos x4 para garantizar diversidad de candidatos antes del corte.
+        "pool": max(CANDIDATE_POOL, top_k * multiplier),
         "rrf_k": RRF_K,
         "top_k": top_k,
         "min_score": min_score,
+        "max_per_article": max_per_article,
         **filter_params(filters),
     }
 
@@ -253,6 +263,7 @@ def hybrid_search(
     min_score: float | None = None,
     filters: dict | None = None,
     rerank: bool = False,
+    max_per_article: int | None = None,
 ) -> list[dict]:
     """
     Busqueda hibrida: embeddings densos + full-text, fusionados con RRF.
@@ -274,11 +285,21 @@ def hybrid_search(
     rerank: si es True, reordena los mejores candidatos de la fusion RRF usando un
     Cross-Encoder de atencion completa (sentence-transformers), agregando rerank_score
     y conservando rrf_score.
+
+    max_per_article: si se define (> 0), limita la cantidad de fragmentos por
+    artículo en el resultado final, promoviendo diversidad de fuentes.
     """
     # Si se pide rerank, ampliamos la cantidad de candidatos recuperados de la DB
     db_top_k = max(CANDIDATE_POOL, top_k * 4) if rerank else top_k
 
-    params = search_params(query, collection, db_top_k, min_score=min_score, filters=filters)
+    params = search_params(
+        query,
+        collection,
+        db_top_k,
+        min_score=min_score,
+        filters=filters,
+        max_per_article=max_per_article,
+    )
     if params is None:
         return []
     params["qvec"] = query_vector(query)

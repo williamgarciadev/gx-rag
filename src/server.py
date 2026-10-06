@@ -195,6 +195,16 @@ READ_TOOLS: list[Tool] = [
                     ),
                     "default": False,
                 },
+                "max_per_article": {
+                    "type": "integer",
+                    "description": (
+                        "Opcional. Cantidad máxima de fragmentos (chunks) a devolver por cada "
+                        "artículo/documento único. Si se omite o es null/0, no restringe por artículo. "
+                        "Recomendado (ej. 1 o 2) en consultas amplias para garantizar diversidad de "
+                        "fuentes en lugar de saturar el resultado con fragmentos de un mismo documento."
+                    ),
+                    "default": None,
+                },
             },
             "required": ["query"],
         },
@@ -1156,9 +1166,23 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
         if rejection := _reject_missing_kb_name(col, filters):
             return [TextContent(type="text", text=rejection)]
         rerank = bool(arguments.get("rerank", False))
+        max_per_article_raw = arguments.get("max_per_article")
+        try:
+            max_per_article = int(max_per_article_raw) if max_per_article_raw is not None else None
+            if max_per_article is not None and max_per_article <= 0:
+                max_per_article = None
+        except (ValueError, TypeError):
+            max_per_article = None
+
         try:
             results = hybrid_search(
-                q, collection=col, top_k=k, min_score=min_score, filters=filters, rerank=rerank
+                q,
+                collection=col,
+                top_k=k,
+                min_score=min_score,
+                filters=filters,
+                rerank=rerank,
+                max_per_article=max_per_article,
             )
             if not results:
                 return [TextContent(type="text", text=_empty_search_text(col, filters))]

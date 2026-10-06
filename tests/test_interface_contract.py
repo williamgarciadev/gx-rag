@@ -315,14 +315,18 @@ def test_search_docs_bounds_arguments_defensively(monkeypatch):
     from src.vectorstore import pg_retriever
 
     captured = {}
-    def fake_hybrid_search(q, collection="gx_docs", top_k=5, min_score=None, filters=None, rerank=False):
+    def fake_hybrid_search(
+        q, collection="gx_docs", top_k=5, min_score=None, filters=None, rerank=False, max_per_article=None, **kwargs
+    ):
         captured["top_k"] = top_k
+        captured["max_per_article"] = max_per_article
         return [{"title": "t", "doc_id": "d", "id": "i", "score": 0.05, "content": "x" * 5000}]
 
     monkeypatch.setattr(pg_retriever, "hybrid_search", fake_hybrid_search)
 
-    out = _call("search_docs", query="test", top_k=9999, snippet_chars=99999)
+    out = _call("search_docs", query="test", top_k=9999, snippet_chars=99999, max_per_article=2)
     assert captured["top_k"] == 50
+    assert captured["max_per_article"] == 2
     # Snippet queda acotado a 4000 caracteres
     assert "…" in out
 
@@ -336,4 +340,27 @@ def test_pg_retriever_tokenize_separates_underscores():
     assert tokens == ["bc", "load", "customer", "id"]
     tsq = _to_tsquery("BC_Load customer_id")
     assert tsq == "bc | load | customer | id"
+
+
+def test_search_params_handles_max_per_article():
+    """search_params debe propagar max_per_article y ajustar el pool de candidatos proporcionalmente."""
+    from src.vectorstore.pg_retriever import search_params, CANDIDATE_POOL
+
+    params_none = search_params("cadena", "bt_docs", 5)
+    assert params_none["max_per_article"] is None
+    assert params_none["pool"] == max(CANDIDATE_POOL, 5 * 3)
+
+    params_dedup = search_params("cadena", "bt_docs", 5, max_per_article=1)
+    assert params_dedup["max_per_article"] == 1
+    assert params_dedup["pool"] == max(CANDIDATE_POOL, 5 * 4)
+
+
+def test_search_sql_partitions_by_article_id():
+    """El SQL de búsqueda debe particionar por article_id en la ventana de ranking."""
+    from src.vectorstore.pg_retriever import _SEARCH_SQL
+
+    assert "PARTITION BY c.article_id" in _SEARCH_SQL
+    assert "article_rank" in _SEARCH_SQL
+    assert "%(max_per_article)s" in _SEARCH_SQL
+
 
