@@ -18,6 +18,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from scripts._console import use_utf8_stdout
 from src.ingestion.pdf_pipeline import PDFIngestPipeline
 
 
@@ -48,17 +49,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--collection",
         type=str,
         default="bt_docs",
-        help="Target collection for vector indexing (default: bt_docs)",
+        help="Target collection (unused: use ingest_local --manifest to index)",
     )
     parser.add_argument(
         "--index",
         action="store_true",
-        help="Index the resulting document into PostgreSQL vector store",
+        help="DEPRECATED: La indexación directa fue retirada. Usá scripts.ingest_local --manifest.",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Generate preview and stats without persisting to disk or database",
+        help="Generate preview and stats without persisting to disk",
     )
     return parser
 
@@ -68,8 +69,6 @@ def process_single_pdf(
     output_dir: Path,
     module: str,
     title: str | None,
-    collection: str,
-    index: bool,
     dry_run: bool,
     pipeline: PDFIngestPipeline,
 ) -> int:
@@ -105,38 +104,23 @@ def process_single_pdf(
 
     print(f"[SUCCESS] Generated: {md_path}")
     print(f"          Metadata:  {meta_path}")
-
-    if index:
-        print(f"==> Indexing into collection '{collection}' via pg_indexer...")
-        try:
-            from scripts.scrape_wiki import compute_hash
-            from src.vectorstore.pg_indexer import reindex_if_changed
-
-            source_id = f"manual/{pdf_file.stem}"
-            content_hash = compute_hash(markdown)
-            status = reindex_if_changed(
-                article_id=source_id,
-                title=title or f"Manual Bantotal — {pdf_file.stem}",
-                content=markdown,
-                source=str(pdf_file.name),
-                genre="manual_tecnico",
-                url=f"local://manuales/{pdf_file.name}",
-                content_hash=content_hash,
-                collection=collection,
-                extra_meta={"origin": "bt_manual", "module": module},
-                chunk_prefix=f"[{pdf_file.stem} · {module}]",
-            )
-            print(f"    Vector store status: '{status}' into '{collection}'.")
-        except Exception as e:
-            print(f"Error during vector store indexing: {e}", file=sys.stderr)
-            return 1
-
     return 0
 
 
 def main() -> int:
+    use_utf8_stdout()
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.index:
+        print(
+            "Error: La opción '--index' fue retirada de ingest_pdf para evitar identidades duplicadas (#10, #11).\n"
+            "ingest_pdf solo genera Markdown estructurado (.md y .meta.json).\n"
+            "Para indexar en la base de datos, declará el documento en data/manuals.json y corré:\n"
+            "    python -m scripts.ingest_local --manifest data/manuals.json",
+            file=sys.stderr,
+        )
+        return 1
 
     target_path = Path(args.path).resolve()
     if not target_path.exists():
@@ -152,8 +136,6 @@ def main() -> int:
             output_dir=output_dir,
             module=args.module,
             title=args.title,
-            collection=args.collection,
-            index=args.index,
             dry_run=args.dry_run,
             pipeline=pipeline,
         )
@@ -172,8 +154,6 @@ def main() -> int:
             output_dir=output_dir,
             module=args.module,
             title=None,
-            collection=args.collection,
-            index=args.index,
             dry_run=args.dry_run,
             pipeline=pipeline,
         )

@@ -66,15 +66,29 @@ def main() -> int:
     parser.add_argument(
         "--index",
         action="store_true",
-        help="Index directly into PostgreSQL vectorstore (collection bt_docs)",
+        help="DEPRECATED: La indexación directa fue retirada. Usá scripts.ingest_local --manifest.",
     )
     parser.add_argument(
         "--collection",
         type=str,
         default="bt_docs",
-        help="Target vector collection name (default: bt_docs)",
+        help="Target vector collection name (unused: use ingest_local --manifest)",
     )
     args = parser.parse_args()
+
+    from scripts._console import use_utf8_stdout
+
+    use_utf8_stdout()
+
+    if args.index:
+        print(
+            "Error: La opción '--index' fue retirada de batch_ingest_videos para evitar identidades duplicadas (#10, #11).\n"
+            "batch_ingest_videos solo genera Markdown estructurado (.md y .meta.json).\n"
+            "Para indexar en la base de datos, declará el documento en un manifiesto y corré:\n"
+            "    python -m scripts.ingest_local --manifest <manifest_file>",
+            file=sys.stderr,
+        )
+        return 1
 
     video_dir = Path(args.video_dir).resolve()
     if not video_dir.exists():
@@ -106,26 +120,6 @@ def main() -> int:
             )
             print(f"    [OK] Generated: {md_path.name} ({len(markdown.split())} words)")
             succeeded += 1
-
-            if args.index:
-                try:
-                    from src.vectorstore.pg_indexer import index_article
-
-                    source_id = f"video/{video.stem}"
-                    chunk_ids = index_article(
-                        article_id=source_id,
-                        title=f"Capacitación Bantotal — {video.stem}",
-                        content=markdown,
-                        source=str(video.name),
-                        genre="video_guide",
-                        url=f"local://videos/{video.name}",
-                        content_hash="",
-                        collection=args.collection,
-                    )
-                    print(f"    [OK] Indexed {len(chunk_ids)} chunks into '{args.collection}'.")
-                except Exception as e:
-                    print(f"    [WARN] Indexing error: {e}", file=sys.stderr)
-
         except Exception as e:
             print(f"    [ERROR] Failed processing {video.name}: {e}", file=sys.stderr)
             failed += 1

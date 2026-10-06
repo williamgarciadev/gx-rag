@@ -25,3 +25,43 @@ def test_dry_run_estimates_chunks_with_the_indexer_chunk_size(capsys):
     assert "documentos: 1" in out
     assert f"(~{CHUNK_SIZE}c): ~3" in out
     assert "NO se indexa nada" in out
+
+
+@pytest.mark.unit
+def test_ingest_pdf_rejects_index_flag_and_points_to_manifest(capsys, monkeypatch):
+    import scripts.ingest_pdf as ipdf
+
+    monkeypatch.setattr("sys.argv", ["ingest_pdf", "--index", "dummy.pdf"])
+    code = ipdf.main()
+
+    err = capsys.readouterr().err
+    assert code == 1
+    assert "retirada" in err
+    assert "ingest_local --manifest" in err
+
+
+@pytest.mark.unit
+def test_ingest_video_rejects_index_flag_and_points_to_manifest(capsys, monkeypatch):
+    import scripts.ingest_video as ivid
+
+    monkeypatch.setattr("sys.argv", ["ingest_video", "--index", "dummy.mp4"])
+    code = ivid.main()
+
+    err = capsys.readouterr().err
+    assert code == 1
+    assert "retirada" in err
+    assert "ingest_local --manifest" in err
+
+
+@pytest.mark.unit
+def test_batch_ingest_videos_rejects_index_flag_and_points_to_manifest(capsys, monkeypatch):
+    import scripts.batch_ingest_videos as biv
+
+    monkeypatch.setattr("sys.argv", ["batch_ingest_videos", "--index", "dummy_dir"])
+    code = biv.main()
+
+    err = capsys.readouterr().err
+    assert code == 1
+    assert "retirada" in err
+    assert "ingest_local --manifest" in err
+

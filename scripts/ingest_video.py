@@ -21,6 +21,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from scripts._console import use_utf8_stdout
 from src.ingestion.video_pipeline import (
     AudioTranscriber,
     FrameExtractor,
@@ -73,13 +74,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--index",
         action="store_true",
-        help="Index the resulting document into PostgreSQL vector store",
+        help="DEPRECATED: La indexación directa fue retirada. Usá scripts.ingest_local --manifest.",
     )
     parser.add_argument(
         "--collection",
         type=str,
-        default="gx_docs",
-        help="Target collection for vector indexing (default: gx_docs)",
+        default="bt_docs",
+        help="Target collection (unused: use ingest_local --manifest to index)",
     )
     parser.add_argument(
         "--keep-frames",
@@ -89,14 +90,25 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Generate preview and stats without persisting to disk or database",
+        help="Generate preview and stats without persisting to disk",
     )
     return parser
 
 
 def main() -> int:
+    use_utf8_stdout()
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.index:
+        print(
+            "Error: La opción '--index' fue retirada de ingest_video para evitar identidades duplicadas (#10, #11).\n"
+            "ingest_video solo genera Markdown estructurado (.md y .meta.json).\n"
+            "Para indexar en la base de datos, declará el documento en un manifiesto y corré:\n"
+            "    python -m scripts.ingest_local --manifest <manifest_file>",
+            file=sys.stderr,
+        )
+        return 1
 
     video_path = Path(args.video).resolve()
     if not video_path.exists():
@@ -148,32 +160,6 @@ def main() -> int:
 
     print(f"\n[SUCCESS] Generated Markdown: {md_path}")
     print(f"          Metadata JSON:      {meta_path}")
-
-    if args.index:
-        print(f"\n==> Indexing into collection '{args.collection}' via pg_indexer...")
-        try:
-            from scripts.scrape_wiki import compute_hash
-            from src.vectorstore.pg_indexer import reindex_if_changed
-
-            source_id = f"video/{video_path.stem}"
-            content_hash = compute_hash(markdown)
-            status = reindex_if_changed(
-                article_id=source_id,
-                title=args.title or f"Capacitación Bantotal — {video_path.stem}",
-                content=markdown,
-                source=str(video_path.name),
-                genre="video_guide",
-                url=f"local://videos/{video_path.name}",
-                content_hash=content_hash,
-                collection=args.collection,
-                extra_meta={"origin": "bt_video"},
-                chunk_prefix=f"[{video_path.stem} · Video]",
-            )
-            print(f"    Vector store status: '{status}' into '{args.collection}'.")
-        except Exception as e:
-            print(f"Error during vector store indexing: {e}", file=sys.stderr)
-            return 1
-
     return 0
 
 
