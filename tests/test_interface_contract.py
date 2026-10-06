@@ -308,3 +308,32 @@ def test_verify_syntax_verdict_is_json(monkeypatch):
     first_line = _call("verify_syntax", snippet="Trim(&x)").splitlines()[0]
 
     assert json.loads(first_line)["verdict"] == "VÁLIDO"
+
+
+def test_search_docs_bounds_arguments_defensively(monkeypatch):
+    """top_k y snippet_chars deben acotarse para evitar agotamiento de memoria por valores desmedidos."""
+    from src.vectorstore import pg_retriever
+
+    captured = {}
+    def fake_hybrid_search(q, collection="gx_docs", top_k=5, min_score=None, filters=None, rerank=False):
+        captured["top_k"] = top_k
+        return [{"title": "t", "doc_id": "d", "id": "i", "score": 0.05, "content": "x" * 5000}]
+
+    monkeypatch.setattr(pg_retriever, "hybrid_search", fake_hybrid_search)
+
+    out = _call("search_docs", query="test", top_k=9999, snippet_chars=99999)
+    assert captured["top_k"] == 50
+    # Snippet queda acotado a 4000 caracteres
+    assert "…" in out
+
+
+def test_pg_retriever_tokenize_separates_underscores():
+    """Identificadores con guión bajo (foo_bar) deben generar tokens separados en OR,
+    evitando que to_tsquery los traduzca al operador de frase estricta <->."""
+    from src.vectorstore.pg_retriever import _to_tsquery, _tokenize
+
+    tokens = _tokenize("BC_Load customer_id")
+    assert tokens == ["bc", "load", "customer", "id"]
+    tsq = _to_tsquery("BC_Load customer_id")
+    assert tsq == "bc | load | customer | id"
+

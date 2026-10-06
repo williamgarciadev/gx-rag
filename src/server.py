@@ -1134,8 +1134,16 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
 
         q = arguments.get("query", "")
         col = arguments.get("collection", "gx_docs")
-        k = arguments.get("top_k", 5)
-        snippet_chars = arguments.get("snippet_chars", 600)
+        k_raw = arguments.get("top_k", 5)
+        snippet_chars_raw = arguments.get("snippet_chars", 600)
+        try:
+            k = min(max(1, int(k_raw)), 50)
+        except (ValueError, TypeError):
+            k = 5
+        try:
+            snippet_chars = min(max(100, int(snippet_chars_raw)), 4000)
+        except (ValueError, TypeError):
+            snippet_chars = 600
         min_score = arguments.get("min_score")
         filters = arguments.get("filters")
         # Antes de embeddear: rechazar acá evita además pagar la carga de e5-large

@@ -166,8 +166,9 @@ def filter_params(filters: dict | None) -> dict:
 
 
 def _tokenize(text: str) -> list[str]:
-    """Mismo criterio que el tokenizador del BM25 que se reemplaza."""
-    return re.findall(r"\w+", text.lower())
+    """Tokeniza en palabras alfanuméricas, excluyendo '_' para que to_tsquery no
+    convierta identificadores con guión bajo (foo_bar) al operador de frase estricta <->."""
+    return re.findall(r"[^\W_]+", text.lower())
 
 
 def _to_tsquery(query: str) -> str:
