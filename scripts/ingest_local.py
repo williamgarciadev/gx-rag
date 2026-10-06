@@ -23,7 +23,7 @@ from scripts._console import use_utf8_stdout
 from src.ingestion.bulk_loader import RawDoc, load_dump
 from src.ingestion.local_loader import iter_supported_files, parse_local_docs
 from src.ingestion.manifest import iter_manifest_paths, load_manifest
-from src.vectorstore.indexer import CHUNK_SIZE
+from src.vectorstore.pg_indexer import CHUNK_SIZE
 
 
 def _expand(paths: list[str]):
