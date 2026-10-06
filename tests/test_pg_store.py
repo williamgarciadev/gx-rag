@@ -192,6 +192,35 @@ def test_reindex_is_transactional_end_to_end(pg_store, monkeypatch):
     assert "original" not in art["content"]  # los viejos se fueron
 
 
+def test_emb_profile_column_records_the_geometry_the_vector_was_built_with(pg_store, monkeypatch):
+    """sql/005 promete que el estado en la base no miente sobre la geometría.
+
+    El upsert no escribía emb_profile: con GXRAG_EMB_PROFILE=e5v1 una ingesta
+    nueva quedaba con vector prefijado y la columna en el DEFAULT 'raw', y
+    reindexar una fila ya migrada con perfil raw le dejaba 'e5v1'. Así
+    `reembed.py --check` daba por migrado lo que no estaba.
+    """
+    from src.vectorstore import pg_indexer
+
+    monkeypatch.setattr(
+        pg_indexer.emb, "embed_texts", lambda textos: [_unit(9) for _ in textos]
+    )
+    monkeypatch.setattr(pg_indexer, "_vector_literal", lambda v: pg_store.vector(9))
+
+    def _perfiles() -> set[str]:
+        with pg_store.pool.connection() as conn:
+            return {r[0] for r in conn.execute(
+                "SELECT emb_profile FROM chunks WHERE article_id = 'art'")}
+
+    monkeypatch.setattr(pg_indexer.emb, "EMB_PROFILE", "e5v1")
+    pg_indexer.reindex_if_changed("art", "T", "contenido", "src", "guide", "url", "H1")
+    assert _perfiles() == {"e5v1"}
+
+    monkeypatch.setattr(pg_indexer.emb, "EMB_PROFILE", "raw")
+    pg_indexer.reindex_if_changed("art", "T", "contenido nuevo", "src", "guide", "url", "H2")
+    assert _perfiles() == {"raw"}
+
+
 # ─── helpers ──────────────────────────────────────────────────────────────────
 
 

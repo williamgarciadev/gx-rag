@@ -35,9 +35,10 @@ _splitter = RecursiveCharacterTextSplitter(
 _UPSERT_SQL = """
     INSERT INTO chunks (
         chunk_id, collection, article_id, chunk_index,
-        title, content, source, url, genre, content_hash, embedding, meta
+        title, content, source, url, genre, content_hash, embedding, meta,
+        emb_profile
     )
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (chunk_id) DO UPDATE SET
         collection   = EXCLUDED.collection,
         title        = EXCLUDED.title,
@@ -47,8 +48,13 @@ _UPSERT_SQL = """
         genre        = EXCLUDED.genre,
         content_hash = EXCLUDED.content_hash,
         embedding    = EXCLUDED.embedding,
-        meta         = EXCLUDED.meta
+        meta         = EXCLUDED.meta,
+        emb_profile  = EXCLUDED.emb_profile
 """
+# `emb_profile` viaja con el embedding por la misma razón que `collection`: es la
+# geometría de ESE vector. Sin él, toda fila nueva caía en el DEFAULT 'raw' de
+# sql/005 aunque se hubiera embebido con el perfil e5v1, y la columna que existe
+# para que el estado no mienta mentía.
 # `collection` MUST be in the DO UPDATE list. chunk_id is derived from
 # article_id + index, so a conflict means "same article again" — and re-indexing
 # an article INTO ANOTHER COLLECTION has to move it. Leaving it out made the
@@ -99,6 +105,8 @@ def _write_chunks(
         log.warning("sin chunks para %s", article_id)
         return []
 
+    # El perfil se lee JUNTO con el embedding: es el que embed_passage acaba de usar.
+    perfil = emb.EMB_PROFILE
     embs = emb.embed_passage(tuple(textos))
     chunk_ids = [f"{article_id}_c{i}" for i in range(len(textos))]
 
@@ -130,6 +138,7 @@ def _write_chunks(
             content_hash,
             _vector_literal(embs[i]),
             _meta_de(i),
+            perfil,
         )
         for i in range(len(textos))
     ]
