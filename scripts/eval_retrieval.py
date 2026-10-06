@@ -34,7 +34,7 @@ RETRIEVE_DEPTH = 20
 def _load_and_run(gold_path: Path, top_k: int, ks: tuple[int, ...]):
     """Wire the real retriever to the gold set. Import is lazy: loading the
     embedding model costs ~18s, and `--help` should not pay it."""
-    from src.vectorstore.retriever import hybrid_search
+    from src.vectorstore.pg_retriever import hybrid_search
 
     cases = load_gold(gold_path)
     results, report = run_gold(cases, top_k, ks, hybrid_search)
