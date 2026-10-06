@@ -283,3 +283,40 @@ def test_directory_sweep_recurses_and_ignores_unsupported_files(tmp_path):
     found = sorted(p.name for p in iter_supported_files(tmp_path))
 
     assert found == ["manual.md", "nested.md"]
+
+
+def test_markdown_with_frontmatter_extracts_title_and_meta(tmp_path):
+    md = tmp_path / "manual_test.md"
+    content = (
+        "---\n"
+        "title: \"Manual Bantotal — Cadena de Cierre\"\n"
+        "module: \"RTE\"\n"
+        "---\n\n"
+        "# Titulo Secundario\n\n"
+        "Contenido de prueba."
+    )
+    md.write_text(content, encoding="utf-8")
+
+    (doc,) = parse_local_docs([md])
+
+    assert doc.title == "Manual Bantotal — Cadena de Cierre"
+    assert doc.meta.get("module") == "RTE"
+    assert doc.meta.get("doc_type") == "markdown"
+
+
+def test_markdown_with_frontmatter_without_title_extracts_body_heading(tmp_path):
+    md = tmp_path / "manual_no_title.md"
+    content = (
+        "---\n"
+        "module: \"RTE\"\n"
+        "---\n\n"
+        "# Titulo Desde Heading\n\n"
+        "Contenido de prueba."
+    )
+    md.write_text(content, encoding="utf-8")
+
+    (doc,) = parse_local_docs([md])
+
+    assert doc.title == "Titulo Desde Heading"
+    assert doc.meta.get("module") == "RTE"
+

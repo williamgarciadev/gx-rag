@@ -152,19 +152,24 @@ def main() -> int:
     if args.index:
         print(f"\n==> Indexing into collection '{args.collection}' via pg_indexer...")
         try:
-            from src.vectorstore.pg_indexer import index_article
+            from scripts.scrape_wiki import compute_hash
+            from src.vectorstore.pg_indexer import reindex_if_changed
+
             source_id = f"video/{video_path.stem}"
-            chunk_ids = index_article(
+            content_hash = compute_hash(markdown)
+            status = reindex_if_changed(
                 article_id=source_id,
                 title=args.title or f"Capacitación Bantotal — {video_path.stem}",
                 content=markdown,
                 source=str(video_path.name),
                 genre="video_guide",
                 url=f"local://videos/{video_path.name}",
-                content_hash="",
+                content_hash=content_hash,
                 collection=args.collection,
+                extra_meta={"origin": "bt_video"},
+                chunk_prefix=f"[{video_path.stem} · Video]",
             )
-            print(f"    Indexed {len(chunk_ids)} chunks into '{args.collection}'.")
+            print(f"    Vector store status: '{status}' into '{args.collection}'.")
         except Exception as e:
             print(f"Error during vector store indexing: {e}", file=sys.stderr)
             return 1

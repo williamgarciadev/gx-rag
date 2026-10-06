@@ -166,8 +166,37 @@ def _pdf_docs(path: Path) -> Iterator[RawDoc]:
         )
 
 
+def _parse_frontmatter(content: str) -> dict:
+    """Extrae el frontmatter YAML si el archivo comienza con '---'."""
+    if not content.startswith("---"):
+        return {}
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return {}
+    raw_yaml = parts[1].strip()
+    if not raw_yaml:
+        return {}
+    try:
+        import yaml
+
+        data = yaml.safe_load(raw_yaml)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
 def _markdown_title(content: str, stem: str) -> str:
-    for line in content.splitlines():
+    frontmatter = _parse_frontmatter(content)
+    if frontmatter and frontmatter.get("title"):
+        return str(frontmatter["title"]).strip()
+
+    body = content
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            body = parts[2]
+
+    for line in body.splitlines():
         line = line.strip()
         if line.startswith("# "):
             return line[2:].strip()
@@ -182,13 +211,17 @@ def _text_docs(path: Path) -> Iterator[RawDoc]:
         return
     uri = path.as_uri()
     title = _markdown_title(content, path.stem)
+    meta = {"doc_type": "markdown", "manual_title": title}
+    frontmatter = _parse_frontmatter(content)
+    if frontmatter:
+        meta.update(frontmatter)
     yield RawDoc(
         source_key=uri,
         title=title,
         content=content,
         url=uri,
         page_id="",
-        meta={"doc_type": "markdown", "manual_title": title},
+        meta=meta,
         chunk_prefix=f"[{title}]",
     )
 
