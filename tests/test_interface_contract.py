@@ -344,7 +344,7 @@ def test_pg_retriever_tokenize_separates_underscores():
 
 def test_search_params_handles_max_per_article():
     """search_params debe propagar max_per_article y ajustar el pool de candidatos proporcionalmente."""
-    from src.vectorstore.pg_retriever import search_params, CANDIDATE_POOL
+    from src.vectorstore.pg_retriever import CANDIDATE_POOL, search_params
 
     params_none = search_params("cadena", "bt_docs", 5)
     assert params_none["max_per_article"] is None
@@ -386,6 +386,7 @@ def test_tool_annotations_govern_public_boundary():
 def test_verify_syntax_declares_output_schema_and_structured_content(monkeypatch):
     """verify_syntax debe declarar outputSchema y retornar structuredContent (Oportunidad B)."""
     import asyncio
+
     from src import server as srv
     from src.syntax_db import gx_repository
 
@@ -409,6 +410,7 @@ def test_verify_syntax_declares_output_schema_and_structured_content(monkeypatch
 def test_error_rejections_and_failures_carry_is_error_flag():
     """Los rechazos de argumentos y fallos internos deben marcar is_error=True (Oportunidad B)."""
     import asyncio
+
     from src import server as srv
 
     # 1. Rechazo por colección desconocida

@@ -19,12 +19,14 @@ after an interruption converges instead of duplicating.
 import argparse
 import sys
 
-from scripts._console import use_utf8_stdout
 from src.vectorstore.chroma_client import get_client
 from src.vectorstore.migrations import (
     count_matching_by_metadata,
     move_matching_by_metadata,
 )
+
+from scripts._console import use_utf8_stdout
+
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Split a collection by metadata match.")

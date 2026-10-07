@@ -3,6 +3,7 @@ Configuración de la aplicación via pydantic-settings.
 """
 
 from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Minimum length for a public bearer API key (entropy floor).

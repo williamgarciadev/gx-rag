@@ -1,6 +1,7 @@
 """Unit tests for the Bantotal manual PDF ingestion pipeline."""
 
 from pathlib import Path
+
 import pytest
 
 from src.ingestion.pdf_pipeline import (

@@ -124,10 +124,10 @@ def main() -> int:
             print(f"    [ERROR] Failed processing {video.name}: {e}", file=sys.stderr)
             failed += 1
 
-    print(f"\n==========================================")
+    print("\n==========================================")
     print(f"Batch completed: {succeeded} succeeded, {failed} failed.")
     print(f"Output files located at: {output_dir.resolve()}")
-    print(f"==========================================")
+    print("==========================================")
     return 1 if failed > 0 else 0
 
 

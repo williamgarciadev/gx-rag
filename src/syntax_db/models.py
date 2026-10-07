@@ -4,18 +4,19 @@ Modelos SQLAlchemy para la Syntax DB (SQLite).
 
 import os
 from datetime import datetime
+from pathlib import Path
+
 from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Text,
-    DateTime,
     JSON,
+    Column,
+    DateTime,
     Index,
+    Integer,
+    String,
+    Text,
     create_engine,
 )
-from sqlalchemy.orm import declarative_base, Session
-from pathlib import Path
+from sqlalchemy.orm import Session, declarative_base
 
 Base = declarative_base()
 

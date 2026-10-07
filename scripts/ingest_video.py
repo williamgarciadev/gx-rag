@@ -26,7 +26,6 @@ from src.ingestion.video_pipeline import (
     AudioTranscriber,
     FrameExtractor,
     VideoIngestPipeline,
-    format_timestamp,
 )
 
 

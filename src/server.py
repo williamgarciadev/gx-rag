@@ -16,7 +16,6 @@ mantené esa propiedad.
 import json
 import logging
 import re
-
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
@@ -39,7 +38,6 @@ from mcp.types import (
 # no arrastra Postgres ni e5 al arranque.
 from src.ingestion import kb_fichas
 from src.ingestion.kb_loader import KB_MAX_INLINE
-
 
 VERIFY_SYNTAX_OUTPUT_SCHEMA = {
     "type": "object",
@@ -1138,7 +1136,7 @@ def _run_ingest_batch(arguments: dict) -> str:
             )
 
         lines = [
-            f"[dry-run] NADA SE ESCRIBIÓ. Esto es lo que entraría:",
+            "[dry-run] NADA SE ESCRIBIÓ. Esto es lo que entraría:",
             f"  documentos : {total}",
             f"  chunks     : ~{est_chunks} (estimado a {CHUNK_SIZE} chars)",
             f"  colección  : {collection}  (genre 'guide' — capa de retrieval)",
@@ -1221,7 +1219,6 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
 
     if name == "search_docs":
         from src.vectorstore.pg_retriever import hybrid_search
-        from src.vectorstore.pg_collections import collection_counts
 
         q = arguments.get("query", "")
         col = arguments.get("collection", "gx_docs")

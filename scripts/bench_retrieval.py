@@ -25,7 +25,6 @@ prepare=False y sin el perfil de embedding, y medía un plan que producción no 
 from __future__ import annotations
 
 import argparse
-import statistics
 import sys
 import time
 from pathlib import Path
@@ -37,10 +36,11 @@ import dotenv
 dotenv.load_dotenv(".env", override=False)
 
 from src.vectorstore import embeddings as emb  # noqa: E402
-from src.vectorstore.pg_client import get_pool  # noqa: E402
+
 # Por el MÓDULO y no por nombre: el bench mide las funciones de producción, y así
 # un cambio en pg_retriever le llega sin tocar este script.
 from src.vectorstore import pg_retriever  # noqa: E402
+from src.vectorstore.pg_client import get_pool  # noqa: E402
 
 # Consultas fijas: el baseline tiene que ser comparable entre corridas, así que no
 # se sortean. Mezcla deliberada de una sola palabra, varias palabras e

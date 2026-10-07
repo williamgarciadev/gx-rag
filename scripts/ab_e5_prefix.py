@@ -23,12 +23,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from src.vectorstore.chroma_client import get_client  # noqa: E402
+
 from scripts._console import use_utf8_stdout  # noqa: E402
 from src.evaluation.gold import load_gold  # noqa: E402
 from src.evaluation.runner import run_gold  # noqa: E402
 from src.paths import REPO_ROOT  # noqa: E402
 from src.vectorstore import embeddings as emb  # noqa: E402
-from src.vectorstore.chroma_client import get_client  # noqa: E402
 
 SOURCE = "gx_docs"
 # Chroma requires 3-512 chars from [a-zA-Z0-9._-] starting and ending

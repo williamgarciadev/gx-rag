@@ -19,13 +19,13 @@ import json
 import logging
 import re
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+import html2text
 import httpx
 from bs4 import BeautifulSoup
-import html2text
 
 # src.net_guard solo depende de la stdlib y httpx, así que importarlo desde
 # scripts/ no cierra ciclo con src.api -> scripts.scrape_wiki.
@@ -158,7 +158,6 @@ def classify_genre(title: str, text: str, url: str) -> tuple[str, str]:
     guide     → gx_docs   (retrieval)
     """
     tl = title.lower()
-    ul = url.lower()
     ts = text[:600].lower()
 
     def score(words):

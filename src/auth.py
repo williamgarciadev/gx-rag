@@ -7,6 +7,7 @@ constant-time, and a second copy is where the `==` creeps back in.
 """
 
 import hmac
+
 from starlette.types import Scope
 
 

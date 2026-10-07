@@ -189,8 +189,8 @@ def test_extract_skips_prose_without_syntax():
 
 
 def test_verify_bt_api_routes_to_bt_apis_table(temp_db):
-    from src.syntax_db.models import BtApi, get_session
     from src.syntax_db.gx_repository import verify_syntax
+    from src.syntax_db.models import BtApi, get_session
 
     session = get_session()
     session.add(BtApi(endpoint="GetBalance", method="GET", path="/accounts/balance"))

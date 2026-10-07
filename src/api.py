@@ -21,7 +21,7 @@ from scripts.scrape_sac import DEFAULT_DELAY, DEFAULT_MAX_MISSES, DEFAULT_MIN_WO
 from src import sac_jobs
 from src.auth import bearer_token, client_ip, is_authorized
 from src.config import config
-from src.ingestion.ingestor import ingest, SCRAPED_DIR
+from src.ingestion.ingestor import SCRAPED_DIR, ingest
 from src.net_guard import BlockedUrlError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -456,6 +456,7 @@ def list_methods(
 
 # ─── Discovery endpoint ────────────────────────────────────────────────────────
 import re as _re
+
 import httpx as _httpx
 from bs4 import BeautifulSoup as _BeautifulSoup
 

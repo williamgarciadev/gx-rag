@@ -1,6 +1,7 @@
 """Unit tests for the Bantotal video ingestion pipeline."""
 
 from pathlib import Path
+
 import pytest
 
 from src.ingestion.video_pipeline import (

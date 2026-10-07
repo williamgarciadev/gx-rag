@@ -1,6 +1,7 @@
 """Unit tests for the Cross-Encoder reranking module."""
 
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from src.vectorstore.reranker import rerank

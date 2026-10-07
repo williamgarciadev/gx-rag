@@ -5,8 +5,8 @@ y los indexa en ChromaDB. Usado por la API HTTP y por el servidor MCP.
 
 import json
 import logging
-from pathlib import Path
 from dataclasses import asdict
+from pathlib import Path
 
 from scripts.scrape_wiki import ScrapedArticle
 from src.paths import SCRAPED_DIR

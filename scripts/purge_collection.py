@@ -22,12 +22,13 @@ undoable by re-ingesting the source.
 import argparse
 import sys
 
-from scripts._console import use_utf8_stdout
 from src.vectorstore.chroma_client import get_client
 from src.vectorstore.migrations import (
     count_matching_by_metadata,
     delete_matching_by_metadata,
 )
+
+from scripts._console import use_utf8_stdout
 
 
 def main(argv: list[str] | None = None) -> int:
