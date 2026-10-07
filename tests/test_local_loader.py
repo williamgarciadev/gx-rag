@@ -205,6 +205,41 @@ def test_every_bantotal_document_prefix_yields_citation_metadata(tmp_path):
         assert (doc.meta["manual"], doc.meta["manual_version"]) == (code, version)
 
 
+def test_meta_carries_the_localization_segment_of_the_code(tmp_path):
+    # The segment after the code is a LOCALIZATION (GL = Global, CO, UY, PE),
+    # not a language. Dropping it made a Uruguayan anti-money-laundering spec
+    # indistinguishable from a Colombian one in every hit.
+    pdf = tmp_path / "ETP-10801-UY-V2R2.1 - Lavado de dinero (PBCU031-32-33).pdf"
+    _write_manual_pdf(pdf, [_chapter("1.0 Objetivo")])
+
+    (doc,) = parse_local_docs([pdf])
+
+    assert doc.meta["localization"] == "UY"
+
+
+def test_a_code_without_localization_segment_carries_no_localization(tmp_path):
+    pdf = tmp_path / "ECP-000302-V3R1.1 - Renovacion Polizas (PJCCA311).pdf"
+    _write_manual_pdf(pdf, [_chapter("1.0 Objetivo")])
+
+    (doc,) = parse_local_docs([pdf])
+
+    assert "localization" not in doc.meta
+
+
+def test_breadcrumb_names_a_country_localization(tmp_path):
+    # The agent reads the chunk text, not the metadata: a country-specific
+    # document has to say so where the agent will see it. Measured on
+    # 2026-10-07: "lavado de dinero" returned the UY spec as the top hit.
+    pdf = tmp_path / "ETP-10801-UY-V2R2.1 - Lavado de dinero (PBCU031-32-33).pdf"
+    _write_manual_pdf(pdf, [_chapter("1.0 Objetivo")])
+
+    (doc,) = parse_local_docs([pdf])
+
+    assert doc.chunk_prefix == (
+        "[ETP-10801 Lavado de dinero (PBCU031-32-33) · localización UY · 1.0 Objetivo · p.2]"
+    )
+
+
 def test_a_filename_off_convention_still_ingests_without_manual_metadata(tmp_path):
     pdf = tmp_path / "09 - Sistema de Prestamos.pdf"
     _write_manual_pdf(pdf, [_chapter("1.0 Objetivo")])

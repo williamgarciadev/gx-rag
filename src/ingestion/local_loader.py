@@ -40,10 +40,11 @@ log = logging.getLogger(__name__)
 #: Leaving a prefix out is silent — the file still ingests, but with no manual
 #: code or version, so its chunks cannot be cited or filtered. ECP numbers its
 #: documents with six digits (ECP-000302) where the rest use five, and skips the
-#: language segment altogether — hence `lang` being optional.
+#: localization segment altogether — hence `loc` being optional. That segment is
+#: a LOCALIZATION (GL = Global; CO, UY, PE = country), not a language.
 _MANUAL_NAME = re.compile(
     rf"^(?P<code>(?:{'|'.join(DOC_CODE_PREFIXES)})-\d{{4,6}})"
-    r"(?:-(?P<lang>[A-Z]{2}))?-"
+    r"(?:-(?P<loc>[A-Z]{2}))?-"
     r"(?P<version>V\d+R\d+(?:\.\d+)?)\s*-\s*(?P<title>.+)$"
 )
 
@@ -68,11 +69,14 @@ def _manual_meta(stem: str) -> dict:
     if m is None:
         log.warning("Filename off the manual convention, no manual metadata: %s", stem)
         return {"manual": "", "manual_version": "", "manual_title": stem}
-    return {
+    meta = {
         "manual": m.group("code"),
         "manual_version": m.group("version"),
         "manual_title": m.group("title").strip(),
     }
+    if m.group("loc"):
+        meta["localization"] = m.group("loc")
+    return meta
 
 
 def _page_ref(start: int, end: int) -> tuple[str, str]:
@@ -87,6 +91,18 @@ def _page_ref(start: int, end: int) -> tuple[str, str]:
     return f"{start}-{end}", f"pp.{start}-{end}"
 
 
+#: Global is the default and says nothing; only a country localization is worth
+#: the reader's attention. Showing GL too would also change the text of every
+#: already-indexed chunk, and `content_hash` (content only) would not notice.
+_DEFAULT_LOCALIZATION = "GL"
+
+
+def _localization_label(manual: dict) -> str:
+    """'localización UY' for a country-specific document, '' otherwise."""
+    loc = manual.get("localization", "")
+    return f"localización {loc}" if loc and loc != _DEFAULT_LOCALIZATION else ""
+
+
 def _breadcrumb(manual: dict, chapter_title: str, section: str, page_label: str) -> str:
     """Situating header prepended to each chunk's text.
 
@@ -96,7 +112,7 @@ def _breadcrumb(manual: dict, chapter_title: str, section: str, page_label: str)
     both levels are shown: "MDI-10201 … · 2.0 Esquemas · 2.3 Devengamiento · p.140".
     """
     label = " ".join(x for x in (manual["manual"], manual["manual_title"]) if x)
-    parts = [p for p in (label, chapter_title, section, page_label) if p]
+    parts = [p for p in (label, _localization_label(manual), chapter_title, section, page_label) if p]
     return f"[{' · '.join(parts)}]"
 
 
