@@ -188,12 +188,12 @@ con su modelo (~3,5 GB de commit reservado). Más worktrees no cuestan RAM por s
 sesiones sí.
 ### Ramas, commits y despliegue
 
-- **Ramas — tres roles, y no se mezclan** (decidido 2026-08-12, después del PR #1):
+- **Ramas — tres roles, y no se mezclan** (decidido 2026-08-12; **sin PR desde el 2026-10-07**):
 
   | Rama | Rol | Regla |
   |---|---|---|
-  | `main` | integración | todo entra por **PR**. Nunca commit directo |
-  | rama por tarea | trabajo | se crea **desde `main`** (`fase0-baseline`, `fix/...`, `docs/...`) y se borra al mergear |
+  | `main` | integración | **Sin PR** (decisión del usuario, 2026-10-07): el trabajo entra con `merge --ff-only` y se pushea. Antes de integrar: `git fetch`, rebasar sobre `origin/main` y correr la suite completa |
+  | rama por tarea | trabajo | opcional, se crea **desde `main`** (`fix/...`, `docs/...`) y se borra al integrar. Sirve para agrupar commits, no para revisión |
   | `vps-produccion` | **puntero de release** | NO se desarrolla acá. Se le hace `merge --ff-only main` **sólo al desplegar**. Es la rama que el VPS tiene checkouteada |
 
   **Por qué separar release de integración:** un push **no despliega** —el código va horneado en la
