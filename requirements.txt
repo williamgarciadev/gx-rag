@@ -24,6 +24,10 @@ beautifulsoup4>=4.15
 html2text>=2025
 pymupdf>=1.28
 
+# Video / Audio pipeline
+av>=12
+Pillow>=10
+
 # DB
 SQLAlchemy>=2.0
 # PostgreSQL + pgvector. Estaban instalados y en uso (src/vectorstore/pg_client.py)

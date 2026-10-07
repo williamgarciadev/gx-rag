@@ -9,6 +9,8 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+av = pytest.importorskip("av")
+
 from src.ingestion.video_pipeline import AudioTranscriber
 
 pytestmark = pytest.mark.unit
