@@ -26,6 +26,7 @@ Estado: **Fase 1** (caracterización de corpus + ingesta de wiki). Progreso vivo
 | El QUÉ SE QUERÍA (hay requisitos escritos y sin implementar) | `docs/` — ⚠️ `docs/CLAUDE.md` es **spec de planeación, no realidad** |
 | Auditar el repo contra sus propios docs | `docs/PROMPT-auditoria-agente.md` y `docs/AUDITORIA-2026-10-05.md` |
 | **Trabajo de optimización en curso** (hallazgos medidos, fases, coordinación entre agentes) | **`docs/PLAN-optimizacion.md`** — empezá por su sección "Cómo arrancar" |
+| **Qué documentación Bantotal se trajo a `bt_docs`, de dónde y qué lote sigue** (portal SGR, criterio Global + Colombia) | **`docs/INGESTA-BANTOTAL.md`** — antes de traer documentos, para no repetir trabajo |
 
 ## Commands
 

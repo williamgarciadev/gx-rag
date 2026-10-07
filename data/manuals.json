@@ -4,8 +4,8 @@
  "documents": [
   {
    "file": "Bantotal/MDI-10201-GL-V3R1.20 - Sistema de Préstamos.pdf",
-   "ingest": true,
-   "reason": "Manual funcional del sistema 50 (Préstamos), 689 págs. Foco actual del trabajo; no tiene equivalente en la DB."
+   "ingest": false,
+   "reason": "FUERA desde el 2026-10-07: reemplazado por MDI-10201-GL-V3R1.22 (Bantotal/SGR/Colocaciones/Sistema de Préstamos/), descargado del portal SGR. Sus 494 chunks se borraron; respaldo en gx-rag/data/backups/."
   },
   {
    "file": "Bantotal/MDI-10109-GL-V3R1.28 - Sistema de Contrapartes.pdf",
@@ -251,6 +251,171 @@
    "file": "bantotal-curado/procesos/Instalacion_GeneXus16_Bantotal_con_Descartes.md",
    "ingest": true,
    "reason": "Guía interna de Contactar (2022) para instalar GX16 for Bantotal + Descartes 5.0 en un PC: pre-requisitos, licencias, KB, JDK11, Classpath. Nombra el share interno \\support2015 (sin credenciales). Versiones de 2022: confirmar antes de usar."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Bantotal Microfinanzas/Administrador de Visitas/MDI-10207-GL-V3R1.2 - Administración de Visitas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Administrador de Visitas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Bantotal Microfinanzas/Administrador de Visitas/MDU-10207-GL-V3R1.1 - Administración de Visitas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Administrador de Visitas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Bantotal Microfinanzas/MDI-10207-GL-V3R1.1 - Administración de Usuarios y Cargos en Microfinanzas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Bantotal Microfinanzas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Bantotal Microfinanzas/MDI-10207-GL-V3R1.1 - Sistema de Autorizaciones.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Bantotal Microfinanzas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Bantotal Microfinanzas/MDU-10207-GL-V3R1.2 - Créditos Grupales.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Bantotal Microfinanzas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Bantotal Microfinanzas/MDU-10207-GL-V3R1.5 - Flujo de Créditos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Bantotal Microfinanzas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Descuentos/MDI-10202-GL-V3R1.6 - Sistema de Descuentos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Descuentos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Descuentos/MDU-10202-GL-V3R1.4 - Sistema de Descuentos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Descuentos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Descuentos/MDU-10202-GL-V3R1.5 - Modelador de Productos de Crédito Descuentos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Descuentos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Garantías Otorgadas/MDI-10203-GL-V3R1.1 - Sistema de Garantías Otorgadas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Garantías Otorgadas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Garantías Otorgadas/MDU-10203-GL-V3R1.1 - Sistema de Garantías Otorgadas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Garantías Otorgadas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Garantías Recibidas/MDI-10204-GL-V3R1.9 - Sistema de Garantías Recibidas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Garantías Recibidas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Garantías Recibidas/MDU-10204-GL-V3R1.1 - Sistema de Garantías Recibidas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Garantías Recibidas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Gestión de Cobranzas/MDI-10210-GL-V3R1.7- Gestión de Cobranzas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Gestión de Cobranzas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Gestión de Cobranzas/MDU-10210-GL-V3R1.2 - Gestión de Cobranza.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Gestión de Cobranzas), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Límites de Crédito/MDI-10205-GL-V3R1.8 - Sistema de Límites de Crédito.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Límites de Crédito), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Límites de Crédito/MDU-10205-GL-V3R1.3 - Sistema de Límites de Crédito.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Límites de Crédito), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Partners/MDI-10214-GL-V3R1.1 - Sistema de Partners.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Partners), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Consumo/MDI-10211- GL-V3R1.1 - Originación de Créditos l Flujo Consumo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Consumo), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Consumo/MDU-10211-GL-V3R1.1 - Originación de Créditos l Flujo Consumo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Consumo), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Hipotecario/MDI-10206-GL-V3R1.1-Originación de Créditos l Flujo Hipotecario.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Hipotecario), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Hipotecario/MDU-10206-GL-V3R1.1 - Originación de Créditos l Flujo Hipotecario.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Hipotecario), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Vehiculares/MDI-10213-GL-V3R1.1 - Mantenimiento de Vehículos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Vehiculares), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Vehiculares/MDI-10213-GL-V3R1.1 - Originación de Créditos l Flujo Vehicular.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Vehiculares), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos Vehiculares/MDU-10213-GL-V3R1.1 - Originación de Créditos l Flujo Vehicular.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos Vehiculares), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos por Convenios/Convenios l Reducido/MDI-10208-GL-V3R1.1 - Cobranzas por Descuento de Nómina.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Convenios l Reducido), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos por Convenios/Convenios l Reducido/MDU-10208-GL-V3R1.1 - Cobranzas por Descuento de Nómina.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Convenios l Reducido), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos por Convenios/MDU-10201-GL-V3R1.1 - Generación de Lotes de Cobranza y Proceso de Cobro Masivo - Convenios.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos por Convenios), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos/MDI-10201-GL-V2R2.1 -Manual de Vínculo de Préstamos y Garantías- HRTE702.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos/MDI-10201-GL-V3R1.22 - Sistema de Préstamos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos/MDI-10201-GL-V3R1.6 - Modelador de Productos de Crédito l Préstamos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos/MDU-10201-GL-V3R1.2 - Sistema de Leasing.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos/MDU-10201-GL-V3R1.6 - Sistema de Préstamos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Colocaciones (Sistema de Préstamos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
   }
  ]
 }
