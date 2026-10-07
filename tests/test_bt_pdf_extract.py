@@ -87,9 +87,19 @@ class TestFurniture:
         assert is_furniture(L("Copyright © Todos los derechos reservados a Bantotal."), 842)
 
     def test_doc_code_line(self) -> None:
-        assert is_furniture(L("- MDI-10109-GL-V3R1.28-Sistema de Contrapartes, Jul.-26"), 842)
-        assert is_furniture(L("MDU-10202-GL-V3R1.4 Sistema de Descuentos, oct.-25"), 842)
-        assert is_furniture(L("ETP-10201-GL-V2R3.2 - CAMBIO DE TASA MASIVO – (PPP92021), feb-26"), 842)
+        # The doc-code footer sits 50-88pt above the bottom edge on all 3.337
+        # occurrences measured across the corpus (2026-10-07); y=760 is in it.
+        assert is_furniture(L("- MDI-10109-GL-V3R1.28-Sistema de Contrapartes, Jul.-26", y=760), 842)
+        assert is_furniture(L("MDU-10202-GL-V3R1.4 Sistema de Descuentos, oct.-25", y=760), 842)
+        assert is_furniture(L("ETP-10201-GL-V2R3.2 - CAMBIO DE TASA MASIVO – (PPP92021), feb-26", y=760), 842)
+
+    def test_a_body_line_citing_another_manual_is_content(self) -> None:
+        # A doc code mid-page is a cross-reference, not a footer. Matching it
+        # anywhere dropped the one line naming a prerequisite manual in
+        # ETP-TransferenciasACH, and cross-references in MDI-10109, MDI-10110
+        # and MDU-10115 (5 lines, all >= 267pt from the bottom edge).
+        line = "Como configuración previa, mencionada en el MDI-10308-CO-V3R1.3 - Medios de Pagos"
+        assert not is_furniture(L(line, y=137), 842)
 
     def test_documento_clasificacion(self) -> None:
         assert is_furniture(L("Documento Privado"), 842)
@@ -297,6 +307,47 @@ class TestHeadings:
         assert len(chapters) == 1
         assert chapters[0][0] == "1.0 Capítulo"
         assert "Manual de Instalador" not in chapters[0][1]
+
+    def test_content_after_the_index_on_the_same_page_is_kept(self) -> None:
+        # A short document starts its first chapter right below the index.
+        # Skipping the page whole lost section 1.0 of "Buenas Prácticas GX16"
+        # (FST017 and the Java-only platform rule), measured 2026-10-07.
+        shared = page(
+            [
+                L("Contenido"),
+                L("1.0 Todas las plataformas ..................... 2"),
+                L("2.0 Manejo de variables ....................... 4"),
+                L("3.0 Uso del order ............................. 5"),
+                L("1.0 Todas las plataformas generan en java", size=20, demi=True),
+                L("Se agregó un nuevo campo en la FST017 para reconocer el DBMS."),
+            ],
+            number=2,
+        )
+        chapters = chapters_from_pages([shared])
+        assert [c[0] for c in chapters] == ["1.0 Todas las plataformas generan en java"]
+        md = chapters[0][1]
+        assert "FST017" in md
+        assert "....." not in md
+        assert "Contenido" not in md
+
+    def test_footer_remnants_below_an_index_are_not_kept(self) -> None:
+        # The footer block of an ETP wraps onto lines with no doc code
+        # ("Información para Gestión Créditos" / "(PSNG9122)", 45-53pt above
+        # the edge). They sit after the last index entry, so "after the index"
+        # alone would leak them on every index page with no content.
+        toc = page(
+            [
+                L("1.0 Objetivo ................................... 3"),
+                L("2.0 Alcance .................................... 4"),
+                L("3.0 Pruebas .................................... 9"),
+                L("Información para Gestión Créditos", y=789),
+                L("(PSNG9122)", y=797),
+            ],
+            number=2,
+        )
+        body_page = page([L("1.0 Objetivo", size=20, demi=True), L("Texto real.")], number=3)
+        md = chapters_from_pages([toc, body_page])[0][1]
+        assert "PSNG9122" not in md
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -576,7 +627,7 @@ class TestEdgeCases:
             L("Contenido real del capítulo."),
             L("Página 7 de 225"),
             L("Copyright © Todos los derechos reservados a Bantotal"),
-            L("- MDI-10109-GL-V3R1.28-Sistema de Contrapartes, Jul.-26"),
+            L("- MDI-10109-GL-V3R1.28-Sistema de Contrapartes, Jul.-26", y=760),
             L("Documento Privado"),
         ]
         md = chapters_from_pages([page(lines)])[0][1]

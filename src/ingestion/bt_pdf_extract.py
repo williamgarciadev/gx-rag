@@ -123,11 +123,18 @@ _DOC_CODE_ALT = "|".join(DOC_CODE_PREFIXES)
 _FURNITURE_PATTERNS = [
     re.compile(r"^Página\s+\d+\s+de\s+\d+$", re.IGNORECASE),
     re.compile(r"^Copyright\s*©\s*Todos los derechos reservados a Bantotal\.?$", re.IGNORECASE),
-    # Doc-code footer line, e.g. "- MDI-10109-GL-V3R1.28-Sistema ..., Jul.-26".
-    # The language segment is optional: ECP omits it entirely.
-    re.compile(rf"\b(?:{_DOC_CODE_ALT})-\d+(?:-[A-Z]{{2}})?-V", re.IGNORECASE),
     re.compile(r"^Documento\s+(Privado|Público|Confidencial)$", re.IGNORECASE),
 ]
+
+# Doc-code footer line, e.g. "- MDI-10109-GL-V3R1.28-Sistema ..., Jul.-26".
+# The localization segment is optional: ECP omits it entirely. Unlike the
+# patterns above, a doc code is ALSO legitimate body text — "ver el documento
+# MDU-10110-GL-V2R3" — so it only counts as furniture inside the footer band.
+_DOC_CODE_RE = re.compile(rf"\b(?:{_DOC_CODE_ALT})-\d+(?:-[A-Z]{{2}})?-V", re.IGNORECASE)
+
+# Measured across the corpus on 2026-10-07: the 3.337 doc-code footers start
+# 50-88pt above the bottom edge; the 5 body cross-references, 267pt or more.
+_FOOTER_BAND = 120.0
 
 
 def is_furniture(line: LineIR, page_height: float) -> bool:
@@ -140,6 +147,8 @@ def is_furniture(line: LineIR, page_height: float) -> bool:
     for pat in _FURNITURE_PATTERNS:
         if pat.search(t):
             return True
+    if _DOC_CODE_RE.search(t) and line.y0 > page_height - _FOOTER_BAND:
+        return True
     if re.fullmatch(r"\d{1,4}", t) and (line.y0 < 100 or line.y1 > page_height - 70):
         return True
     # Watermark fragments: the "Documento Privado" watermark shatters into
@@ -187,6 +196,28 @@ def is_toc_page(lines: list[LineIR], page_width: float = 595.0) -> bool:
         len(right) >= _MIN_TOC_MARKERS
         and len(right) >= _PAGE_REF_MIN_SHARE * len(numbers)
     )
+
+
+def content_after_index(lines: list[LineIR], page_height: float) -> list[LineIR]:
+    """The lines of an index page between its last dot-leader entry and the footer.
+
+    Short documents open their first chapter right below the index; skipping
+    the page whole lost section 1.0 of "Buenas Prácticas GX16" and the
+    Objetivo of ETP-99000. Only the dot-leader style has a reliable end: an
+    index of bare right-margin page numbers (MDU-10115) interleaves entries and
+    numbers, so its page is still dropped whole — losing content there is less
+    likely than leaking an index.
+
+    The footer band is excluded because a footer block wraps onto lines with no
+    doc code ("(PSNG9122)") that `is_furniture` cannot recognise, and on an
+    index page they are the only thing below the last entry.
+    """
+    leaders = [ln.y0 for ln in lines if _DOT_LEADER_RE.search(ln.text.strip())]
+    if not leaders:
+        return []
+    last = max(leaders)
+    footer_top = page_height - _FOOTER_BAND
+    return [ln for ln in lines if last < ln.y0 <= footer_top]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -636,7 +667,9 @@ def chapters_from_pages(pages: list[PageIR]) -> list[Chapter]:
             continue  # cover (page 1): the title comes from the filename
         lines = [ln for ln in p.lines if not ln.rotated and not is_furniture(ln, p.height)]
         if is_toc_page(lines, p.width):
-            continue
+            lines = content_after_index(lines, p.height)
+            if not lines:
+                continue
         usable.append(
             PageIR(number=p.number, height=p.height, lines=lines, width=p.width)
         )
