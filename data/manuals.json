@@ -135,12 +135,122 @@
   {
    "file": "Bantotal/ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).pdf",
    "ingest": false,
-   "reason": "Original de ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).md. NO se ingiere: el extractor de PDF arranca en la pág. 3 y pierde la pág. 2 (Objetivo, Pre-requisitos, inicio del Paso 1), medido el 2026-10-06"
+   "reason": "Original de su .md homónimo. El extractor perdía la pág. 2 (Objetivo, Pre-requisitos) por compartir página con el índice (corregido el 2026-10-07). Se sigue ingiriendo el .md: además el PDF filtra un pie partido en dos líneas ('de Larrobla y Asociados - ...') en 5 páginas."
   },
   {
    "file": "Bantotal/ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).md",
    "ingest": true,
    "reason": "Especificación técnica oficial de PIF00540/PIF00541: consumo genérico de servicios REST vía BTConsumer, códigos de error y casos de prueba"
+  },
+  {
+   "file": "Bantotal/MDI-10110-GL-V3R1.6 - Sistema de Contabilidad.pdf",
+   "ingest": true,
+   "reason": "Manual funcional de Contabilidad, 152 págs. Plan de cuentas, asientos y cierres contables."
+  },
+  {
+   "file": "Bantotal/MDI-10201-GL-V3R1.5 - Sistema de Seguros.pdf",
+   "ingest": true,
+   "reason": "Manual funcional de Seguros, 55 págs. Pólizas asociadas a operaciones. Ojo: comparte el código MDI-10201 con Préstamos pero es otro manual."
+  },
+  {
+   "file": "Bantotal/MDI - Transferencias ACH.pdf",
+   "ingest": true,
+   "reason": "Manual de Transferencias ACH, 17 págs. Sin código MDI formal en el nombre."
+  },
+  {
+   "file": "Bantotal/MDU-10111-GL-V3R1.1 - Sistema de Conciliaciones.pdf",
+   "ingest": true,
+   "reason": "Manual de usuario de Conciliaciones, 115 págs. Se renombró: el original en OneDrive se llamaba '... (1).pdf'."
+  },
+  {
+   "file": "Bantotal/MDU-10308-GL-V3R1.1 - Sistema de Cash Management.pdf",
+   "ingest": true,
+   "reason": "Manual de usuario de Cash Management, 80 págs."
+  },
+  {
+   "file": "Bantotal/MDU-10401-GL-V3R1.12 - Bantotal Servicios l Actualización de versión 2_5 a 2_6.pdf",
+   "ingest": false,
+   "reason": "FUERA: 6 págs cuyo procedimiento (jdbc, eventsserver-encrypted.properties) está casi textual en la pág. 24 de MDI-10401 BT Servicios 2.6. Duplicado que competiría por el top-k. Revisado 2026-10-07."
+  },
+  {
+   "file": "Bantotal/MDU-10109-GL-V3R1.11 - Cadena de Cierre.pdf",
+   "ingest": true,
+   "reason": "Manual de usuario de Cadena de Cierre, 51 págs. REEMPLAZA a 'MDU-10102-GL-V3R1.2 - Cadena de Cierre.pdf' (125 chunks, sin archivo declarado), borrado el 2026-10-07 por decisión del usuario para no mezclar versiones; respaldo en gx-rag/data/backups/."
+  },
+  {
+   "file": "Bantotal/ECP-000302-V3R1.1 - Renovación Pólizas De Seguros (PJCCA311).pdf",
+   "ingest": true,
+   "reason": "Especificación del programa PJCCA311 (renovación de pólizas de seguros), 3 págs."
+  },
+  {
+   "file": "Bantotal/ETP-10102-GL-V3R1.4 - Información para Gestión Créditos (PSNG9122).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica de PSNG9122 (información para gestión de créditos), 13 págs."
+  },
+  {
+   "file": "Bantotal/ETP-10110-GL-V2R1.4- Depuración Diaria  (PP017).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica de PP017 (depuración diaria), 7 págs."
+  },
+  {
+   "file": "Bantotal/ETP-10206-CO-V3R1.5 - Funcionalidad de Polizas (HJCCA154).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica COLOMBIA de HJCCA154 (funcionalidad de pólizas), 38 págs."
+  },
+  {
+   "file": "Bantotal/ETP-11600-GL-V3R1.1- Reprogramación Créditos (HPP1919).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica de HPP1919 (reprogramación de créditos), 20 págs."
+  },
+  {
+   "file": "Bantotal/ETP-10114-PE-V3R1.7 - Reporte Sobrendeudamiento (PDEPE83-PDEPE84-PRIPE189).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica de PERÚ (localización PE): reporte de sobreendeudamiento PDEPE83/84, PRIPE189, 29 págs. NO APLICA a Colombia: su regulación es peruana; sirve solo como referencia de cómo Bantotal resuelve el patrón."
+  },
+  {
+   "file": "Bantotal/ETP-10801-UY-V2R2.1 - Lavado de dinero (PBCU031-32-33).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica de URUGUAY (localización UY): lavado de dinero PBCU031-33 (BCU), 48 págs. NO APLICA a Colombia: la norma de Contactar es SARLAFT/SFC, no BCU; sirve solo como referencia técnica."
+  },
+  {
+   "file": "Bantotal/ETP-10801-UY-V2R3.3 - Tablón de Créditos  (PRNUY30X).pdf",
+   "ingest": true,
+   "reason": "Especificación técnica de URUGUAY (localización UY): tablón de créditos PRNUY30X, 28 págs. NO APLICA a Colombia: el tablón local es otro (ver bantotal-curado/scriptslucho/14_Tablon_Consolidacion.md)."
+  },
+  {
+   "file": "Bantotal/ETP-TransferenciasACH-V3R1.pdf",
+   "ingest": false,
+   "reason": "Original de ETP-TransferenciasACH-V3R1.md. El extractor perdía la línea que remite al MDI-10308 (corregido el 2026-10-07: el código de documento ya solo es pie en la franja inferior). Se sigue ingiriendo el .md porque el PDF aplana la tabla de parámetros y la indentación del pseudocódigo."
+  },
+  {
+   "file": "Bantotal/ETP-TransferenciasACH-V3R1.md",
+   "ingest": true,
+   "reason": "Especificación técnica de PMPE0101 / servicio BTTransferenciasACH (ACH desde canales digitales): parámetros, pseudocódigo y códigos de error. Transcrita del PDF; las listas de las págs. 3-4 son capturas y no se reproducen."
+  },
+  {
+   "file": "Bantotal/PRD-99000-GL-V2R3.2 - Funcionalidades Bantotal.pdf",
+   "ingest": true,
+   "reason": "Catálogo de funcionalidades de Bantotal por sistema, 279 págs (18 de índice). Mapa de qué hace cada módulo; cobertura medida 2026-10-07 sin pérdida fuera de encabezados."
+  },
+  {
+   "file": "Bantotal/Buenas Prácticas Programación GX16 - Bantotal V3 - Pionero.pdf",
+   "ingest": false,
+   "reason": "Original de su .md homónimo. El extractor descartaba la sección 1.0 por compartir página con el índice (corregido el 2026-10-07). Se sigue ingiriendo el .md porque marca cuáles ejemplos son imágenes, que el PDF omite sin aviso."
+  },
+  {
+   "file": "Bantotal/Buenas Prácticas Programación GX16 - Bantotal V3 - Pionero.md",
+   "ingest": true,
+   "reason": "Guía de programación GX16 for Bantotal V3R1 Pionero: error 403 Forbidden por variables, readOnly en hidden, Order en For each, generateScriptArea de Descartes, grillas con tabla base. Transcrita del PDF; los ejemplos en imagen no se reproducen."
+  },
+  {
+   "file": "bantotal-curado/procesos/instalaciongenexus16ConDescartes.pdf",
+   "ingest": false,
+   "reason": "Original de Instalacion_GeneXus16_Bantotal_con_Descartes.md. NO se ingiere: el extractor descarta la pág. 1 (pre-requisitos) y casi todo el resto son capturas, medido el 2026-10-07."
+  },
+  {
+   "file": "bantotal-curado/procesos/Instalacion_GeneXus16_Bantotal_con_Descartes.md",
+   "ingest": true,
+   "reason": "Guía interna de Contactar (2022) para instalar GX16 for Bantotal + Descartes 5.0 en un PC: pre-requisitos, licencias, KB, JDK11, Classpath. Nombra el share interno \\support2015 (sin credenciales). Versiones de 2022: confirmar antes de usar."
   }
  ]
 }
