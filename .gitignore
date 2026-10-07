@@ -16,6 +16,8 @@ data/scraped_sac/
 data/chroma/
 data/raw/
 data/manuales_processed/
+# Respaldos de chunks borrados del store (con embeddings): datos, no código.
+data/backups/
 
 # Entorno
 .env
