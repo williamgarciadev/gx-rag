@@ -1666,6 +1666,256 @@
    "file": "Bantotal/SGR/Otros Documentos/Sin Categoria/MDI-10119-GL-V3R1.3 - Sistema de Auditoría de Base de Datos.pdf",
    "ingest": false,
    "reason": "FUERA: copia byte a byte de un documento que ya está en el manifiesto (inventario I2.0 de docs/PLAN-INGESTA-SGR.md, 2026-10-08). Ingerirlo duplicaría sus chunks."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Ciclo de Ajustes y Confirmación de Depósitos (PTDD0072 - PTDD0073).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Cobro de Comisiones  (PTDD0363).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Control de Cuentas Asociadas (PTDD0110).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - DPF por ATM Link (PTDD1110 PTDD1111 PTDD1112 PTDD1113).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Funcionalidades de Cambio de PIN a Tarjetas de Débito (HTDD0100 HTDD0101).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Genera Envio Solicitud Embozadora UNIBANCA (PTDD0400).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Limites definidos por Clientes para grupo de Movimientos (PTDD0371 - PTDD0372 - PTDD0373).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Módulo de Tarjeta de Débito en modalidad PCI.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Novedades de Tarjetas de Débito desde la RED (PTDD0066).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Numero de TD con correlativo aleatorio (PTDD0243).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Orden de navegación en cuentas de una tarjeta (PTDD1055).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Recepción Novedades aprobado UNIBANCA (PTDD0402).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Recepción Tarjetas Embozadas UNIBANCA (PTDD0401).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Servicio BANCARD TD (PTDD0236 PTDD0237 PTDD0238 PTDD0239 PTDD0240).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - Proceso Batch Para Cobro De Comisiones Mensuales Por Fraude (PTDD0159).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - Web Service Baja de Tarjetas de Debito (PTDD0054).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - Web Service Entrega - Destruccion de Tarjeta Debito (PTDD0057).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Bantotal Microfinanzas/ETP-10110-GL-V3R1.3 - Información De Créditos Para Cobranzas (PSNG917).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Bantotal Microfinanzas/ETP-10201-GL-V3R1.1 - Graba SNG917 - Tablón Detalle de Cuotas Préstamos (PSNG917B).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Bantotal Microfinanzas/ETP-10207-GL-V3R1.1 - Panel de Carga de Estados Financieros (HSNGC570 Y HSNGC572).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Bantotal Microfinanzas/ETP-10604-GL-V3R1.2 - Cambio De Tasa Masivo Desde Excel.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Garantías Otorgadas/ETP-10203-GL-V3R1.1-  Modificación Datos Adicionales (Novación de Garantía) (HPPG072 - PPPG072).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Garantías Recibidas/ETP-10204-GL-V3R1.1 - Asociación de Garantías  (HSNG122).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Garantías Recibidas/ETP-10204-GL-V3R1.1 - Determinación de Garantías Disponibles (PSNG124).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Garantías Recibidas/ETP-10204-GL-V3R1.2 - Baja de Garantías de Préstamos Cancelados (PPP10038).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Garantías Recibidas/Formularios/ETP-10204-GL-V3R1.1 - Extensión de Parámetros de Formularios  (HPPG001-HPPG007-HPPG009-HPPG017).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Límites de Crédito/ETP-10205-GL-V3R1.1 - Sistema de Límites - Moneda Diferente (HPP9032, PPP9016J).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Límites de Crédito/ETP-10205-GL-V3R1.1- Límites de Créditos (HPP9046 HPP9047).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos Vehiculares/ETP-10213-GL-V3R1.1 - Preseteo de Maquinarias.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos por Convenios/Convenios l Reducido/ETP-10208-GL-V3R1.1 - Confirmación - Anulación de Cobro en Cartera (PPP9359).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos por Convenios/Convenios l Reducido/ETP-10208-GL-V3R1.1 - Tratamiento especial por mora (PPP9360).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos por Convenios/ETP-10201-GL-V3R1.1 - Preseteo de Convenios (HCNV750).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP - 10201-GL-V3R1.1 - Proceso de Detención de Inconsistencias de Préstamos (PPP92007).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10200-GL-V3R1.1 - Prést en UVA - Extensión de plazo para clientes por incremento 10 porc CVS (PPP161).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V2R3.2 - Cambio de Tasa Masivo (PPP92021).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Adjudicación dación y recuperación de bienes  (HPP46000, HPP46001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Alta operaciones de leasing con 1 canon con monto (PSIP556A).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Baja de Operaciones Relacionadas a un Préstamo (PRTE0202).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Cancelación de Préstamos (PRTE003).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Cancelación inteligente de cartera (HPP9050).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Control en Cancelación Total (HPP93000 - HPP9300A).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Control pagos simultáneos (PRTE545).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Cálculo Tasa Costo Financiero  (PRTE890).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Cálculo costo financiero total (PRTE795).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Mora en Préstamos (PRTE041) (2).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Novación de Préstamos (Ppp93051).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Panel de Consulta de Productos (HFS00040 y HFS00041).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - RTE Calcular Importe de Interés Diferido (HTOPP02).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - RTE Cobro Préstamos Online (PPP9099B).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - RTE Destino del Crédito (HSNG367 - PSNG367).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.2 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Captaciones)."
   }
  ]
 }
