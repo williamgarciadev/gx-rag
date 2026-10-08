@@ -34,8 +34,13 @@ _CODE_RE = re.compile(
     r"V(\d+)R(\d+)(?:\.(\d+))?",
     re.IGNORECASE,
 )
-#: Carpetas cuyo hijo es un país: ahí la localización la da la carpeta, no el código.
+#: Carpetas que agrupan por país: si su hijo ES un país, la localización la da la carpeta.
 _COUNTRY_DIRS = {"manuales por país", "documentos por país"}
+#: Hijos de esas carpetas que son países, medidos en el inventario del 2026-10-07. No todos lo
+#: son: "MANUALES POR PAÍS" también tiene "BANTOTAL CORE  NÚCLEO" con 128 manuales Globales.
+#: Un hijo que no está aquí no se adivina: decide el código del archivo, como en el resto.
+_COUNTRIES = {"argentina", "chile", "colombia", "honduras", "méxico", "panamá", "paraguay",
+              "perú", "uruguay"}
 _WANTED_SCOPES = {"GL", "CO"}
 _WANTED_STATUS = {"nuevo", "versión nueva"}
 
@@ -60,8 +65,9 @@ def scope_of(link: str) -> str:
     """GL / CO / 'fuera' (otro país) / 'sin-país' (sin segmento o sin código)."""
     parts = link.split(_SEP)
     for i, part in enumerate(parts[:-1]):
-        if part.lower() in _COUNTRY_DIRS and i + 1 < len(parts) - 1:
-            return "CO" if parts[i + 1].lower().startswith("colombia") else "fuera"
+        child = parts[i + 1].lower() if i + 1 < len(parts) - 1 else ""
+        if part.lower() in _COUNTRY_DIRS and child in _COUNTRIES:
+            return "CO" if child == "colombia" else "fuera"
     m = _CODE_RE.search(parts[-1])
     if not m or not m.group(2):
         return "sin-país"

@@ -31,6 +31,15 @@ def test_scope_inside_a_country_folder_is_the_folder_not_the_code():
 
 
 @pytest.mark.unit
+def test_a_module_folder_under_a_country_folder_is_not_a_country():
+    # "MANUALES POR PAÍS\BANTOTAL CORE  NÚCLEO" holds 128 Global manuals (2026-10-07),
+    # Contrapartes V3R1.29 among them: reading the child as a country dropped them all.
+    link = _link("Manuales", "MANUALES POR PAÍS", "BANTOTAL CORE  NÚCLEO", "Sistema de Contrapartes",
+                 "MDI-10109-GL-V3R1.29 - Sistema de Contrapartes.pdf")
+    assert scope_of(link) == "GL"
+
+
+@pytest.mark.unit
 def test_scope_without_localization_or_code_is_left_to_the_user():
     assert scope_of(_link("Otros", "ECP-000302-V3R1.1 - Renovación Pólizas.pdf")) == "sin-país"
     assert scope_of(_link("Manuales", "M", "Cálculo de intereses Bantotal.pdf")) == "sin-país"
