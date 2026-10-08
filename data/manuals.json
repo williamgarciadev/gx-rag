@@ -2666,6 +2666,256 @@
    "file": "Bantotal/SGR/Otros Documentos/Mercados Financieros/Mercados l Títulos y Valores/ETP-10502-GL-V3R1.1 - Reporte de Operaciones de Mesa (HBRKZ501).pdf",
    "ingest": true,
    "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.5 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Mercados Financieros, Núcleo, Comercio Internacional, Cadena de Cierre y sueltos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Mercados Financieros/Mercados l Títulos y Valores/ETP-10502-GL-V3R1.1- Comisiones Adeudadas por Corredor (HBRKC205).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Mercados Financieros/Mercados l Títulos y Valores/ETP-10502-GL-V3R1.1- Consultas de Posición (HBRKC352).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Mercados Financieros/Mercados l Títulos y Valores/ETP-10502-GL-V3R1.1- Reporte Total Operaciones por Estado (HBRKZ502).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Normativo/Genérico/ETP-10309-GL-V3R1.1 - Bloqueos de Saldos de Cuentas Vistas (FSD530).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Normativo/Genérico/ETP-10801-GL-V3R1.1 - REGENERACIÓN DE CATEGORÍAS FSH012 (PBCGNCAT) (2).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Normativo/Genérico/ETP-10801-GL-V3R1.3 - Ejecución de Procesos Normativos (HBCGN100).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Bantotal Microfinanzas/ETP-10207-GL-V3R1.1 - Cierre de tareas Administrador de Visitas (PSNG717).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Bantotal Microfinanzas/ETP-10207-GL-V3R1.1 - Crédito Grupal - Aplicación de pagos de corresponsal por prorrateo (PPP01061_PPP00065).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Bantotal Microfinanzas/ETP-10207-GL-V3R1.1 - Generación de Eventos  (PSNG710C).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/ETP-10110-GL-V3R1.1 - Actualiza FSH012 con Asientos de Cierre de Ejercicio (PBCGD211).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Genérico/ETP-10102-GL-V2R3.2 - Eventos Disparados por Consultas de Reportes (PSNG661).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Genérico/ETP-10102-GL-V3R1.1 - Proceso Batch que respalda FSD011, FSD015, FSD016 y FSD603 (PRGRESPA).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Genérico/ETP-10500-GL-V3R1.2 - Elimina Registro de Tablas Auxiliares de Mercado de Capitales (PBRKCI24).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Mercados Financieros l Cambios/ETP-10502-GL-V3R1.1 - Devengamiento de primas (PBRKCI04).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Mercados Financieros l Títulos y Valores/ETP-10500-GL-V3R1.1 - Reconocimiento de Ganancias (PBRK0396).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Mercados Financieros l Títulos y Valores/ETP-10500-GL-V3R1.1 - Resultados Operativos y Cupón de Bonos (PBRKCI40).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Mercados Financieros l Títulos y Valores/ETP-10500-GL-V3R1.3 - Valuación de Letras de Tesorería (PBRKCI35).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Mercados Financieros l Títulos y Valores/ETP-10501-GL-V3R1.1 - Valores para Negociación-Valores Disp. para la Venta (PBRK0390).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Mercados Financieros/Mercados Financieros l Títulos y Valores/ETP-10501-GL-V3R1.2 - Copia de saldos anuales de Custodias (PBRKCI23).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración de Precios/ETP-10115-GL-V3R1.4 - Revisión Periódica de Tasas  (PAR00280).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración de Precios/ETP-10305-GL-V3R1.1 - TD - Recepción de archivo LIQ - LINK (HTDD0400).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1 -  Generación de Matrices de Riesgo (PBRGE110).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1 -Resumen (FBRH11) por Concepto (PBRGE020).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1- Lista GHIJ (PBRGE10g).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1- Lista L- Ctas. ListaTerroristas (PBRGE10l).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista A -Ctas con Saldo Mayor a Tope (PBRGE10a).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista B,Ctas.Perteneciente Lista PEP (PBRGE10b).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista C-Ctas. con Actividad Riesgosa (PBRGE10c).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista D - 20 Mayores Depositantes  (PBRGE10d).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista E - 20 Mayores Deudores (PBRGE10e).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista F-Ctas. De Países Riesgosos  (PBRGE10f).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Lista K - Ctas. de Segmentos Riesgosos (PBRGE10k).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-ListaM-Ctas.ActividadRiesgosa Especial(PBRGE10m).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Resumen (FBRH10) De Movimientos (PBRGE210).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Matrtiz de Riesgo/ETP-10114-GL-V3R1.1-Resumen (FBRH10) de Saldos (PBRGE011).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Genérico/ETP-10114-GL-V3R1.5 - Categorización de clientes en WEB (PRI00152 - PRI00153).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Caja/ETP-10301-GL-V3R1.1 - Inicializa Sesiones, Habilitación de Cajeros  ( PMBC016).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Caja/ETP-10301-GL-V3R1.2 -  Habilitación de Tesoreros  (PMBCGD015).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cofres de Seguridad/ETP-10306-GL-V3R1.1 - Devengado de Comisiones de Cofres de Seguridad (PCF0040).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Comercio Exterior/ETP-10601-GL-V3R1.1 - Pasaje de Operaciones de Plazo a Vista en Forma Batch (PBCMX001 – PBCMX004).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Conciliaciones/ETP-10111-GL-V3R1.1 -  Generación Automática de Referencia (PXCR0115).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Conciliaciones/ETP-10111-GL-V3R1.1 - Bandejas para ingreso de Partidas Externas (PXCR0321).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Conciliaciones/ETP-10111-GL-V3R1.1 - Conciliación Automática (PXCR0245).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Conciliaciones/ETP-10111-GL-V3R1.1 - Pasaje a Históricos  (PXCR0246).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Conciliaciones/ETP-10111-GL-V3R1.1-Generación de Partidas desde Movimientos en la Aplicación (PXCR0051-PXCR0252-PXCR0274).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10102-GL-V3R1.8 - Devengado Plazo (PNU00002).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 -  Ajustes de Resultados por Operaciones Canceladas  (PNU00009).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 -  Depuración FSA109  (PFSBC004).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Ajuste Sub operacion contracuenta (PNU00220).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Ajuste de Cotización Operativa para Especies No Índices (PNU00007).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.6 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch, Mercados Financieros, Normativo)."
   }
  ]
 }
