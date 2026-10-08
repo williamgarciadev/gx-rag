@@ -31,6 +31,18 @@ def test_scope_inside_a_country_folder_is_the_folder_not_the_code():
 
 
 @pytest.mark.unit
+def test_a_country_folder_at_any_depth_decides_even_against_a_gl_code():
+    # Informes para el BCU uruguayo publicados con código -GL- bajo
+    # "...Organismos Reguladores\Uruguay\..." y "REPORTES REGULATORIOS\Uruguay\...":
+    # solo mirar las carpetas "por País" los dejaba pasar (2026-10-07, lote D1.4).
+    link = _link("Manuales", "BANTOTAL  REPORTES REGULATORIOS", "Sistema de Información a Organismos Reguladores",
+                 "Uruguay", "Informes Mensuales", "ETP-10801-GL-V2R3.1 - Operaciones Por Cuenta de Terceros.pdf")
+    assert scope_of(link) == "fuera"
+    colombia = _link("Otros Documentos", "Procesos Batch", "Procesos por País", "Colombia", "ETP-10201-CO-V3R1.1 - Saldos.pdf")
+    assert scope_of(colombia) == "CO"
+
+
+@pytest.mark.unit
 def test_a_module_folder_under_a_country_folder_is_not_a_country():
     # "MANUALES POR PAÍS\BANTOTAL CORE  NÚCLEO" holds 128 Global manuals (2026-10-07),
     # Contrapartes V3R1.29 among them: reading the child as a country dropped them all.

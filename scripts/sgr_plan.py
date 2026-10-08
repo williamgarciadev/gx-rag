@@ -37,13 +37,13 @@ _CODE_RE = re.compile(
     r"V(\d+)R(\d+)(?:\.(\d+))?",
     re.IGNORECASE,
 )
-#: Carpetas que agrupan por país: si su hijo ES un país, la localización la da la carpeta.
-_COUNTRY_DIRS = {"manuales por país", "documentos por país"}
-#: Hijos de esas carpetas que son países, medidos en el inventario del 2026-10-07. No todos lo
-#: son: "MANUALES POR PAÍS" también tiene "BANTOTAL CORE  NÚCLEO" con 128 manuales Globales.
-#: Un hijo que no está aquí no se adivina: decide el código del archivo, como en el resto.
-_COUNTRIES = {"argentina", "chile", "colombia", "honduras", "méxico", "panamá", "paraguay",
-              "perú", "uruguay"}
+#: Países que aparecen como carpeta en el inventario del 2026-10-07. Una carpeta con uno de estos
+#: nombres, A CUALQUIER PROFUNDIDAD, decide la localización por encima del código del archivo:
+#: el portal publica informes del BCU uruguayo con código -GL- bajo
+#: "...Organismos Reguladores\Uruguay\..." (lote D1.4). Una carpeta que no está aquí no se
+#: adivina ("MANUALES POR PAÍS\BANTOTAL CORE  NÚCLEO" tiene 128 manuales Globales): decide el código.
+_COUNTRIES = {"argentina", "bolivia", "chile", "colombia", "el salvador", "guatemala", "honduras",
+              "méxico", "panamá", "paraguay", "perú", "uruguay"}
 _WANTED_SCOPES = {"GL", "CO"}
 _ROOT_DIR = "WEBV3R1"
 _WANTED_STATUS = {"nuevo", "versión nueva"}
@@ -68,10 +68,9 @@ def doc_key(name: str) -> tuple[tuple[str, str] | None, tuple[int, ...] | None]:
 def scope_of(link: str) -> str:
     """GL / CO / 'fuera' (otro país) / 'sin-país' (sin segmento o sin código)."""
     parts = link.split(_SEP)
-    for i, part in enumerate(parts[:-1]):
-        child = parts[i + 1].lower() if i + 1 < len(parts) - 1 else ""
-        if part.lower() in _COUNTRY_DIRS and child in _COUNTRIES:
-            return "CO" if child == "colombia" else "fuera"
+    for folder in parts[:-1]:
+        if folder.lower() in _COUNTRIES:
+            return "CO" if folder.lower() == "colombia" else "fuera"
     m = _CODE_RE.search(parts[-1])
     if not m or not m.group(2):
         return "sin-país"
