@@ -45,6 +45,8 @@ _CODE_RE = re.compile(
 _COUNTRIES = {"argentina", "bolivia", "chile", "colombia", "el salvador", "guatemala", "honduras",
               "méxico", "panamá", "paraguay", "perú", "uruguay"}
 _WANTED_SCOPES = {"GL", "CO"}
+#: Solo dígitos entre paréntesis, al final: "(2)" es copia; "(PRICO001-02)" es parte del nombre.
+_COPY_MARKER_RE = re.compile(r"\s*\(\d+\)$")
 _ROOT_DIR = "WEBV3R1"
 _WANTED_STATUS = {"nuevo", "versión nueva"}
 
@@ -61,7 +63,10 @@ def doc_key(name: str) -> tuple[tuple[str, str] | None, tuple[int, ...] | None]:
     if not m:
         return None, None
     code = re.sub(r"\s", "", m.group(1)).upper()
-    title = re.sub(r"\W", "", name[m.end():].lower().removesuffix(".pdf"))
+    # " (2)" al final es el marcador de copia de Windows, no parte del título: sin quitarlo, una
+    # copia idéntica cuenta como otro documento (le pasó a ETP-10114 SARC, lote D2.1).
+    tail = _COPY_MARKER_RE.sub("", name[m.end():].lower().removesuffix(".pdf"))
+    title = re.sub(r"\W", "", tail)
     return (code, title), tuple(int(g or 0) for g in m.groups()[2:])
 
 
@@ -84,8 +89,10 @@ def latest_only(docs: list[Doc]) -> tuple[list[Doc], list[Doc]]:
     for doc in docs:
         key, version = doc_key(doc.name)
         slot = key if key is not None else doc.link
-        if slot not in best or (version or ()) > best[slot][1]:
-            best[slot] = (doc, version or ())
+        # Orden: versión más alta y, a igual versión, el nombre SIN marcador de copia " (2)".
+        rank = (version or (), not _COPY_MARKER_RE.search(doc.name.removesuffix(".pdf")))
+        if slot not in best or rank > best[slot][1]:
+            best[slot] = (doc, rank)
     kept = [doc for doc, _ in best.values()]
     return kept, [d for d in docs if d not in kept]
 

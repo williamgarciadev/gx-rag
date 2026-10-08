@@ -66,6 +66,27 @@ def test_doc_key_is_code_plus_title_and_tolerates_spaces_in_the_code():
 
 
 @pytest.mark.unit
+def test_a_copy_marker_at_the_end_does_not_make_a_new_document():
+    # "... (PRIC003) (2).pdf" es una copia idéntica (mismo hash) del original: se borró en el
+    # lote 3 y el lote D2.1 la volvió a bajar porque el "(2)" cambiaba el título (2026-10-07).
+    original = doc_key("ETP-10114-CO-V3R1.1 - Cálculo Segmentos Carteras SARC (PRIC003).pdf")
+    copia = doc_key("ETP-10114-CO-V3R1.1 - Cálculo Segmentos Carteras SARC (PRIC003) (2).pdf")
+    assert copia == original
+    # Un paréntesis que es parte del nombre (programas) NO es un marcador de copia.
+    assert doc_key("ETP-10114-CO-V3R1.1 - Fase (PRICO001-02).pdf")[0][1].endswith("prico00102")
+
+
+@pytest.mark.unit
+def test_between_a_copy_and_its_original_the_original_wins():
+    # El inventario a veces lista la copia "(2)" antes que el original: quedarse con la primera
+    # bajaba la copia. A igual versión, gana el nombre sin marcador.
+    docs = [Doc(link="copia", name="ETP-10201-GL-V3R1.1 - Mora en Préstamos (PRTE041) (2).pdf"),
+            Doc(link="original", name="ETP-10201-GL-V3R1.1 - Mora en Préstamos (PRTE041).pdf")]
+    kept, _ = latest_only(docs)
+    assert [d.link for d in kept] == ["original"]
+
+
+@pytest.mark.unit
 def test_one_code_shared_by_different_documents_gives_different_keys():
     # MDI-10201 names Préstamos, Seguros, Modelador and Vínculo: four documents.
     prestamos, _ = doc_key("MDI-10201-GL-V3R1.22 - Sistema de Préstamos.pdf")
