@@ -7,7 +7,7 @@ creyendo que ya estaba.
 
 import pytest
 
-from scripts.sgr_plan import Doc, doc_key, latest_only, scope_of, status_of
+from scripts.sgr_plan import Doc, doc_key, latest_only, scope_of, split_lot, status_of
 
 ROOT = "\\\\figari\\docsbantotal\\version2\\ORG.INTEGRAL\\WEBV3R1\\"
 
@@ -82,6 +82,18 @@ def test_latest_only_compares_versions_numerically_not_as_text():
     ]
     kept, _ = latest_only(docs)
     assert [d.link for d in kept] == ["new"]
+
+
+@pytest.mark.unit
+def test_a_document_in_two_folders_lands_in_exactly_one_lot():
+    # MDI-10103 "Manual de Definición de RTE" está en Núcleo Y en RTE's Genéricas. Planear
+    # carpeta por carpeta lo bajaba en los dos lotes (D1.1 y D2.6, 2026-10-07).
+    name = "MDI-10103-GL-V3R1.1 - Manual de Definición de RTE.pdf"
+    docs = [Doc(link=_link("Manuales", "BANTOTAL CORE  NÚCLEO", "X", name), name=name),
+            Doc(link=_link("Otros Documentos", "RTE's Genéricas", name), name=name)]
+    kept, _ = latest_only(docs)
+    lots = [split_lot(kept, prefix) for prefix in ("Manuales/BANTOTAL CORE  NÚCLEO/", "Otros Documentos/RTE's Genéricas/")]
+    assert sum(len(lot) for lot in lots) == 1
 
 
 @pytest.mark.unit

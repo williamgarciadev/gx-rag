@@ -15,10 +15,12 @@ sin duplicados, solo la última versión de cada documento. Criterio y decisione
 
 ```bash
 # Desde F:/ProyectosClaude/gx-rag
-# 1. Plan: arma el lote de la carpeta (GL/CO, lo que el RAG no tiene, última versión)
+# 1. Plan: deduplica sobre TODO el árbol y deja solo la parte del lote (GL/CO, lo que el RAG
+#    no tiene, última versión). Prefijo de la tabla: relativo a Bantotal V3R1, con '/' y los
+#    dobles espacios del portal.
 ./.venv/Scripts/python.exe -m scripts.sgr_plan \
   F:/ProyectosClaude/docs/Bantotal/SGR/_inventario/inventario-2026-10-07.jsonl \
-  --carpeta "<carpeta exacta, con sus dobles espacios>" --out lote.json
+  --solo "<prefijo>" [--solo "<otro prefijo>"] --out lote.json
 
 # 2. Descarga (desde la raíz de kb-micro/DevGeo, por el .env del portal)
 D:/Programas/Python313/python.exe .claude/skills/leer-doc-sgr-bantotal/scripts/sgr_docs.py \
@@ -32,6 +34,10 @@ Un lote está **listo** cuando cumple las cuatro:
 - [ ] No quedó ningún archivo de otro país ni duplicado (copias "(2)" con el mismo hash).
 - [ ] Se marcó aquí la fila con ✅, la fecha y la cantidad real.
 
+⚠️ **Usar `--solo`, no `--carpeta`**: `--carpeta` deduplica solo dentro de la carpeta, y un mismo
+documento en dos carpetas (ej. MDI-10103 "Definición de RTE", en Núcleo y en RTE's Genéricas)
+terminaba en dos lotes. Medido el 2026-10-07: D1.1 daba 110 con `--carpeta` y 106 con `--solo`.
+
 ⚠️ Al armar un lote a mano, **no buscar por cómo termina el nombre**: el 2026-10-07 eso trajo un
 homónimo de Uruguay. Usar `sgr_plan` o el `Link` completo.
 
@@ -42,14 +48,14 @@ Orden: primero los **manuales** (documentan sistemas completos), después los **
 
 ### D1 — Manuales
 
-| ✔ | Lote | Carpeta (`--carpeta`) | PDFs | Fecha | Real |
+| ✔ | Lote | Prefijo (`--solo`, uno por línea) | PDFs | Fecha | Real |
 |---|---|---|---|---|---|
-| [ ] | D1.1 Core Núcleo | `BANTOTAL CORE  NÚCLEO` | 106 | | |
-| [ ] | D1.2 Core Captaciones | `BANTOTAL CORE  CAPTACIONES` | 31 | | |
-| [ ] | D1.3 DevOps | `BANTOTAL  DEVOPS` | 10 | | |
-| [ ] | D1.4 Reportes Regulatorios | `BANTOTAL  REPORTES REGULATORIOS` | 8 | | |
-| [ ] | D1.5 Tesorería | `BANTOTAL  TESORERÍA` | 7 | | |
-| [ ] | D1.6 Instalación | `BANTOTAL INSTALACIÓN` | 5 | | |
+| 🔄 | D1.1 Core Núcleo | `Manuales/BANTOTAL CORE  NÚCLEO/` y `Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/` | 106 | | |
+| [ ] | D1.2 Core Captaciones | `Manuales/BANTOTAL CORE  CAPTACIONES/` | 31 | | |
+| [ ] | D1.3 DevOps | `Manuales/BANTOTAL  DEVOPS/` | 10 | | |
+| [ ] | D1.4 Reportes Regulatorios | `Manuales/BANTOTAL  REPORTES REGULATORIOS/` | 8 | | |
+| [ ] | D1.5 Tesorería | `Manuales/BANTOTAL  TESORERÍA/` | 7 | | |
+| [ ] | D1.6 Instalación | `Manuales/BANTOTAL INSTALACIÓN/` | 5 | | |
 | [ ] | D1.7 BPeople, Comercio Exterior, BTDevelopers, Conectores | (una por carpeta) | 3 + 2 + 2 + 1 | | |
 
 > D1.1: "MANUALES POR PAÍS" tiene un espejo de Núcleo con los mismos documentos. `sgr_plan` se
@@ -57,15 +63,15 @@ Orden: primero los **manuales** (documentan sistemas completos), después los **
 
 ### D2 — Otros Documentos (ETP)
 
-| ✔ | Lote | Carpeta (`--carpeta`) | PDFs | Fecha | Real |
+| ✔ | Lote | Prefijo (`--solo`, uno por línea) | PDFs | Fecha | Real |
 |---|---|---|---|---|---|
-| [ ] | D2.1 Procesos Batch | `Procesos Batch` | 163 | | |
-| [ ] | D2.2 Núcleo | `BANTOTAL CORE - NÚCLEO` | 83 | | |
-| [ ] | D2.3 Captaciones | `BANTOTAL CORE - CAPTACIONES` | 66 | | |
-| [ ] | D2.4 Colocaciones | `BANTOTAL CORE - COLOCACIONES` | 59 | | |
-| [ ] | D2.5 Mercados Financieros | `Mercados Financieros` | 31 | | |
-| [ ] | D2.6 RTE's Genéricas | `RTE's Genéricas` | 21 | | |
-| [ ] | D2.7 Riesgos | `Riesgos` | 15 | | |
+| [ ] | D2.1 Procesos Batch | `Otros Documentos/Procesos Batch/` | 163 | | |
+| [ ] | D2.2 Núcleo | `Otros Documentos/BANTOTAL CORE - NÚCLEO/` | 83 | | |
+| [ ] | D2.3 Captaciones | `Otros Documentos/BANTOTAL CORE - CAPTACIONES/` | 66 | | |
+| [ ] | D2.4 Colocaciones | `Otros Documentos/BANTOTAL CORE - COLOCACIONES/` | 59 | | |
+| [ ] | D2.5 Mercados Financieros | `Otros Documentos/Mercados Financieros/` | 31 | | |
+| [ ] | D2.6 RTE's Genéricas | `Otros Documentos/RTE's Genéricas/` | 21 | | |
+| [ ] | D2.7 Riesgos | `Otros Documentos/Riesgos/` | 15 | | |
 | [ ] | D2.8 Normativo, Comercio Internacional, Cadena de Cierre, Canales, sueltos | (una por carpeta) | 9 + 5 + 3 + 1 + 3 | | |
 
 ## Fuera de este plan (decidido)

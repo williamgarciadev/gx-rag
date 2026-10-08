@@ -1,8 +1,11 @@
 """Arma un lote de descarga del portal SGR cruzando su inventario con lo que ya tiene el RAG.
 
 Usage:
-    python -m scripts.sgr_plan <inventario.jsonl> --carpeta "BANTOTAL CORE  COLOCACIONES" \\
-        [--out lote.json] [--collection bt_docs]
+    python -m scripts.sgr_plan <inventario.jsonl> --solo "Manuales/BANTOTAL CORE  NÚCLEO/" \\
+        [--solo <otro prefijo>] [--carpeta <carpeta>] [--out lote.json] [--collection bt_docs]
+
+`--solo` reparte un plan deduplicado sobre todo el árbol: así un documento que está en dos
+carpetas cae en un solo lote. Planear con `--carpeta` sola deduplica únicamente dentro de ella.
 
 El inventario lo produce `sgr_docs.py inventario` (skill leer-doc-sgr-bantotal); el lote que
 escribe este script lo consume `sgr_docs.py descargar`. Aquí vive la DECISIÓN de qué bajar,
@@ -42,6 +45,7 @@ _COUNTRY_DIRS = {"manuales por país", "documentos por país"}
 _COUNTRIES = {"argentina", "chile", "colombia", "honduras", "méxico", "panamá", "paraguay",
               "perú", "uruguay"}
 _WANTED_SCOPES = {"GL", "CO"}
+_ROOT_DIR = "WEBV3R1"
 _WANTED_STATUS = {"nuevo", "versión nueva"}
 
 
@@ -87,6 +91,20 @@ def latest_only(docs: list[Doc]) -> tuple[list[Doc], list[Doc]]:
     return kept, [d for d in docs if d not in kept]
 
 
+def rel_path(link: str) -> str:
+    """Ruta del archivo relativa a Bantotal V3R1, con '/': "Manuales/BANTOTAL CORE  NÚCLEO/..."."""
+    return link.split(_ROOT_DIR + _SEP, 1)[-1].replace(_SEP, "/")
+
+
+def split_lot(docs: list[Doc], prefix: str) -> list[Doc]:
+    """La parte de un plan YA deduplicado que cae bajo `prefix` (relativo a Bantotal V3R1).
+
+    Se deduplica sobre todo el árbol y recién después se reparte: planear carpeta por carpeta
+    deja el mismo documento en dos lotes cuando está en dos carpetas.
+    """
+    return [d for d in docs if rel_path(d.link).startswith(prefix)]
+
+
 def status_of(name: str, have: dict[tuple[str, str], set[tuple[int, ...]]]) -> str:
     """Estado del documento frente a lo que ya tiene el RAG."""
     key, version = doc_key(name)
@@ -125,7 +143,11 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv(Path(__file__).resolve().parent.parent / ".env")
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("inventario", type=Path)
-    parser.add_argument("--carpeta", required=True, help="nombre exacto de la carpeta del portal")
+    parser.add_argument("--carpeta", default=_ROOT_DIR,
+                        help="carpeta del portal a planear (por defecto, todo Bantotal V3R1)")
+    parser.add_argument("--solo", action="append", default=[], metavar="PREFIJO",
+                        help="deja en el lote solo lo que está bajo este prefijo relativo a Bantotal "
+                             "V3R1 (repetible). Se aplica DESPUÉS de deduplicar sobre --carpeta")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--collection", default="bt_docs")
     args = parser.parse_args(argv)
@@ -145,6 +167,8 @@ def main(argv: list[str] | None = None) -> int:
     for doc in pdfs:
         by_scope.setdefault(scope_of(doc.link), []).append(doc)
     kept, older = latest_only(by_scope.get("GL", []) + by_scope.get("CO", []))
+    if args.solo:
+        kept = [d for prefix in args.solo for d in split_lot(kept, prefix)]
 
     lote, report = [], {}
     for doc in kept:
