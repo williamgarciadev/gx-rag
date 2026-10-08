@@ -49,6 +49,13 @@ CANDIDATE_POOL = 30  # candidatos por retriever antes de fusionar
 # cambia el RRF. strict_order es la alternativa conservadora si alguna medicion
 # mostrara degradacion de ranking.
 #
+# OJO: lo aproximado no cambia solo el ORDEN, tambien QUE candidatos entran al pool.
+# Con un HNSW compartido, crecer una coleccion le movia el grafo a las demas (medido
+# el 2026-10-08: R@5 0,583 con HNSW global vs 0,833 exacto). Por eso desde
+# sql/006-hnsw-per-collection.sql cada coleccion tiene su HNSW parcial, y el
+# iterative_scan queda para los filtros de _META_FILTER, que siguen post-filtrando
+# dentro del grafo de la coleccion.
+#
 # Requiere pgvector >= 0.8 (instalado: 0.8.6).
 _TUNING_SQL = "SET LOCAL hnsw.iterative_scan = 'relaxed_order'"
 
