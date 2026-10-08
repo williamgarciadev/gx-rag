@@ -1,7 +1,7 @@
 """Verifica que un documento local quedó ingerido, y ENTERO.
 
 Usage:
-    python -m scripts.verify_ingest <ruta>... [--collection bt_docs]
+    python -m scripts.verify_ingest <ruta>... | --list <lista.txt> [--collection bt_docs]
 
 `ingest_local` responde `OK — indexed=N` aunque haya perdido texto: el
 2026-10-07 tres documentos entraron así sin una sección, una página o una línea.
@@ -35,6 +35,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from scripts._console import use_utf8_stdout
+from scripts._path_list import read_path_list
 from src.ingestion.bt_pdf_extract import (
     extract_pages,
     is_furniture,
@@ -179,16 +180,20 @@ def main(argv: list[str] | None = None) -> int:
     use_utf8_stdout()
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("paths", nargs="+", type=Path)
+    parser.add_argument("paths", nargs="*", type=Path)
+    parser.add_argument("--list", type=Path, help="archivo UTF-8 con una ruta por línea")
     parser.add_argument("--collection", default="bt_docs")
     args = parser.parse_args(argv)
+    paths = list(args.paths) + (read_path_list(args.list) if args.list else [])
+    if not paths:
+        parser.error("hacen falta rutas o --list")
 
     from src.vectorstore.pg_client import close_pool, get_pool
 
     absent = 0
     try:
         with get_pool().connection() as conn:
-            for path in args.paths:
+            for path in paths:
                 if not path.is_file():
                     print(f"\n✗ {path}: no existe")
                     absent += 1
