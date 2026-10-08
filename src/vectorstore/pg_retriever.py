@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import re
+from pathlib import Path
 
 from src.vectorstore import embeddings as emb
 from src.vectorstore.pg_client import get_pool
@@ -185,15 +186,33 @@ def _tokenize(text: str) -> list[str]:
     return re.findall(r"[^\W_]+", text.lower())
 
 
-def _to_tsquery(query: str) -> str:
-    """Convierte texto libre en una tsquery con OR entre terminos.
+#: Palabras vacías del español (copia de spanish.stop de PostgreSQL, ver el archivo).
+_STOPWORDS = frozenset(
+    line.strip()
+    for line in (Path(__file__).parent / "stopwords_es.txt").read_text(encoding="utf-8").splitlines()
+    if line.strip() and not line.startswith("#")
+)
 
-    Se usa OR y no plainto_tsquery (que hace AND) porque BM25 puntua de forma
-    aditiva: un documento que contiene 1 de 3 terminos igual entra al ranking.
-    Con AND ese documento desapareceria y el recall caeria contra el baseline.
+
+def _to_tsquery(query: str) -> str:
+    """Convierte texto libre en una tsquery con OR entre terminos, sin palabras vacías.
+
+    Se usa OR y no plainto_tsquery (que hace AND) para que un documento que contiene
+    1 de 3 terminos igual entre al ranking. Con AND desapareceria y el recall caeria.
+
+    OJO: ts_rank_cd NO es BM25, no pondera por rareza (no tiene IDF). Con un OR sobre
+    todos los tokens, "de" pesaba igual que "residencia" y ganaban los chunks llenos
+    de términos frecuentes. Quitar las palabras vacías, medido el 2026-10-08 sobre
+    451 ETP buscados por su tema (scripts/eval_etp_titles.py), subió el acierto@10
+    de 0,825 a 0,920. Se comparan con tilde (la lista trae "más", "él"): por eso no
+    se hace del lado de PostgreSQL, donde unaccent corre antes que la lista.
+
+    Una consulta hecha SOLO de palabras vacías conserva sus términos: vacía, la
+    búsqueda entera devolvería nada (search_params da None).
     """
     tokens = _tokenize(query)
-    return " | ".join(tokens)
+    content = [t for t in tokens if t not in _STOPWORDS]
+    return " | ".join(content or tokens)
 
 
 # Las tres piezas de una búsqueda, públicas para que scripts/bench_retrieval.py

@@ -1,0 +1,59 @@
+{
+ "etp": 451,
+ "top_k": 10,
+ "modos": {
+  "tema": {
+   "acierto@1": 0.663,
+   "acierto@5": 0.9,
+   "acierto@10": 0.92,
+   "mrr": 0.763,
+   "casos": 451,
+   "fallos": [
+    "ETP-10102 — Ordinales Mixtos (WLAGR02)",
+    "ETP-10102 — Paralelizador cadena de cierre (HCAP003)",
+    "ETP-10102 — Relación de Operaciones",
+    "ETP-10107 — Mensajes Parametrizables (HMSGA60)",
+    "ETP-10108 — Panel de Carga de Estados Financieros (HSNGC570 Y HSNGC572)",
+    "ETP-10110 — Balance para un Período  (HBAEN31)",
+    "ETP-10110 — Control cierre operaciones (RNU00105)",
+    "ETP-10110 — Generación de Mayores (HBAEN02)",
+    "ETP-10110 — Generación de Promedios Mensuales (PBCGM01N)",
+    "ETP-10110 — Información De Créditos Para Cobranzas (PSNG917)",
+    "ETP-10110 — Inventario Histórico de Códigos Contables (HFS000H1)",
+    "ETP-10110 — Pasaje a Históricos  (PP020A PP020C PP020B)",
+    "ETP-10110 — Rutina que analiza Saldos (PP008)",
+    "ETP-10111 — Pasaje a Históricos  (PXCR0246)",
+    "ETP-10114 — Lista GHIJ (PBRGE10g)",
+    "ETP-10114 — ListaM-Ctas.ActividadRiesgosa Especial(PBRGE10m)",
+    "ETP-10115 — Carga Masiva Valores Por Módulo (HFSV005)",
+    "ETP-10120 — Depurador de Facultades (PCL00210)",
+    "ETP-10201 — Cobro Batch de Préstamos (PPP92005)",
+    "ETP-10201 — Mora en Préstamos (PRTE041) (2)",
+    "ETP-10201 — Novación de Préstamos (Ppp93051)",
+    "ETP-10201 — Recompra N a 1 (PRNGR15)",
+    "ETP-10201 — Simulación con Despeje de Tasa  (RRG0526)",
+    "ETP-10201 — Sistema de Préstamos l Estado de Cuenta (HPP9038)",
+    "ETP-10205 — Límites de Créditos (HPP9046 HPP9047)",
+    "ETP-10207 — Panel de Carga de Estados Financieros (HSNGC570 Y HSNGC572)",
+    "ETP-10301 — Arqueo de Cajas (HMBC005)",
+    "ETP-10303 — Depura Órdenes de no Pago (PCC00523)",
+    "ETP-10304 — Alta de Depósito a Plazo (PRTE001)",
+    "ETP-10304 — Cancelación de Depósitos a Plazo (PRTE006)",
+    "ETP-10305 — Cobro de Comisiones  (PTDD0363)",
+    "ETP-10500 — Bandeja de Retoma (Acciones de Reglas) (HBRKS187 - PBRKS114 - PBRKS101)",
+    "ETP-10501 — Ventas por operación FIFO (PBRKRTET)",
+    "ETP-10704 — Bandejas de Asientos (PIF0009)",
+    "ETP-11600 — Reprogramación Créditos (HPP1919)",
+    "ETP-99000 — Graba Status de la Operación (HRTE162A-PRTE162B)"
+   ]
+  },
+  "código": {
+   "acierto@1": 0.744,
+   "acierto@5": 0.994,
+   "acierto@10": 1.0,
+   "mrr": 0.862,
+   "casos": 504,
+   "fallos": []
+  }
+ }
+}
