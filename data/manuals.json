@@ -3416,6 +3416,231 @@
    "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - TD - Recepción De Archivo PTLF - BANELCO (PTDD0341).pdf",
    "ingest": true,
    "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 TD - Recepción de Archivo Novedades desde la RED - BANELCO(PTDD0359).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1- Cancelación Tarjetas de Débito por Inhabilitación-Permanencia en Sucursal (PTDD0041).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1- Generación de Archivos CRM para VISA (PTDD0063)- (Plataforma Java Oracle y C#) - (Uruguay).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - Cancelación de Tarjetas de Débito por Vencimiento (PTDD0018 - PTDD0019).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - Generación de archivo PBF (PTDD0355-PTDD0356-PTDD0357).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - TD - Recepción de archivo de Crédito - Banelco(PTDD0347).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 - Verificación de TLF (PTDD1200).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 TD - Recepción de Archivo Novedades desde la RED - BANELCO(PTDD0343).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.2 TD - Recepción de Archivo Novedades desde la RED - BANELCO(PTDD0344).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.3 - Renovación Automática de TD por Vencimiento (PTDD0015).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.3 - TD - Recepción De Archivo TLF - Banelco(PTDD0340).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.4 - Generación de Archivo CAF - BANELCO (PTDD0358).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-150816-GL-V3R1.1 - Informa novedades INDNI (PTDD0133).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10100-GL-V3R1.1 - Copia Datos de Ordinales (PRTE009).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10100-GL-V3R1.1 - Copia Textos (PRTE010).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10101-GL-V3R1.1- RTE Generación de Relación de Operaciones entre ordinales.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10102-GL-V3R1.1 - Devuelve Operación Relacionada (PRTE950).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10102-GL-V3R1.1 - Generación de ordinal repetitivo  (PRTE115F).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10102-GL-V3R1.1 - Ordinales Mixtos (WLAGR02).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10102-GL-V3R1.1 - Relación de Operaciones.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10102-GL-V3R1.1 - Sustitución de Fechas (PRTE308).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10102-GL-V3R1.2 -Vincula Persona a Operación (HRTE012  PRTE012C-PRTE012K).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10106-GL-V3R1.1 - Determina fecha vencimiento según guía (PRTX016).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10110-GL-V3R1.1 - Imprime Asiento en PDF (HRTE027C).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10111-GL-V3R1.1 - Genera Iva y Seguros de Cuotas Vencidas (PRTE203).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10112-GL-V3R1.1- RTE genérica para evaluar Regla de Negocio (HRNGRTxx).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10113-GL-V3R1.1 - Actualización ItImpo en K negativo  (HRTE077a).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10200-GL -V3R1.1- Fecha de Incumplimiento de operación previo a pasaje o reclasificación contable (PRTE570).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10201-GL-V3R1.1 - RTE Obtiene cuenta de Aseguradora - (HSIP156 y PSIP156).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10201-GL-V3R1.1 - Simulación con Despeje de Tasa  (RRG0526).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10207-GL-V3R1.1 - Acumula Importes por Moneda (PSNGRTE8).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-10303-GL-V3R1.2 - RTE Cambio De Estado (PRTE280).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/ETP-99000-GL-V3R1.2 - Graba Status de la Operación (HRTE162A-PRTE162B).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/RTE's Genéricas/MDI-10103-GL-V3R1.1 - Manual de Definición de RTE.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Distribución de garantías/Genérico/ETP-10114-GL-V3R1.1 - Pasaje de Garantías a No computables (PRI00124-PRI00223).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Otros/Clientes/BROU/ETP-10114-GL-V3R1.1 - Cargar tabla FAU011 (PRI00101-PRI01102).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Otros/Clientes/BROU/ETP-10114-GL-V3R1.1 - Ejecución cadena de riesgos (PRIxxxxx).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/Colombia/ETP-10114-GL-V3R1.1 - Alineación por categoría histórico (PNUCO100-101-102).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/Colombia/ETP-10114-GL-V3R1.1 - Provisión general de intereses (PRICO900-PRICO901).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/Genérico/ETP-10114-GL-V3R1.1 - Actualizar saldos tabla FRI105 (PRI00491-PRI00492).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/Genérico/ETP-10801-GL-V3R1.1 - Informe de riesgo de liquidez y tasa de interés (PBCURLB2-PBCURLB0).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/NIIF/ETP-10201-GL-V3R1.1 - Cálculo de PD Marginal por segmento (PRINI600).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/NIIF/ETP-10201-GL-V3R1.2 - Proceso Carga Información Histórica PD (PRINI589).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/NIIF/ETP-10201-GL-V3R1.3 - Cálculo de Pérdida Esperada (PRINI601).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/NIIF/ETP-10801-GL-V3R1.1 - Provisión NIIF (PRINI122).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
   }
  ]
 }
