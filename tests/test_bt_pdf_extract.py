@@ -206,6 +206,44 @@ class TestTocPage:
         ]
         assert not is_toc_page(lines, 595.0)
 
+    def test_a_table_whose_numeric_columns_are_all_right_hand_is_not_a_toc(self) -> None:
+        # MDI-10206 p.21 ("Carga Asociada al Atributo"): the Reporte/Consulta
+        # columns sit at x/width 0.75 and 0.84, so every bare number is in the
+        # right margin and the page was dropped as an index. 125 pages of 6
+        # manuals were lost this way, 120 in the three Originación de Créditos.
+        # What an index has and a table does not: its page references never go
+        # DOWN in reading order. These go 20, 1, 20, 4, 20, 3.
+        lines = [
+            L("FECHA Fecha Inicio Solicitud D (8) Carga Reporte.", x=90, y=200),
+            L("20", x=448, x1=460, y=200),
+            L("1", x=500, x1=506, y=200),
+            L("INSTANCIA Instancia N (4) Carga Reporte.", x=90, y=240),
+            L("20", x=448, x1=460, y=240),
+            L("4", x=500, x1=506, y=240),
+            L("USUARIO Usuario C (10) Carga Reporte.", x=90, y=280),
+            L("20", x=448, x1=460, y=280),
+            L("3", x=500, x1=506, y=280),
+        ]
+        assert not is_toc_page(lines, 595.0)
+
+    def test_an_index_with_a_stray_page_number_is_still_a_toc(self) -> None:
+        # MDI-10102 Comparador de Fecha p.2: a real index whose own printed page
+        # number survives as one more bare number, so the column reads
+        # 2, 3, 4, 5, 2. Demanding that the references NEVER go down dropped it
+        # and leaked the index as content.
+        lines = [
+            L("Contenido", x=90, y=200),
+            L("2", x=530, x1=536, y=200),
+            L("Introducción", x=90, y=230),
+            L("3", x=530, x1=536, y=230),
+            L("Instalación", x=90, y=260),
+            L("4", x=530, x1=536, y=260),
+            L("Modo de Uso", x=90, y=290),
+            L("5", x=530, x1=536, y=290),
+            L("2", x=452, x1=458, y=700),
+        ]
+        assert is_toc_page(lines, 595.0)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Headings and chapters

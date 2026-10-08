@@ -195,7 +195,31 @@ def is_toc_page(lines: list[LineIR], page_width: float = 595.0) -> bool:
     return (
         len(right) >= _MIN_TOC_MARKERS
         and len(right) >= _PAGE_REF_MIN_SHARE * len(numbers)
+        and _mostly_ascending(right)
     )
+
+
+def _mostly_ascending(page_refs: list[LineIR]) -> bool:
+    """True when, read top to bottom, the numbers mostly grow.
+
+    An index's page references only grow (MDU-10115: 5, 6, 6, 7 ... 41, 41, 42).
+    A table whose numeric columns all sit in the right margin passes the position
+    and share tests above, but its values jump around: MDI-10206 p.21 reads
+    20, 1, 20, 4, 20, 3. Without this check 125 content pages of 6 manuals were
+    dropped as indexes (measured 2026-10-08).
+
+    "Mostly" and not "never go down": an index's own printed page number can
+    survive as one more bare number (MDI-10102 Comparador p.2 reads 2, 3, 4, 5, 2).
+    So the measure is the longest non-decreasing run, as a share of all numbers:
+    0.8 on that index, at most 0.67 on the content pages measured.
+    """
+    values = [int(ln.text.strip()) for ln in sorted(page_refs, key=lambda ln: (ln.y0, ln.x0))]
+    longest = [1] * len(values)
+    for i, value in enumerate(values):
+        for j in range(i):
+            if values[j] <= value:
+                longest[i] = max(longest[i], longest[j] + 1)
+    return max(longest, default=0) >= _PAGE_REF_MIN_SHARE * len(values)
 
 
 def content_after_index(lines: list[LineIR], page_height: float) -> list[LineIR]:
