@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guía para trabajar en este repo. **Verificado contra el código el 2026-10-06**; lo fechado así se
+Guía para trabajar en este repo. **Verificado contra el código el 2026-10-08**; lo fechado así se
 midió, no se supone.
 
 ## What This Is
@@ -20,12 +20,13 @@ alucinación del agente consumidor**.
 Estado: **Fase 1** (caracterización de corpus + ingesta de wiki). Progreso vivo en
 `FASE1_ALISTAMIENTO.md`; orden de lectura de los docs de planeación en `docs/README.md`.
 
-| Necesitás | Leé |
+| Necesitas | Lee |
 |---|---|
 | La arquitectura real, con clasificación de evidencia por afirmación | **`RAG_SYSTEM_MAP.md`** — reconstruido desde el código, es el mapa autoritativo |
 | El QUÉ SE QUERÍA (hay requisitos escritos y sin implementar) | `docs/` — ⚠️ `docs/CLAUDE.md` es **spec de planeación, no realidad** |
 | Auditar el repo contra sus propios docs | `docs/PROMPT-auditoria-agente.md` y `docs/AUDITORIA-2026-10-05.md` |
-| **Trabajo de optimización en curso** (hallazgos medidos, fases, coordinación entre agentes) | **`docs/PLAN-optimizacion.md`** — empezá por su sección "Cómo arrancar" |
+| **Trabajo de optimización en curso** (hallazgos medidos, fases, coordinación entre agentes) | **`docs/PLAN-optimizacion.md`** — empieza por su sección "Cómo arrancar" |
+| **Cómo se ingiere un lote del portal SGR** (pasos, herramientas, qué quedó pendiente por lote) | **`docs/PLAN-INGESTA-SGR.md`** — cada fila tiene el resultado verificado del lote |
 | **Qué documentación Bantotal se trajo a `bt_docs`, de dónde y qué lote sigue** (portal SGR, criterio Global + Colombia) | **`docs/INGESTA-BANTOTAL.md`** — antes de traer documentos, para no repetir trabajo |
 
 ## Commands
@@ -40,18 +41,24 @@ docker compose up
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API
 .venv/bin/python -m src.server                        # MCP server (stdio)
-.venv/bin/python -m pytest tests/ -q                 # Tests — 438 passing al 2026-10-06
+.venv/bin/python -m pytest tests/ -q                 # Tests — 509 passing al 2026-10-08
 
 # Windows (PowerShell):
 python -m venv .venv; .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\uvicorn src.api:app --reload --port 8000
 .venv\Scripts\python -m src.server
-.venv\Scripts\pytest tests/ -q                        # Tests — 438 passing al 2026-10-06
+.venv\Scripts\pytest tests/ -q                        # Tests — 509 passing al 2026-10-08
 # Marcadores (pytest.ini, --strict-markers): unit | integration
 
 # Ingesta
 .venv/bin/python scripts/scrape_wiki.py <url> [--output-dir <dir>]
 .venv/bin/python -m scripts.ingest_dump <file> --format genexus|workwithplus [--dry-run]
+
+# Lote de documentos locales (portal SGR): una lista UTF-8 con una ruta por línea
+.venv/bin/python -m scripts.scan_secrets --list <lista>     # 1. secretos (informativo)
+.venv/bin/python -m scripts.ingest_lote <lista> [--dry-run]  # 2. ingesta con 4 hilos y prioridad baja
+.venv/bin/python -m scripts.verify_ingest --list <lista>    # 3. ¿entró ENTERO? (lectura directa de la base)
+.venv/bin/python -m scripts.eval_etp_titles --json out.json  # 4. ¿se encuentra cada ETP por tema y por código?
 
 # Frontend (frontend/) — Vite, puerto 5173. NECESITA el backend arriba:
 .venv/Scripts/python.exe -m uvicorn src.api:app --host 127.0.0.1 --port 8000   # en otra terminal
@@ -66,7 +73,7 @@ llama `/api/*` y Vite lo proxea a `VITE_API_TARGET`.
 **`./dev.sh`** levanta backend + frontend juntos en **8050** / **3050** para no colisionar con otros
 proyectos de esta máquina (`gx-docs-v1` usa `:8000`). Override con `BACKEND_PORT` / `FRONTEND_PORT`.
 
-**Corré en el venv, no en el intérprete global.** Un paquete global (`notebooklm_skill`) trae un
+**Corre en el venv, no en el intérprete global.** Un paquete global (`notebooklm_skill`) trae un
 package `scripts` de nivel superior que tapa el `scripts/` de este repo (que no tiene `__init__.py`,
 así que es namespace package implícito) y rompe `from scripts import scrape_wiki` en `src/api.py`.
 Docker no se ve afectado (imagen limpia).
@@ -102,9 +109,12 @@ Flujo de datos:
    catálogo de veredicto binario.
 4. **Index** (`src/vectorstore/pg_indexer.py`): chunkea con `langchain-text-splitters`
    (`CHUNK_SIZE=800`, overlap 100), embebe con `intfloat/multilingual-e5-large`, escribe en
-   **Postgres**. `reindex_if_changed()` compara `content_hash` y saltea sin re-embeddear.
+   **Postgres**. `reindex_if_changed()` compara `content_hash` y se salta lo que no cambió, sin re-embeddear.
 5. **Retrieve** (`src/vectorstore/pg_retriever.py::hybrid_search`): **denso (pgvector) + full-text
-   (`ts_rank_cd`) fusionados con RRF (`RRF_K=60`), resuelto EN SQL** con un CTE por criterio. El
+   (`ts_rank_cd`) fusionados con RRF (`RRF_K=60`), resuelto EN SQL** con un CTE por criterio.
+   La mitad densa recorre un **HNSW parcial por colección** (`sql/006`): con uno global, crecer una
+   colección le cambiaba el ranking a las demás. La léxica hace OR **sin palabras vacías**
+   (`src/vectorstore/stopwords_es.txt`): `ts_rank_cd` **no es BM25, no tiene IDF**. El
    reranker (`cross-encoder/mmarco-mMiniLMv2-L12-H384-v1`) está **cableado y disponible vía `rerank=True`**:
    es multilingüe (soporta español de forma nativa), calcula atención cruzada completa sobre candidatos
    y provee fallback explícito a RRF si el modelo no está disponible.
@@ -140,12 +150,12 @@ con el `forbid` que trae pydantic-settings por defecto, cualquier clave ajena ro
   verdad, y lo no catalogado es `NO_VERIFICABLE`.
 - **El crecimiento del corpus pasa por un gate humano**: descubrir candidatos automáticamente está
   bien, ingerir automáticamente no. La rama segura va por defecto (`dry_run=true` en `ingest_batch`).
-- Usá el SDK oficial `mcp`, no FastMCP standalone.
+- Usa el SDK oficial `mcp`, no FastMCP standalone.
 - Sin LangChain/LlamaIndex como framework base — solo `langchain-text-splitters` para chunking.
-- Consultá PyPI para cualquier número de versión: no los escribas de memoria.
+- Consulta PyPI para cualquier número de versión: no los escribas de memoria.
 - Una fase está lista cuando el comportamiento se verificó funcionando, no cuando compila.
-- **Después de una escritura, verificá el estado por una vía independiente del valor de retorno.**
-  El retorno de una tool no describe el store: para probar pertenencia usá una lectura determinista
+- **Después de una escritura, verifica el estado por una vía independiente del valor de retorno.**
+  El retorno de una tool no describe el store: para probar pertenencia usa una lectura determinista
   (`get_article` por colección), no una búsqueda por ranking.
 - **Cada fix lleva un test que falla SIN el fix.** Un test que solo pasa después no demuestra que
   proteja el bug original.
@@ -172,7 +182,7 @@ git log --oneline -3         # ¿el HEAD es el que dice el plan que estoy ejecut
 ```
 
 Un working tree sucio es trabajo de otro: **se integra, no se pisa.** Y **no cambies de rama con
-cambios ajenos encima** — commiteálos en la rama donde están o preguntá.
+cambios ajenos encima** — commitéalos en la rama donde están o pregunta.
 
 **Dos agentes, dos modos:**
 
@@ -182,7 +192,7 @@ cambios ajenos encima** — commiteálos en la rama donde están o preguntá.
 | Se quiere paralelismo REAL por rama | `git worktree add ../gx-rag-<tarea> -b <rama>` — directorio propio, rama propia, mismo `.git`. Es la única forma de que dos agentes estén en ramas distintas a la vez |
 
 El checkout del VPS (`/home/admin/.openclaw/workspace/gx-bt-rag-mcp`) es **otro clon**, así que no
-interfiere: puede estar en `vps-produccion` mientras acá se trabaja en otra rama.
+interfiere: puede estar en `vps-produccion` mientras aquí se trabaja en otra rama.
 
 ⚠️ Ojo con el `git worktree` en esta máquina: cada sesión de agente levanta su propio `src.server`
 con su modelo (~3,5 GB de commit reservado). Más worktrees no cuestan RAM por sí mismos, pero más
@@ -195,11 +205,11 @@ sesiones sí.
   |---|---|---|
   | `main` | integración | **Sin PR** (decisión del usuario, 2026-10-07): el trabajo entra con `merge --ff-only` y se pushea. Antes de integrar: `git fetch`, rebasar sobre `origin/main` y correr la suite completa |
   | rama por tarea | trabajo | opcional, se crea **desde `main`** (`fix/...`, `docs/...`) y se borra al integrar. Sirve para agrupar commits, no para revisión |
-  | `vps-produccion` | **puntero de release** | NO se desarrolla acá. Se le hace `merge --ff-only main` **sólo al desplegar**. Es la rama que el VPS tiene checkouteada |
+  | `vps-produccion` | **puntero de release** | NO se desarrolla aquí. Se le hace `merge --ff-only main` **sólo al desplegar**. Es la rama que el VPS tiene checkouteada |
 
   **Por qué separar release de integración:** un push **no despliega** —el código va horneado en la
   imagen— y el build cuesta ~15 min. "Integrado" y "desplegado" son estados distintos, así que
-  tienen rama distinta: podés mergear a `main` sin tocar producción, y desplegar es un acto
+  tienen rama distinta: puedes mergear a `main` sin tocar producción, y desplegar es un acto
   explícito.
 
   ⚠️ Durante los primeros 49 commits `vps-produccion` fue la rama de trabajo, con nombre de
@@ -215,20 +225,25 @@ sesiones sí.
 - **Nunca versionar datos**: `data/syntax.db` (binario mutable, con telemetría real de validación) ni
   `data/scraped_sac/` (1002 archivos). Diffs opacos y conflictos irresolubles.
 - **Reiniciar el MCP no es automático**: el proceso conserva el código viejo en memoria, así que un
-  cambio se verifica por MCP recién después de reconectar el server.
+  cambio se verifica por MCP solo después de reconectar el server.
 
 ## Known Gotchas
 
 - **Un `top_k` chico NO prueba una ausencia.** `gx_docs` tiene ~50k chunks y el ranking mezcla
-  fuentes: un tema presente puede no entrar en los primeros 3. Para afirmar que algo no está, subí
-  `top_k` y reformulá con términos del dominio.
+  fuentes: un tema presente puede no entrar en los primeros 3. Para afirmar que algo no está, sube
+  `top_k` y reformula con términos del dominio.
 - **`gx_docs` mezcla tres fuentes**: wiki GeneXus, tickets SAC (`sac.genexus.com`) y wiki de
   WorkWithPlus (`docs.workwithplus.com`). GeneXus tiene un pattern nativo *Work With for Web* y WWP
-  (DVelop) es otro producto: una query sobre "el pattern" devuelve los dos entremezclados. **Filtrá
+  (DVelop) es otro producto: una query sobre "el pattern" devuelve los dos entremezclados. **Filtra
   por procedencia (la url del hit), no por presencia.**
-- **Estado del corpus, medido 2026-10-06**: `gx_docs` 50.063 chunks · `bt_docs` **1.569** (manual
-  funcional Bantotal, videos de buenas prácticas y manuales técnicos Cadena de Cierre/RTE) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
-  avisa qué colecciones tienen contenido cuando pegás en una vacía.
+- **Estado del corpus, medido 2026-10-08**: `gx_docs` 50.063 chunks · `bt_docs` **~29.880** (manuales
+  MDI/MDU, ETP y ECP del portal SGR, más los videos y manuales curados de antes) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
+  avisa qué colecciones tienen contenido cuando consultas una vacía.
+- **Los metadatos de un PDF salen SOLO de su nombre de archivo** (`MDI-10201-CO-V3R1.22 - …`):
+  `manual`, `manual_version` y `localization`. Un nombre fuera de formato deja el chunk sin ellos, y la
+  carpeta no corrige nada (el F1000-48 es de Colombia y el portal lo archiva en Uruguay). Para un
+  documento así, transcríbelo a `.md` con frontmatter (`localization: CO`) y pon el país en el título:
+  el agente lee el texto del chunk, no los metadatos. Ojo: el frontmatter también se indexa como chunk.
 - **El catálogo del validador (`gx_syntax`, SQL) tiene 765 entradas, 706 con `version_since` y 96 `object_type`.**
   Las fuentes principales provienen de GeneXus 18 (incluyendo `gxtypes.xml`). Para una versión previa
   como `gx16` (las KBs Bantotal), un método no diferenciable por versión sale como veredicto `PISTA`
@@ -247,7 +262,7 @@ sesiones sí.
   idempotencia: `add_from_url` normaliza el `source_key` (`normalize_wiki_url`) y el dump usa la URL
   cruda. Como `reindex_if_changed` deduplica por `source_key`, **un artículo ya ingerido por dump se
   DUPLICA si después entra por URL**. Medido con el artículo WWP 1149. Pendiente unificar el esquema.
-- **El proceso MCP conserva el código viejo en memoria**: un cambio se verifica por MCP recién
+- **El proceso MCP conserva el código viejo en memoria**: un cambio se verifica por MCP solo
   después de reconectar el server.
 - Chunk size: `config.py` declara 1000/200 pero `pg_indexer.py` usa 800/100 — **manda el módulo**, los
   valores del config no se leen.
