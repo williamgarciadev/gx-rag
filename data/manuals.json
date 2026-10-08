@@ -1241,6 +1241,156 @@
    "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Corrientes/MDU-10303-GL-V3R1.6 - Sistema de Cuentas Corrientes.pdf",
    "ingest": true,
    "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL DESCARTES/MDI-10102-GL-V3R1.1 - Descartes.pdf",
+   "ingest": false,
+   "reason": "FUERA (2026-10-08, confirmado por el usuario): instalador de Descartes, excluido por decisión del 2026-07-27 (GeneXus 8.0, obsoleto). Queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL MONSERVER/MDI-10102-GL-V3R1.1 Monserver V6 - Performance (Aplicación DotNet SQL).pdf",
+   "ingest": false,
+   "reason": "FUERA (2026-10-08, confirmado por el usuario): variante DotNet; Contactar corre Java Web. Queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL MONSERVER/MDI-10102-GL-V3R1.1 Monserver V6 - Performance (Aplicación java Web ORACLE).pdf",
+   "ingest": false,
+   "reason": "FUERA (2026-10-08, confirmado por el usuario): variante Oracle; Contactar corre Java Web sobre SQL Server. Queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL INSTALACIÓN/MDI-99000-GL-V3R1.3 - Manual de Instalación Bantotal Java Web as400.pdf",
+   "ingest": false,
+   "reason": "FUERA (2026-10-08, confirmado por el usuario): plataforma AS400; Contactar corre Java Web sobre SQL Server. Queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL INSTALACIÓN/MDI-99000-GL-V3R1.4 - Manual de Instalación Bantotal Java Web as400 en Linux.pdf",
+   "ingest": false,
+   "reason": "FUERA (2026-10-08, confirmado por el usuario): plataforma AS400; Contactar corre Java Web sobre SQL Server. Queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL INSTALACIÓN/MDI-99000-GL-V3R1.4 - Manual de Instalación Bantotal Java Web Oracle en Linux.pdf",
+   "ingest": false,
+   "reason": "FUERA (2026-10-08, confirmado por el usuario): plataforma Oracle; Contactar corre Java Web sobre SQL Server. Queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL CLEAN/MDI-10102-GL-V3R1.10 - Bantotal Clean I Sistema de Depuración de Bantotal.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL MASKING/ETP-10102-GL-V3R1.2 - Bantotal Masking (POCULTA).pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL MONSERVER/MDI-10102-GL-V3R1.1 Monserver V6 - Performance (Aplicación Java Web AS).pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/Comparador de Fechas/MDI-10102-GL-V3R1.1 - Comparador de Fecha de Programas.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL DESCARTES/Gráficas (Flotcharts)/MDI-10102-GL-V3R1.1 - Gráficas (Flotcharts).pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL JMX/tomcat/MDI-10102-GL-V3R1.1 - Monitor Bantotal - Java Web - JMX.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL JMX/WAS/MDI-10102-GL-V3R1.1 - JMXConsole.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l  Dinero/MDU-10503-GL-V3R1.1 - Sistema de Tesorería -Dinero.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l Cambios Mayoristas/MDI-10502-GL-V3R1.1-Operaciones de Cambio.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l Cambios Mayoristas/MDU-10502-GL-V3R1.1 - Sistema de Tesorería_ Cambios.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l Títulos y Valores/MDI-10501-GL-V3R1.1 - Emisión Propia.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l Títulos y Valores/MDI-10501-GL-V3R1.1 - Herramientas de Configuración Especificas de Títulos y Tesorería.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l Títulos y Valores/MDU-10210-GL-V3R1.1 - Transferenica de Cartera.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  TESORERÍA/Mercados l Títulos y Valores/MDU-10501-GL-V3R1.1 - Sistema de Tesorería - Títulos y Valores.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL INSTALACIÓN/MDI-99000-GL-V3R1.4 - Manual de Instalación Bantotal Java Web SQL Server en Linux.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL INSTALACIÓN/MDI-99000-GL-V3R1.6 - Manual de Instalación Bantotal Java Web SQL Server en Windows.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BPEOPLE  - DIGITAL CORE/Autorización de Excepciones por Mobile/MDI-10703-GL-V3R1.1 - Autorización de Excepciones por Mobile.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BPEOPLE  - DIGITAL CORE/Autorización de Excepciones por Mobile/MDU-10703-GL-V3R1.1 - Autorización de Excepciones por Mobile.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BPEOPLE  - DIGITAL CORE/Bantotal Internet Banking l Empresas/MDU-10701-GL-V3R1.1 -  Sistema de Internet Banking.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  COMERCIO EXTERIOR/Comercio exterior l Cartas de crédito y Cobranzas/MDU-10601-GL-V3R1.1 - Sistema de Comercio Exterior.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  COMERCIO EXTERIOR/Transferencias y Órdenes de pago/MDI-10602-GL-V3R1.1 - Transferencias y Órdenes de pago.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BTDEVELOPERS/Qliktotal/MIS/MDI-10901-GL-V3R1.1 - Carga de Bandejas MIS.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BTDEVELOPERS/Qliktotal/MIS/MDU-10901-GL-V3R1.1 - Carga de Bandejas MIS.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CONECTORES/MDI-10704-GL-V3R1.1 - Interfaces Monitor PLUS.pdf",
+   "ingest": true,
+   "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
   }
  ]
 }

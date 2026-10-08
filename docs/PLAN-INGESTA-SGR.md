@@ -10,7 +10,7 @@ y toca la base, así que cada lote se verifica antes de pasar al siguiente.
 |---|---|---|---|---|---|---|---|
 | ✅ | **I1.1** | Manuales › Core Núcleo | 106 → **74** | 4.527 | ~1 h 10 min real | 2026-10-07 | 1.460 secciones, 74/74 ✓. De Bantotal Servicios solo la última versión (2.8 + su guía, Exposer 1.2, API Institucional, Transacciones por Servicios): 32 versiones y migraciones viejas quedan `ingest: false`. Pérdida: 3 referencias cruzadas en la franja del pie. bt_docs = 15.630 |
 | ✅ | **I1.2** | Manuales › Core Captaciones | 31 | 4.447 | ~1 h 50 min real | 2026-10-07 | 1.875 secciones, 31/31 ✓. Pruebas: cierre de caja y renovación de DPF ✅; "apertura de cuenta corriente" ⚠️ top-1 equivocado (Migración de Tarjetas), los 3 hits de una sola mitad del híbrido → primera señal de ruido. bt_docs = 20.874 |
-| [ ] | **I1.3** | Manuales › Tesorería, Comercio Exterior, DevOps, Instalación, Conectores, BPeople, BTDevelopers | 30 | 1.662 | ~45 min | | |
+| ✅ | **I1.3** | Manuales › Tesorería, Comercio Exterior, DevOps, Instalación, Conectores, BPeople, BTDevelopers | 30 → **24** | ~1.400 | ~30 min real | 2026-10-08 | 680 secciones, 24/24 ✓. Solo variantes Java Web / SQL Server: 5 de AS400, Oracle o DotNet y el instalador viejo de Descartes quedan `ingest: false`. Instalación SQL Server Windows y Linux comparten capítulos idénticos (chunks duplicados, menor). bt_docs = 22.787 |
 | [ ] | **Gate** | Medir la línea base del retrieval (`eval/gold.jsonl`) antes de meter ETPs | — | — | — | | |
 | [ ] | **I2** | ETP de Otros Documentos (D2, 445 PDFs) | ❓ | | | | Requiere decisión: todos o solo los programas que usa Contactar |
 
@@ -31,6 +31,10 @@ y toca la base, así que cada lote se verifica antes de pasar al siguiente.
 | 7 | Versiones viejas | `python -m scripts.retire_source <viejo> --replaced-by <nuevo>` | antes de borrar, se informa cuáles |
 | 8 | Prueba | `search_docs` con preguntas sobre el lote | el documento no sale en el top-3 |
 | 9 | Cierre | marcar la fila ✅ aquí y en `INGESTA-BANTOTAL.md`; commit | — |
+
+⚠️ **Las listas y logs de cada lote van a `docs/Bantotal/SGR/_inventario/lotes/`**, nunca al
+scratchpad de la sesión: la noche del 2026-10-07 al 08 el temporal se vació solo y se perdieron
+las listas de lote, los logs y los scripts auxiliares (se regeneraron con `sgr_plan`).
 
 ⚠️ Pasar las rutas a los scripts **desde un archivo de lista escrito en UTF-8**, no desde un
 `print` a la consola: las tildes de "NÚCLEO" o "PAÍS" se rompían en cp1252 y los scripts
