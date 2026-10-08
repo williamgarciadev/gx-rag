@@ -74,14 +74,18 @@ Orden: primero los **manuales** (documentan sistemas completos), después los **
 
 | ✔ | Lote | Prefijo (`--solo`, uno por línea) | PDFs | Fecha | Real |
 |---|---|---|---|---|---|
-| [ ] | D2.1 Procesos Batch | `Otros Documentos/Procesos Batch/` | 160 | | |
-| [ ] | D2.2 Núcleo | `Otros Documentos/BANTOTAL CORE - NÚCLEO/` | 83 | | |
-| [ ] | D2.3 Captaciones | `Otros Documentos/BANTOTAL CORE - CAPTACIONES/` | 66 | | |
-| [ ] | D2.4 Colocaciones | `Otros Documentos/BANTOTAL CORE - COLOCACIONES/` | 59 | | |
-| [ ] | D2.5 Mercados Financieros | `Otros Documentos/Mercados Financieros/` | 31 | | |
-| [ ] | D2.6 RTE's Genéricas | `Otros Documentos/RTE's Genéricas/` | 21 | | |
-| [ ] | D2.7 Riesgos | `Otros Documentos/Riesgos/` | 11 | | |
-| [ ] | D2.8 Normativo, Comercio Internacional, Cadena de Cierre, Canales, sueltos | (una por carpeta) | 3 + 5 + 3 + 1 + 3 | | |
+| ✅ | D2.1 Procesos Batch | `Otros Documentos/Procesos Batch/` | 160 | 2026-10-07 | 159. **1 vacío en el portal** (0 bytes): `ETP-10201 - Re-expresión Contable de Préstamos Fondeados por Terceros`. 2 copias "(2)" de SARC bajadas de nuevo y borradas |
+| ✅ | D2.2 Núcleo | `Otros Documentos/BANTOTAL CORE - NÚCLEO/` | 83 | 2026-10-07 | 83 · 0 fallas |
+| ✅ | D2.3 Captaciones | `Otros Documentos/BANTOTAL CORE - CAPTACIONES/` | 66 | 2026-10-07 | 66. Se cortó en 25 (bug de consola cp1252 en `sgr_docs`, corregido); el reintento bajó los 41 restantes sin fallas |
+| ✅ | D2.4 Colocaciones | `Otros Documentos/BANTOTAL CORE - COLOCACIONES/` | 59 | 2026-10-07 | 59 · 0 fallas |
+| ✅ | D2.5 Mercados Financieros | `Otros Documentos/Mercados Financieros/` | 31 | 2026-10-07 | 31 · 0 fallas |
+| ✅ | D2.6 RTE's Genéricas | `Otros Documentos/RTE's Genéricas/` | 21 | 2026-10-07 | 21 · 0 fallas |
+| ✅ | D2.7 Riesgos | `Otros Documentos/Riesgos/` | 11 | 2026-10-07 | 11 · 0 fallas |
+| ✅ | D2.8 Normativo, Comercio Internacional, Cadena de Cierre, Canales, sueltos | (una por carpeta) | 3 + 5 + 3 + 1 + 3 | 2026-10-07 | 15 (14 nuevos + 1 que ya estaba) · 0 fallas |
+
+> **Descarga completa (2026-10-07)**: `docs/Bantotal/SGR/` tiene **670 PDFs (~609 MB)**, 0 de
+> otro país y 0 copias duplicadas (verificado por hash). El plan y el disco coinciden salvo lo
+> explicado: el Modelo de Datos (excluido) y el archivo vacío del portal. Siguiente: plan de ingesta.
 
 ## Fuera de este plan (decidido)
 
