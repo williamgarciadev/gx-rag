@@ -20,8 +20,8 @@ Existe para que el próximo (persona o agente) no repita trabajo ni deshaga una 
 |---|---|---|---|---|---|
 | 0 | Carpeta OneDrive "Documentación Bantotal/PDF" (24 PDFs) | OneDrive | ✅ hecho | 2026-10-07 | 21 ingeridos, 3 originales fuera (transcritos a `.md` o duplicados) |
 | 1 | Manuales › **Core Colocaciones** (33 PDFs) | SGR | ✅ hecho | 2026-10-07 | 4.353 chunks, 33/33 ✓ en `verify_ingest`. Préstamos **V3R1.22** reemplazó a la V3R1.20 (494 chunks borrados, respaldo en `data/backups/`) y `eval/gold.jsonl` se actualizó a la V3R1.22. Fuera: MDU-10202 V3R1.3 (había V3R1.4) y 9 planillas sin código |
-| 2 | **Versiones nuevas** de lo ya ingerido | SGR | ⏳ siguiente | | Contabilidad V3R1.8 (hay V3R1.6) · Contrapartes V3R1.29 (V3R1.28) · Descartes Diseñador V3R1.3 (V3R1.2) · ETP-10102 V3R1.6 (V3R1.4) · ETP-10110 V3R1.3 (V2R1.4) |
-| 3 | **Colombia**: Manuales por País › Colombia + los `-CO-` de Otros Documentos | SGR | ⏳ | | ~33 PDFs |
+| 2 | **Versiones nuevas** de lo ya ingerido | SGR | ✅ hecho | 2026-10-07 | 5 PDFs, 298 secciones: Contabilidad V3R1.8 · Contrapartes V3R1.29 · Descartes Diseñador V3R1.3 · ETP-10102 V3R1.6 · ETP-10110 V3R1.3. Las 5 viejas retiradas con `retire_source` (1.145 chunks, con respaldo) |
+| 3 | **Colombia**: Manuales por País › Colombia + los `-CO-` de Otros Documentos | SGR | ⏳ siguiente | | ~32 PDFs |
 | 4 | Manuales › **Core Núcleo** | SGR | ⏳ | | ~116 PDFs nuevos |
 | 5 | Manuales › **Core Captaciones** | SGR | ⏳ | | ~31 PDFs |
 | 6 | Tesorería · Reportes Regulatorios · Comercio Exterior · DevOps · Instalación | SGR | ⏳ por decidir | | ~40 PDFs; confirmar cuáles usa Contactar |
@@ -34,6 +34,8 @@ Leyenda: ✅ hecho · 🔄 en curso · ⏳ pendiente · ❓ requiere decisión.
 | Decisión | Por qué | Fecha |
 |---|---|---|
 | **Solo localización Global (`-GL-`) y Colombia (`-CO-`)** | Lo demás es normativa de otro país (UY, PE, AR, MX…): un agente la tomaría como norma de Contactar | 2026-10-07 |
+| En las carpetas "por País" manda la carpeta **solo si su hijo es un país** | "MANUALES POR PAÍS" también tiene `BANTOTAL CORE  NÚCLEO` con 128 manuales Globales: tratarla como país los descartaba (le pasó a Contrapartes V3R1.29) | 2026-10-07 |
+| Las descargas reproducen la ruta del portal bajo `docs/Bantotal/SGR/` | Se ve de qué carpeta salió cada archivo. **Excepción**: el lote 1 quedó en `SGR/Colocaciones/` y no se mueve (mover duplica en la base) | 2026-10-07 |
 | Sin segmento de país (ECP…) o sin código (planillas, nombres libres): **los decide el usuario caso a caso** | No se pueden clasificar solos | 2026-10-07 |
 | **Una versión nueva reemplaza a la vieja** (respaldo + borrado de chunks) | Si conviven, el top-k mezcla versiones | 2026-10-07 |
 | Dentro de un lote, de un mismo documento (código **+ título**) se baja **solo la versión más alta** | Ej.: MDU-10202 V3R1.3 y V3R1.4 "Sistema de Descuentos" | 2026-10-07 |
@@ -66,6 +68,7 @@ de aquí es **solo lectura**: navegar y descargar, nada más.
 | 1 | `sgr_docs.py inventario <out.jsonl> [--sub "Manuales/<carpeta>"]` | skill `leer-doc-sgr-bantotal` (DevGeo) | recorre el árbol y lista cada archivo |
 | 2 | `python -m scripts.sgr_plan <inventario> --carpeta "<carpeta>" --out lote.json` | **este repo** | aplica las Decisiones (GL/CO, última versión, lo que el RAG no tiene) y arma el lote |
 | 3 | `sgr_docs.py descargar lote.json <destino>` | skill | baja el lote, valida `%PDF-`, es idempotente |
+| 4 | `python -m scripts.retire_source <viejo> --replaced-by <nuevo>` | **este repo** | saca la versión vieja de la base: exige que la nueva ya esté, respalda en `data/backups/` y después borra |
 
 Comandos completos en la skill. El inventario completo del 2026-10-07 está en
 `F:/ProyectosClaude/docs/Bantotal/SGR/_inventario/`. Los nombres de carpeta del portal llevan

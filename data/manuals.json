@@ -9,8 +9,8 @@
   },
   {
    "file": "Bantotal/MDI-10109-GL-V3R1.28 - Sistema de Contrapartes.pdf",
-   "ingest": true,
-   "reason": "Manual funcional de Contrapartes, 225 págs. Semántica de negocio que describe_table no da."
+   "ingest": false,
+   "reason": "FUERA desde el 2026-10-07: reemplazado por MDI-10109-GL-V3R1.29, descargado del portal SGR. Chunks retirados con scripts/retire_source.py; respaldo en gx-rag/data/backups/."
   },
   {
    "file": "Bantotal/MDU-10115-CO-V3R1.1 - Sistema de Precios.pdf",
@@ -24,8 +24,8 @@
   },
   {
    "file": "Bantotal/_skipped/MDU-10102-GL-V3R1.2 - Descartes - Diseñador Web UI.pdf",
-   "ingest": true,
-   "reason": "Framework Web UI de Bantotal, 122 págs. Se ingesta el PDF y NO el -extracted.md: el PDF tiene página citable y es más completo (306K vs 285K chars)."
+   "ingest": false,
+   "reason": "FUERA desde el 2026-10-07: reemplazado por MDU-10102-GL-V3R1.3, descargado del portal SGR. Chunks retirados con scripts/retire_source.py; respaldo en gx-rag/data/backups/."
   },
   {
    "file": "Bantotal/_skipped/MDU-10102-GL-V3R1.2 - Descartes - Servidor de Procesos.pdf",
@@ -144,8 +144,8 @@
   },
   {
    "file": "Bantotal/MDI-10110-GL-V3R1.6 - Sistema de Contabilidad.pdf",
-   "ingest": true,
-   "reason": "Manual funcional de Contabilidad, 152 págs. Plan de cuentas, asientos y cierres contables."
+   "ingest": false,
+   "reason": "FUERA desde el 2026-10-07: reemplazado por MDI-10110-GL-V3R1.8, descargado del portal SGR. Chunks retirados con scripts/retire_source.py; respaldo en gx-rag/data/backups/."
   },
   {
    "file": "Bantotal/MDI-10201-GL-V3R1.5 - Sistema de Seguros.pdf",
@@ -184,13 +184,13 @@
   },
   {
    "file": "Bantotal/ETP-10102-GL-V3R1.4 - Información para Gestión Créditos (PSNG9122).pdf",
-   "ingest": true,
-   "reason": "Especificación técnica de PSNG9122 (información para gestión de créditos), 13 págs."
+   "ingest": false,
+   "reason": "FUERA desde el 2026-10-07: reemplazado por ETP-10102-GL-V3R1.6, descargado del portal SGR. Chunks retirados con scripts/retire_source.py; respaldo en gx-rag/data/backups/."
   },
   {
    "file": "Bantotal/ETP-10110-GL-V2R1.4- Depuración Diaria  (PP017).pdf",
-   "ingest": true,
-   "reason": "Especificación técnica de PP017 (depuración diaria), 7 págs."
+   "ingest": false,
+   "reason": "FUERA desde el 2026-10-07: reemplazado por ETP-10110-GL-V3R1.3, descargado del portal SGR. Chunks retirados con scripts/retire_source.py; respaldo en gx-rag/data/backups/."
   },
   {
    "file": "Bantotal/ETP-10206-CO-V3R1.5 - Funcionalidad de Polizas (HJCCA154).pdf",
@@ -416,6 +416,31 @@
    "file": "Bantotal/SGR/Colocaciones/Sistema de Préstamos/MDU-10201-GL-V3R1.6 - Sistema de Préstamos.pdf",
    "ingest": true,
    "reason": "Manual Global de Colocaciones (Sistema de Préstamos), descargado del portal SGR de DLYA (Conocimiento Bantotal > Documentación > Manuales > BANTOTAL CORE COLOCACIONES) el 2026-10-07. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL DESCARTES/MDU-10102-GL-V3R1.3 - Descartes - Diseñador Web UI.pdf",
+   "ingest": true,
+   "reason": "Versión nueva descargada del portal SGR el 2026-10-07 (lote 2 de docs/INGESTA-BANTOTAL.md); reemplaza a la versión anterior que estaba en bt_docs. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contabilidad/MDI-10110-GL-V3R1.8 - Sistema de Contabilidad.pdf",
+   "ingest": true,
+   "reason": "Versión nueva descargada del portal SGR el 2026-10-07 (lote 2 de docs/INGESTA-BANTOTAL.md); reemplaza a la versión anterior que estaba en bt_docs. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/MDI-10109-GL-V3R1.29 - Sistema de Contrapartes.pdf",
+   "ingest": true,
+   "reason": "Versión nueva descargada del portal SGR el 2026-10-07 (lote 2 de docs/INGESTA-BANTOTAL.md); reemplaza a la versión anterior que estaba en bt_docs. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/ETP-10102-GL-V3R1.6 - Información para Gestión Créditos (PSNG9122).pdf",
+   "ingest": true,
+   "reason": "Versión nueva descargada del portal SGR el 2026-10-07 (lote 2 de docs/INGESTA-BANTOTAL.md); reemplaza a la versión anterior que estaba en bt_docs. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10110-GL-V3R1.3 - Depuración Diaria  (PP017).pdf",
+   "ingest": true,
+   "reason": "Versión nueva descargada del portal SGR el 2026-10-07 (lote 2 de docs/INGESTA-BANTOTAL.md); reemplaza a la versión anterior que estaba en bt_docs. Revisado: sin credenciales."
   }
  ]
 }
