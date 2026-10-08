@@ -21,8 +21,8 @@ Existe para que el próximo (persona o agente) no repita trabajo ni deshaga una 
 | 0 | Carpeta OneDrive "Documentación Bantotal/PDF" (24 PDFs) | OneDrive | ✅ hecho | 2026-10-07 | 21 ingeridos, 3 originales fuera (transcritos a `.md` o duplicados) |
 | 1 | Manuales › **Core Colocaciones** (33 PDFs) | SGR | ✅ hecho | 2026-10-07 | 4.353 chunks, 33/33 ✓ en `verify_ingest`. Préstamos **V3R1.22** reemplazó a la V3R1.20 (494 chunks borrados, respaldo en `data/backups/`) y `eval/gold.jsonl` se actualizó a la V3R1.22. Fuera: MDU-10202 V3R1.3 (había V3R1.4) y 9 planillas sin código |
 | 2 | **Versiones nuevas** de lo ya ingerido | SGR | ✅ hecho | 2026-10-07 | 5 PDFs, 298 secciones: Contabilidad V3R1.8 · Contrapartes V3R1.29 · Descartes Diseñador V3R1.3 · ETP-10102 V3R1.6 · ETP-10110 V3R1.3. Las 5 viejas retiradas con `retire_source` (1.145 chunks, con respaldo) |
-| 3 | **Colombia**: Manuales por País › Colombia + los `-CO-` de Otros Documentos | SGR | ⏳ siguiente | | ~32 PDFs |
-| 4 | Manuales › **Core Núcleo** | SGR | ⏳ | | ~116 PDFs nuevos |
+| 3 | **Colombia**: Manuales por País › Colombia + los `-CO-` de Otros Documentos | SGR | ✅ hecho | 2026-10-07 | 22 documentos, 241 secciones, 22/22 ✓. Fuera: 2 copias idénticas "(2)" de ETP-10114 SARC. LDAP (MDI-10109-CO) entró como `.md` con una contraseña de ejemplo tachada. ❓ Pendiente: `Manejo de Calificaciones (HBC201G).pdf` (Colombia, sin código) ya descargado, sin ingerir |
+| 4 | Manuales › **Core Núcleo** | SGR | ⏳ siguiente | | ~116 PDFs nuevos (+ el espejo de 128 bajo "MANUALES POR PAÍS", mismos documentos) |
 | 5 | Manuales › **Core Captaciones** | SGR | ⏳ | | ~31 PDFs |
 | 6 | Tesorería · Reportes Regulatorios · Comercio Exterior · DevOps · Instalación | SGR | ⏳ por decidir | | ~40 PDFs; confirmar cuáles usa Contactar |
 | — | **Otros Documentos** (ETPs de programas) | SGR | ❓ por decidir | | ~527 PDFs. NO traer en bloque: filtrar por los programas que usa Contactar |
@@ -40,6 +40,8 @@ Leyenda: ✅ hecho · 🔄 en curso · ⏳ pendiente · ❓ requiere decisión.
 | **Una versión nueva reemplaza a la vieja** (respaldo + borrado de chunks) | Si conviven, el top-k mezcla versiones | 2026-10-07 |
 | Dentro de un lote, de un mismo documento (código **+ título**) se baja **solo la versión más alta** | Ej.: MDU-10202 V3R1.3 y V3R1.4 "Sistema de Descuentos" | 2026-10-07 |
 | Comparar por **código + título**, nunca solo código | `MDI-10201` lo comparten 4 documentos distintos (Préstamos, Seguros, Modelador, Vínculo) | 2026-10-07 |
+| Valor sensible literal en un PDF (contraseña de ejemplo) → `.md` con el valor reemplazado por un marcador; PDF `ingest: false` | Lo que recupera el RAG entra al contexto del agente y viaja al proveedor del modelo; tachar un valor de ejemplo no le quita nada a la respuesta | 2026-10-07 |
+| Copias idénticas (mismo hash, nombre con "(2)") no se ingieren | Duplican chunks; el plan no las junta porque el "(2)" cambia el título | 2026-10-07 |
 | PDF que pierde contenido → se transcribe a `.md` y el PDF queda `ingest: false` | Casos: ETP-99000, ETP-TransferenciasACH, Buenas Prácticas GX16, guía de instalación GX16 | 2026-10-07 |
 | MDU-99000 (inventario de tablas) **fuera** del RAG | Duplica lo que el MCP `bantotal-dev` responde desde el schema real | 2026-07-27 |
 | Cadena de Cierre MDU-10102 V3R1.2 reemplazada por MDU-10109 V3R1.11 | Versión nueva; respaldo en `data/backups/` (el PDF viejo ya no existía) | 2026-10-07 |

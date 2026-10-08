@@ -441,6 +441,121 @@
    "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Contabilidad/ETP-10110-GL-V3R1.3 - Depuración Diaria  (PP017).pdf",
    "ingest": true,
    "reason": "Versión nueva descargada del portal SGR el 2026-10-07 (lote 2 de docs/INGESTA-BANTOTAL.md); reemplaza a la versión anterior que estaba en bt_docs. Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/Colombia/NIIF/MDI-10111-CO-V3R1.1 - Adaptaciones a NIIF Colombia.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/Colombia/Sistema de Contrapartes/MDU-10110-CO-V3R1.1 - Sistema de Contrapartes l Particularidades Colombia.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/Colombia/Sistema de Cámara/MDI-10308-CO-V3R1.3 - Medios de Pagos Electrónicos Online- Batch para Cámaras (Débitos-Créditos).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/Colombia/Sistema de Depósitos a Plazo/MDI-10304-CO-V3R1.2 - Certificado de Depósito a Término.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/Colombia/Sistema de Depósitos a Plazo/MDU-10304-CO-V3R1.2 - Certificado de Depósito a Término.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/Colombia/Sistema de Préstamos/MDU-10201-CO-V3R1.1 - Modelador de Productos de Crédito Préstamos.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/ETP-10801-CO-V3R1.3-Control de Narcotráfico y de Lavado de Dinero Interactivo (HBCCOLV0).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Procesos Batch/ETP-10104-CO-V3R1.2 - Reporte anual de costos (PDECO310).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Cajas/ETP-10301-CO-V3R1.1 - Recibos provisionales- (HDECO511-HDECO512-HDECO51).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Contabilidad/ETP-10111-CO-V3R1.1 - Generación Resultados en ME (PGEN508 - PFS99508).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Contrapartes/ETP-10109-CO-V3R1.1 - Cambio de Documento (Colombia) (PDECOCH1).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Cuentas Vista/ETP-10303-CO-V3R1.1 - Cámara - Devolución Recibida del Canje.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Cámara de compensación de Cheques/ETP -10304-CO-V3R1.1 -Archivo al Proveedor de chequera - Certificado (HCVCO001).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Depósitos a Plazo/ETP-10304-CO-V3R1.1 - Cambio est. CDT cheq. acreditado (PDECO034).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Parámetros Generales/MDU-10103-CO-V3R1.1 - Sistema de Parámetros Generales.pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Seguridad/MDI-10109-CO-V3R1.1 -  Sistema de Seguridad - Autenticación por LDAP y LDAPS (HLOGIN).md",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Procesos por País/Colombia/ETP-10201-CO-V3R1.1 -Generación de Saldos en Cuentas de Orden de Créditos Abiertos por Plazo de Mora (PDECO301 – PDECO302).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Colombia/ETP-10114-CO-V3R1.1 - Cálculo Previsión Carteras SARC  (PRICO005 - PRICO006).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Colombia/ETP-10114-CO-V3R1.1 - Cálculo Segmentos Carteras SARC (PRIC003).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Colombia/ETP-10114-CO-V3R1.1 - Fase Acumulativa Desacumulativa  (PRICO001-02).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Colombia/ETP-10114-CO-V3R1.1 - Homologación de Categorías  (PRICO004).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Colombia/ETP-10114-CO-V3R1.1 - Previsiones Generales  (PRICO120).pdf",
+   "ingest": true,
+   "reason": "Documento de localización Colombia (CO) descargado del portal SGR el 2026-10-07 (lote 3 de docs/INGESTA-BANTOTAL.md). Revisado: sin credenciales."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Seguridad/MDI-10109-CO-V3R1.1 -  Sistema de Seguridad - Autenticación por LDAP y LDAPS (HLOGIN).pdf",
+   "ingest": false,
+   "reason": "Original de su .md homónimo. NO se ingiere: trae en la pág. 5 una contraseña de keystore literal de ejemplo; el .md la reemplaza por un marcador. 2026-10-07."
   }
  ]
 }
