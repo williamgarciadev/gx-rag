@@ -43,7 +43,7 @@ Leyenda: ✅ hecho · 🔄 en curso · ⏳ pendiente · ❓ requiere decisión.
 | **Una versión nueva reemplaza a la vieja** (respaldo + borrado de chunks) | Si conviven, el top-k mezcla versiones | 2026-10-07 |
 | Dentro de un lote, de un mismo documento (código **+ título**) se baja **solo la versión más alta** | Ej.: MDU-10202 V3R1.3 y V3R1.4 "Sistema de Descuentos" | 2026-10-07 |
 | Comparar por **código + título**, nunca solo código | `MDI-10201` lo comparten 4 documentos distintos (Préstamos, Seguros, Modelador, Vínculo) | 2026-10-07 |
-| Valor sensible literal en un PDF (contraseña de ejemplo) → `.md` con el valor reemplazado por un marcador; PDF `ingest: false` | Lo que recupera el RAG entra al contexto del agente y viaja al proveedor del modelo; tachar un valor de ejemplo no le quita nada a la respuesta | 2026-10-07 |
+| **Valores sensibles de ejemplo en los manuales: se ingieren tal cual** (decisión del usuario, reemplaza a la anterior de tacharlos) | El RAG corre local y no sale de este equipo. Matiz dejado constar: lo que recupera `search_docs` entra al contexto del agente consultor y viaja al proveedor del modelo. El escaneo de secretos sigue como **paso informativo**, no bloquea. El `.md` de LDAP ya ingerido con el valor tachado se deja así | 2026-10-07 |
 | Copias idénticas (mismo hash, nombre con "(2)") no se ingieren | Duplican chunks; el plan no las junta porque el "(2)" cambia el título | 2026-10-07 |
 | PDF que pierde contenido → se transcribe a `.md` y el PDF queda `ingest: false` | Casos: ETP-99000, ETP-TransferenciasACH, Buenas Prácticas GX16, guía de instalación GX16 | 2026-10-07 |
 | MDU-99000 (inventario de tablas) **fuera** del RAG | Duplica lo que el MCP `bantotal-dev` responde desde el schema real | 2026-07-27 |

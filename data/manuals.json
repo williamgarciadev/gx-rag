@@ -556,6 +556,536 @@
    "file": "Bantotal/SGR/Otros Documentos/Documentos por País/Colombia/Sistema de Seguridad/MDI-10109-CO-V3R1.1 -  Sistema de Seguridad - Autenticación por LDAP y LDAPS (HLOGIN).pdf",
    "ingest": false,
    "reason": "Original de su .md homónimo. NO se ingiere: trae en la pág. 5 una contraseña de keystore literal de ejemplo; el .md la reemplaza por un marcador. 2026-10-07."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 1.1/MDU-10401-GL-V3R1.1 - BT SOA Versión 1.1.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.0/MDI-10401-GL-V3R1.3 - Bantotal Servicios 2.0  l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.0/MDU-10401-GL-V3R1.1 - BTSOA - Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.0/MDU-10401-GL-V3R1.2 - BTS  2.0 - Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.1/MDI-10401-GL-V3R1.5 - Bantotal Servicios 2.1 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.1.1/MDI-10401-GL-V3R1.6 - Bantotal Servicios 2.1.1 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.2/MDI-10401-GL-V3R1.7 - Bantotal Servicios 2.2 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.3/MDI-10401-GL-V3R1.10 - Bantotal Servicios 2.3 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.3/MDU-10401-GL-V3R1.2 - Bantotal Servicios  Migración de versión 2.2 a 2.3.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4/MDI-10401-GL-V3R1.12 - Bantotal Servicios 2.4 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4/MDU-10401-GL-V3R1.3 - Bantotal Servicios l Migración de versión 2.3 a 2.4.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4/MDU-10403-GL-V3R1.1 - BTSConsumer.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.1/MDI-10401-GL-V3R1.1 - Bantotal Services Exposer 1.0.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.1/MDI-10401-GL-V3R1.13 - Bantotal Servicios 2.4.1 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.2/MDI-10401-GL-V3R1.14 - Bantotal Servicios 2.4.2 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.2/MDU-10401-GL-V3R1.4 - Bantotal Servicios l Actualización de versión 2.4 a 2.4.2.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.2/MDU-10401-GL-V3R1.4 - Bantotal Servicios l Actualización de versión 2.4.1 a 2.4.2.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.2/MDU-10401-GL-V3R1.5 - Bantotal Servicios  Migración de versión 2.1 a 2.4.2.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.4.2/MDU-10401-GL-V3R1.5 - Bantotal Servicios l Actualización de versión 2.3 a 2.4.2.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.5/MDI-10401-GL-V3R1.15 - BTServices 2.5 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.5/MDU-10403-GL-V3R1.1 - BTSConsumer 1.2.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.5.2/MDI-10401-GL-V3R1.2 - Bantotal Servicios 2.5.2 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.5.2/MDU-10401-GL-V3R1.8 - Bantotal Servicios l Actualización de versión 2_5 a 2_5_2.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.6/MDI-10401-GL-V3R1.4 - Bantotal Servicios 2.6 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.6/MDU-10401-GL-V3R1.12 - Bantotal Servicios l Actualización de versión 2_5 a 2_6.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.6/MDU-10401-GL-V3R1.9 - Bantotal Servicios l Actualización de versión 2_5_2 a 2_6.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.7/MDI-10401-GL-V3R1.4 - Bantotal Servicios 2.7 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.7/MDU-10401-GL-V3R1.13 - Bantotal Servicios l Actualización de versión 2_3 a 2_7.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.7/MDU-10401-GL-V3R1.13 - Bantotal Servicios l Actualización de versión 2_4_3 a 2_7.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.7/MDU-10401-GL-V3R1.15 - Bantotal Servicios l Actualización de versión 2_5 a 2_7.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS l  Exposer 1.1/MDI-10401-GL-V2R3.1 - Bantotal Services Exposer 1.1.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS l  Publisher 2.5.1/MDI-10401-GL-V2R3.16 - Bantotal Services 2.5.1 l Publicación de Servicios Bantotal.pdf",
+   "ingest": false,
+   "reason": "FUERA por decisión del usuario (2026-10-07): de Bantotal Servicios solo se ingiere la última versión (2.8, su guía de actualización y Exposer 1.2). Esta es una versión o guía de migración anterior; queda en disco."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal Impresor l Sistema de Definición y Resolución de Impresos/MDI-10105-GL-V3R1.3 - Bantotal Impresor con ActiveX.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal Impresor l Sistema de Definición y Resolución de Impresos/MDI-10105-GL-V3R1.4 - Bantotal Impresor con BTP (Bantotal Protocol).pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/MDU-10401-GL-V3R1.2 - Transacciones por Servicios.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Cadena de Cierre/MDI-10108-GL-V3R1.2 - Ejecución de Procesos Batch desde el Disparador Externo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Control Dual/MDI-10102-GL-V3R1.1  - Control Dual.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Matriz de Riegos/MDI-10122-GL-V3R1 1 - Matriz de Riesgo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Matriz de Riegos/MDU-10122-GL-V3R1 1 - Matriz de Riesgo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1 1 - Migraciones de Préstamos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1 1 - Migración de Carpeta Digital.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1-.1 - Migraciones de Datos Adicionales de Garantías.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Administración de Bandejas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Manual de Migraciones de Chequeras.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Manual de Migraciones de Depósitos a Plazo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Manual de Migraciones de Garantías Recibidas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Manual de Migración Garantías Datos Adicionales.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migraciones Cuentas y Personas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migraciones de Líneas de Crédito.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migraciones de Microfinanzas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migración de Acuerdos de Sobregiro.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migración de Datos Adicionales de Personas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migración de Facultades.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migración de Saldos Contables Inventariables.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10102-GL-V3R1.1 - Migración de Tarjetas de Débito.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10303-GL-V3R1.1  - Migraciones de Cuentas Vista.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDI-10303-GL-V3R1.1 - Manual de Migraciones Descuentos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Migracion/MDU-10102-GL-V3R1.1 - Manual Migración de Saldos Iniciales.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Administración  del Riesgo de Crédito/ETP-10114-GL-V3R1.2 - Administración manual de categorías (HRICAT01).pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Administración de Seguros/MDU-11001-GL-V3R1.1 - Sistema de Administración de Seguros.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Alerta de Lavado de Dinero/ETP-10116 -GL-V3R1.2 - Control Persona en Lista de Inhabilitados (PSNGCVP4).pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Alerta de Lavado de Dinero/MDI-10116-GL-V3R1 1 - Sistema de Alerta de Lavado de Dinero.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Carpeta Digital/MDI-10104-GL-V3R1.7 - Sistema de Carpeta Digital.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Carpeta Digital/MDU-10104-GL-V3R1.4 - Sistema de Carpeta Digital.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Configuración Bantotal/MDI-10101-GL-V3R1.3 - Multi-Idioma.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Configuración Bantotal/MDU-10101-GL-V3R1.1 - Terminología Bantotal.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Configuración Bantotal/MDU-10101-GL-V3R1.2- Sistema de Parámetros Generales.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Configuración Bantotal/MDU-10101-GL-V3R1.3 - Parametros de Operaciones.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contabilidad/MDI-10110-GL-V3R1-5 - Generador de XBRL.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contabilidad/MDU-10110-GL-V3R1.1 - Sistema de Contabilidad.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contabilidad/MDU-10110-GL-V3R1.2 - Fecha Valor Contable.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contabilidad/MDU-10110-GL-V3R1.2- Generador de Archivos y Funcionalidad XBRL  (HBCXBRLGN).pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/MDI-10109-GL-V3R1.1 - Alta Masiva de Cuentas y Personas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/MDI-10109-GL-V3R1.3 - Consulta Cliente (HCPO000).pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/MDU-10109-GL-V3R1.7 - Sistema de Contrapartes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Control Documentario/MDI-10117-GL-V3R1.1 - Control Documentario.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Definición y Ejecución de Transacciones/MDI-10113-GL-V3R1.6 - Monitor Transaccional.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Definición y Ejecución de Transacciones/MDU-10113-GL-V3R1.1 -  Guía Para el Ingreso de Transacciones.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Evaluacion Automática/MDI-10121-GL-V3R1.2 - Plataforma Automática de Evaluación (PAE).pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Impuestos/MDI-10106-GL-V3R1.4 - Sistema de Impuestos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Resolución de  Datos/MDI-10117-GL-V3R1.2 - Sistema de Resolución de Datos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Seguridad/MDI-10108-GL-V3R1.1- Sistema de Seguridad.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Seguridad/MDI-10108-GL-V3R1.2 - Integración Bantotal OpenID AV.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Seguridad/MDU-10108-GL-V3R1.2- Sistema de Seguridad.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema Motor de Reglas de Negocio/MDI-10112-GL-V3R1.1 -  Motor de Reglas de Negocio.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Auditoría/Auditoría de base de datos/MDI-10119-GL-V3R1.3 - Sistema de Auditoría de Base de Datos.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Auditoría/Auditoría de pantallas/MDI-10119-GL-V3R1.9 - Auditoría de Pantallas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/FATCA/MDI-10109-GL-V3R1.3 - FATCA.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/FATCA/MDU-10109-GL-V3R1.3 - FATCA.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/Geolocalización/MDI-10109-GL-V3R1.2 - Geolocalización.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/OCDE/MDI-10109-GL-V3R1.1 - OCDE.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/MDI-10120-GL-V3R1.5 - Facultades y Poderes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/MDU-10120-GL-V3R1.4 - Facultades y Poderes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Mensajería/Mensajería Bantotal/MDI-10107-GL-V3R1.1 - Sistema de Mensajería.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Mensajería/Mensajería Bantotal/MDU-10107-GL-V3R1.1 - Sistema de Mensajería.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Mensajería/Sistema de Gestión de Eventos de Negocios/MDU-10107-GL-V3R1.2 - Sistema de Gestión de Eventos de Negocios.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Mensajería/Swift/MDI-10107-GL-V3R1.2 - SWIFT.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Sistema de Mensajería/Swift/MDU-10107-GL-V3R1.1 - Monitor SWIFT.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.3/MDI-10401-GL-V3R1.1 - Instalación API Institucional.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.5/MDI-10402-GL-V3R1.2 - BTSDL.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.3/MDU-99000-GL-V3R1.1 - Test de instalación de BTS.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.8/MDI-10401-GL-V3R1.1 - Bantotal Servicios 2.8 l Publicación de Servicios Bantotal.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS 2.8/MDU-10401-GL-V3R1.17 - Bantotal Servicios l Actualización de versión 2_8.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  NÚCLEO/Bantotal l Servicios/BT I Servicios/BTS l Exposer 1.2/MDI-10401-GL-V2R3.1 - Bantotal Services Exposer 1.2.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/Sistema de Administración de Seguros/MDI-11001-GL-V3R1.2 - Sistema de Administración de Seguros.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/Sistema de Configuración Bantotal/MDU-10101-GL-V3R1.1 - Parámetros de Operaciones.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
   }
  ]
 }
