@@ -59,8 +59,17 @@ y es AngularJS: no sirve `WebFetch`/`curl`, se usa Playwright.
 🔴 El portal da permisos de **escritura** (botones Modificar/Eliminar, subir documentación). Todo lo
 de aquí es **solo lectura**: navegar y descargar, nada más.
 
-⚠️ **Los scripts de recorrido y descarga todavía viven en un scratchpad de sesión** y se pierden. Pasarlos
-a la skill `leer-doc-sgr-bantotal` está aprobado y pendiente (ver Pendientes).
+**Las tres herramientas** (orden de uso):
+
+| Paso | Script | Dónde | Hace |
+|---|---|---|---|
+| 1 | `sgr_docs.py inventario <out.jsonl> [--sub "Manuales/<carpeta>"]` | skill `leer-doc-sgr-bantotal` (DevGeo) | recorre el árbol y lista cada archivo |
+| 2 | `python -m scripts.sgr_plan <inventario> --carpeta "<carpeta>" --out lote.json` | **este repo** | aplica las Decisiones (GL/CO, última versión, lo que el RAG no tiene) y arma el lote |
+| 3 | `sgr_docs.py descargar lote.json <destino>` | skill | baja el lote, valida `%PDF-`, es idempotente |
+
+Comandos completos en la skill. El inventario completo del 2026-10-07 está en
+`F:/ProyectosClaude/docs/Bantotal/SGR/_inventario/`. Los nombres de carpeta del portal llevan
+**dobles espacios** (`BANTOTAL CORE  COLOCACIONES`): cópialos del inventario.
 
 ## Dónde queda cada ruta
 
@@ -85,7 +94,7 @@ sus chunks por `source` → mover → actualizar `manuals.json` → reingerir.
 
 ## Pendientes
 
-- [ ] Pasar los scripts del portal (inventario + descarga) a la skill `leer-doc-sgr-bantotal`, con un helper compartido.
+- [x] Scripts del portal en la skill (`sgr_docs.py`) y el plan de lote en este repo (`scripts/sgr_plan.py`), 2026-10-07. ⚠️ `sgr_docs.py` y el SKILL.md de la skill están **sin commitear en DevGeo** (la rama activa allá era trabajo ajeno).
 - [ ] `verify_ingest`: que los índices largos no inflen las "palabras perdidas".
 - [ ] Extractor: un pie de página partido en dos líneas se cuela en ETP-99000 ("de Larrobla y Asociados…").
 - [ ] Mover los `.env` de los MCP Bantotal fuera de la carpeta de la skill `bantotal_model_docs` (Action `act_muymg7zp_d89ee3b31878`).

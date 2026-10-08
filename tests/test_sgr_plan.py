@@ -1,0 +1,85 @@
+"""Tests de `scripts.sgr_plan`: qué documentos del portal SGR entran a un lote.
+
+Cada regla nació de un caso real del 2026-10-07 (lote Core Colocaciones). Si una se
+rompe, el lote baja normativa de otro país, duplica versiones o salta un manual nuevo
+creyendo que ya estaba.
+"""
+
+import pytest
+
+from scripts.sgr_plan import Doc, doc_key, latest_only, scope_of, status_of
+
+ROOT = "\\\\figari\\docsbantotal\\version2\\ORG.INTEGRAL\\WEBV3R1\\"
+
+
+def _link(*parts):
+    return ROOT + "\\".join(parts)
+
+
+@pytest.mark.unit
+def test_scope_reads_the_localization_segment_of_the_code():
+    assert scope_of(_link("Manuales", "M", "MDI-10201-GL-V3R1.22 - Sistema de Préstamos.pdf")) == "GL"
+    assert scope_of(_link("Otros", "ETP-10206-CO-V3R1.5 - Pólizas.pdf")) == "CO"
+    assert scope_of(_link("Otros", "ETP-10801-UY-V2R2.1 - Lavado de dinero.pdf")) == "fuera"
+
+
+@pytest.mark.unit
+def test_scope_inside_a_country_folder_is_the_folder_not_the_code():
+    # "MANUALES POR PAÍS\Argentina" holds -GL- manuals too: the folder decides.
+    assert scope_of(_link("Manuales", "MANUALES POR PAÍS", "Colombia", "MDI-10110-GL-V3R1.7 - Contabilidad.pdf")) == "CO"
+    assert scope_of(_link("Manuales", "MANUALES POR PAÍS", "Argentina", "MDI-10110-GL-V3R1.7 - Contabilidad.pdf")) == "fuera"
+
+
+@pytest.mark.unit
+def test_scope_without_localization_or_code_is_left_to_the_user():
+    assert scope_of(_link("Otros", "ECP-000302-V3R1.1 - Renovación Pólizas.pdf")) == "sin-país"
+    assert scope_of(_link("Manuales", "M", "Cálculo de intereses Bantotal.pdf")) == "sin-país"
+
+
+@pytest.mark.unit
+def test_doc_key_is_code_plus_title_and_tolerates_spaces_in_the_code():
+    # "MDI-10211- GL-V3R1.1" is how the portal really names it.
+    (key, version) = doc_key("MDI-10211- GL-V3R1.1 - Originación de Créditos l Flujo Consumo.pdf")
+    assert key == ("MDI-10211", "originacióndecréditoslflujoconsumo")
+    assert version == (3, 1, 1)
+
+
+@pytest.mark.unit
+def test_one_code_shared_by_different_documents_gives_different_keys():
+    # MDI-10201 names Préstamos, Seguros, Modelador and Vínculo: four documents.
+    prestamos, _ = doc_key("MDI-10201-GL-V3R1.22 - Sistema de Préstamos.pdf")
+    seguros, _ = doc_key("MDI-10201-GL-V3R1.5 - Sistema de Seguros.pdf")
+    assert prestamos != seguros
+
+
+@pytest.mark.unit
+def test_latest_only_keeps_the_highest_version_of_each_document():
+    docs = [
+        Doc(link="a", name="MDU-10202-GL-V3R1.3 - Sistema de Descuentos.pdf"),
+        Doc(link="b", name="MDU-10202-GL-V3R1.4 - Sistema de Descuentos.pdf"),
+        Doc(link="c", name="MDU-10202-GL-V3R1.5 - Modelador de Productos de Crédito Descuentos.pdf"),
+    ]
+    kept, dropped = latest_only(docs)
+    assert {d.link for d in kept} == {"b", "c"}
+    assert [d.link for d in dropped] == ["a"]
+
+
+@pytest.mark.unit
+def test_latest_only_compares_versions_numerically_not_as_text():
+    # As text "V3R1.9" > "V3R1.22"; it is the older one.
+    docs = [
+        Doc(link="old", name="MDI-10201-GL-V3R1.9 - Sistema de Préstamos.pdf"),
+        Doc(link="new", name="MDI-10201-GL-V3R1.22 - Sistema de Préstamos.pdf"),
+    ]
+    kept, _ = latest_only(docs)
+    assert [d.link for d in kept] == ["new"]
+
+
+@pytest.mark.unit
+def test_status_against_what_the_rag_already_has():
+    have = {doc_key("MDI-10201-GL-V3R1.20 - Sistema de Préstamos.pdf")[0]: {(3, 1, 20)}}
+    assert status_of("MDI-10201-GL-V3R1.20 - Sistema de Préstamos.pdf", have) == "ya está"
+    assert status_of("MDI-10201-GL-V3R1.22 - Sistema de Préstamos.pdf", have) == "versión nueva"
+    assert status_of("MDI-10201-GL-V3R1.5 - Sistema de Préstamos.pdf", have) == "versión vieja"
+    assert status_of("MDI-10201-GL-V3R1.6 - Modelador de Productos.pdf", have) == "nuevo"
+    assert status_of("Cálculo de intereses.pdf", have) == "sin código"
