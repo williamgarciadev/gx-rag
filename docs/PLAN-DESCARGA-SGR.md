@@ -7,9 +7,12 @@ no tiene. **La ingesta es otro plan**, que se arma después, con estos archivos 
 > ingesta cuesta horas de embeddings y toca la base. Con todo descargado se puede revisar con calma
 > (secretos, pérdida, duplicados) y decidir el orden de ingesta sin volver al portal.
 
-**Medido el 2026-10-07** con `sgr_plan` sobre el inventario del mismo día: **635 PDFs** por bajar,
-sin duplicados, solo la última versión de cada documento. Criterio y decisiones: ver
-`docs/INGESTA-BANTOTAL.md`.
+**Medido el 2026-10-07** con `sgr_plan` sobre el inventario del mismo día: **614 PDFs** en total
+(D1 = 167, D2 = 447), sin duplicados, solo la última versión de cada documento. Criterio y
+decisiones: ver `docs/INGESTA-BANTOTAL.md`.
+
+> Primera versión de este plan: 635. Bajó a 614 al corregir la regla de país (una carpeta de país
+> a cualquier profundidad manda sobre el código): 21 informes de Uruguay venían con código `-GL-`.
 
 ## Cómo se baja un lote (los mismos pasos para cada fila)
 
@@ -41,6 +44,10 @@ terminaba en dos lotes. Medido el 2026-10-07: D1.1 daba 110 con `--carpeta` y 10
 ⚠️ Al armar un lote a mano, **no buscar por cómo termina el nombre**: el 2026-10-07 eso trajo un
 homónimo de Uruguay. Usar `sgr_plan` o el `Link` completo.
 
+⚠️ **El código del archivo no alcanza para saber el país**: el portal publica informes de Uruguay
+con código `-GL-` dentro de carpetas `...\Uruguay\...`. `sgr_plan` da prioridad a cualquier carpeta
+con nombre de país, a cualquier profundidad (lista medida en el inventario).
+
 ## Lotes de descarga
 
 Orden: primero los **manuales** (documentan sistemas completos), después los **ETP** de
@@ -50,13 +57,15 @@ Orden: primero los **manuales** (documentan sistemas completos), después los **
 
 | ✔ | Lote | Prefijo (`--solo`, uno por línea) | PDFs | Fecha | Real |
 |---|---|---|---|---|---|
-| 🔄 | D1.1 Core Núcleo | `Manuales/BANTOTAL CORE  NÚCLEO/` y `Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/` | 106 | | |
-| [ ] | D1.2 Core Captaciones | `Manuales/BANTOTAL CORE  CAPTACIONES/` | 31 | | |
-| [ ] | D1.3 DevOps | `Manuales/BANTOTAL  DEVOPS/` | 10 | | |
-| [ ] | D1.4 Reportes Regulatorios | `Manuales/BANTOTAL  REPORTES REGULATORIOS/` | 8 | | |
-| [ ] | D1.5 Tesorería | `Manuales/BANTOTAL  TESORERÍA/` | 7 | | |
-| [ ] | D1.6 Instalación | `Manuales/BANTOTAL INSTALACIÓN/` | 5 | | |
-| [ ] | D1.7 BPeople, Comercio Exterior, BTDevelopers, Conectores | (una por carpeta) | 3 + 2 + 2 + 1 | | |
+| ✅ | D1.1 Core Núcleo | `Manuales/BANTOTAL CORE  NÚCLEO/` y `Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/` | 106 | 2026-10-07 | 106 · 0 fallas · 0 duplicados · 0 de otro país |
+| ✅ | D1.2 Core Captaciones | `Manuales/BANTOTAL CORE  CAPTACIONES/` | 31 | 2026-10-07 | 31 · 0 fallas |
+| ✅ | D1.3 DevOps | `Manuales/BANTOTAL  DEVOPS/` | 10 | 2026-10-07 | 10 · 0 fallas |
+| ⛔ | D1.4 Reportes Regulatorios | `Manuales/BANTOTAL  REPORTES REGULATORIOS/` | ~~8~~ **0** | 2026-10-07 | Fuera de alcance: los 8 son informes para el BCU de **Uruguay** con código `-GL-`. 5 alcanzaron a bajar y se borraron |
+| ✅ | D1.5 Tesorería | `Manuales/BANTOTAL  TESORERÍA/` | 7 | 2026-10-07 | 7 · 0 fallas |
+| ✅ | D1.6 Instalación | `Manuales/BANTOTAL INSTALACIÓN/` | 5 | 2026-10-07 | 5 · 0 fallas |
+| ✅ | D1.7 BPeople, Comercio Exterior, BTDevelopers, Conectores | (una por carpeta) | 3 + 2 + 2 + 1 | 2026-10-07 | 8 · 0 fallas |
+
+> D1 completo: **167 PDFs** en disco, 0 duplicados, 0 de otro país (verificado por hash y por ruta).
 
 > D1.1: "MANUALES POR PAÍS" tiene un espejo de Núcleo con los mismos documentos. `sgr_plan` se
 > queda con una sola copia de cada uno, así que no se baja dos veces.
@@ -65,14 +74,14 @@ Orden: primero los **manuales** (documentan sistemas completos), después los **
 
 | ✔ | Lote | Prefijo (`--solo`, uno por línea) | PDFs | Fecha | Real |
 |---|---|---|---|---|---|
-| [ ] | D2.1 Procesos Batch | `Otros Documentos/Procesos Batch/` | 163 | | |
+| [ ] | D2.1 Procesos Batch | `Otros Documentos/Procesos Batch/` | 160 | | |
 | [ ] | D2.2 Núcleo | `Otros Documentos/BANTOTAL CORE - NÚCLEO/` | 83 | | |
 | [ ] | D2.3 Captaciones | `Otros Documentos/BANTOTAL CORE - CAPTACIONES/` | 66 | | |
 | [ ] | D2.4 Colocaciones | `Otros Documentos/BANTOTAL CORE - COLOCACIONES/` | 59 | | |
 | [ ] | D2.5 Mercados Financieros | `Otros Documentos/Mercados Financieros/` | 31 | | |
 | [ ] | D2.6 RTE's Genéricas | `Otros Documentos/RTE's Genéricas/` | 21 | | |
-| [ ] | D2.7 Riesgos | `Otros Documentos/Riesgos/` | 15 | | |
-| [ ] | D2.8 Normativo, Comercio Internacional, Cadena de Cierre, Canales, sueltos | (una por carpeta) | 9 + 5 + 3 + 1 + 3 | | |
+| [ ] | D2.7 Riesgos | `Otros Documentos/Riesgos/` | 11 | | |
+| [ ] | D2.8 Normativo, Comercio Internacional, Cadena de Cierre, Canales, sueltos | (una por carpeta) | 3 + 5 + 3 + 1 + 3 | | |
 
 ## Fuera de este plan (decidido)
 
@@ -84,7 +93,7 @@ Orden: primero los **manuales** (documentan sistemas completos), después los **
 
 ## Decisiones pendientes (del usuario, antes de la ingesta)
 
-- [ ] **101 PDFs sin país o sin código** (ej. ECP-*, nombres libres): ¿se bajan para revisarlos o se dejan?
+- [ ] **62 PDFs sin país o sin código** (ej. ECP-*, nombres libres): ¿se bajan para revisarlos o se dejan?
 - [ ] **`Manejo de Calificaciones (HBC201G).pdf`** (Colombia, sin código): ya está en disco, sin ingerir.
 - [ ] **ETP de "Otros Documentos"**: se bajan todos (es barato), pero ¿se ingieren todos o solo los de los programas que usa Contactar?
 

@@ -37,7 +37,7 @@ Leyenda: ✅ hecho · 🔄 en curso · ⏳ pendiente · ❓ requiere decisión.
 | Decisión | Por qué | Fecha |
 |---|---|---|
 | **Solo localización Global (`-GL-`) y Colombia (`-CO-`)** | Lo demás es normativa de otro país (UY, PE, AR, MX…): un agente la tomaría como norma de Contactar | 2026-10-07 |
-| En las carpetas "por País" manda la carpeta **solo si su hijo es un país** | "MANUALES POR PAÍS" también tiene `BANTOTAL CORE  NÚCLEO` con 128 manuales Globales: tratarla como país los descartaba (le pasó a Contrapartes V3R1.29) | 2026-10-07 |
+| **Una carpeta con nombre de país, a cualquier profundidad, manda sobre el código del archivo**; una carpeta que no es país no se adivina | El portal publica informes del BCU de Uruguay con código `-GL-` bajo `...\Uruguay\...` (21 documentos). Y "MANUALES POR PAÍS" también tiene `BANTOTAL CORE  NÚCLEO` con 128 manuales Globales, que no es un país (le pasó a Contrapartes V3R1.29). Lista de países medida en el inventario, en `scripts/sgr_plan.py` | 2026-10-07 |
 | Las descargas reproducen la ruta del portal bajo `docs/Bantotal/SGR/` | Se ve de qué carpeta salió cada archivo. **Excepción**: el lote 1 quedó en `SGR/Colocaciones/` y no se mueve (mover duplica en la base) | 2026-10-07 |
 | Sin segmento de país (ECP…) o sin código (planillas, nombres libres): **los decide el usuario caso a caso** | No se pueden clasificar solos | 2026-10-07 |
 | **Una versión nueva reemplaza a la vieja** (respaldo + borrado de chunks) | Si conviven, el top-k mezcla versiones | 2026-10-07 |
