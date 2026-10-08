@@ -1086,6 +1086,161 @@
    "file": "Bantotal/SGR/Manuales/MANUALES POR PAÍS/BANTOTAL CORE  NÚCLEO/Sistema de Configuración Bantotal/MDU-10101-GL-V3R1.1 - Parámetros de Operaciones.pdf",
    "ingest": true,
    "reason": "Manual Global de Bantotal Core Núcleo, descargado del portal SGR el 2026-10-07 (lote I1.1 de docs/PLAN-INGESTA-SGR.md). Revisado: sin credenciales en texto plano."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/MDU-10303-GL-V3R1.1 - Adelanto de Haberes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Ahorro Programado/MDI-10313-GL-V3R1.6- Ahorro Programado.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Ahorro Programado/MDU-10313-GL-V3R1.2 - Ahorro Programado.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cajas/MDI-10301-GL-V3R1.11 - Sistema de Cajas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cajas/MDU-10301-GL-V3R1.2 - Sistema de Cajas.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cash Management/MDI-10308-GL-V3R1.3 - Sistema de Cash Management.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cofres de Seguridad/MDI-10306-GL-V3R1.1 - Cofres de Seguridad.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cofres de Seguridad/MDU-10306-GL-V3R1.2 - Cofres de Seguridad.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cámara de compensación de Cheques/MDI-10308-GL-V3R1.3 - Sistema de Cámara.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Depósitos a Plazo/MDI-10304-GL-V3R1.3 - Sistema de Depósitos a Plazo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Depósitos a Plazo/MDI-10304-GL-V3R1.8 - Modelador de Depósito a Plazo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Depósitos a Plazo/MDU-10304-GL-V3R1.1 - Modelador de Depósito a Plazo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Depósitos a Plazo/MDU-10304-GL-V3R1.2 - Sistema de Depósitos a Plazo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Remesas/MDI-10312-GL-V3R1.1 - Remesas Internacionales de Dinero.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Tarjetas de Débito/MDI-10305-GL-V3R1.5 - Sistema de Tarjeta de Débito.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Tarjetas de Débito/MDU-10305-GL-V3R1.3 - Sistema de Tarjeta de Débito.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Tesoreria/MDI-103010-GL-V3R1.3 - Sistema de Tesorería.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Tesoreria/MDU-103010-GL-V3R1.2 -Sistema de Tesorería.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Valor al Cobro/MDI-10314-GL-V3R1.1 - Valor al Cobro.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cajas/Calculadora Bantotal/MDI-10301-GL-V3R1.1 - Calculadora Bantotal.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cajas/Calculadora Bantotal/MDU-10301-GL-V3R1.1 - Calculadora Bantotal.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Productos y Paquetes/MDI-10303-GL-V3R1.8 - Productos y Paquetes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Productos y Paquetes/MDI-10309-GL- V3R1.1- Cambio de Producto Vista.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cajas de Ahorro/MDI-10302-GL-V3R1.3 - Sistema de Cajas de Ahorro.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cajas de Ahorro/MDU-10302-GL-V3R1.2 - Sistema de Cajas de Ahorro.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Bolsillo/MDI-10302-GL-V3R1.2 - Cuentas Bolsillo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Bolsillo/MDU-10302-GL-V3R1.2 - Cuentas Bolsillo.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Corrientes/MDI-10303-GL-V3R1.2 - Administración de Cheques de Gerencia y Comunes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Corrientes/MDI-10303-GL-V3R1.5 - Sistema de Cuentas Corrientes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Corrientes/MDI-103103-GL-V3R1.1 - Cheques Rechazados.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL CORE  CAPTACIONES/Sistema de Cuentas Vista/Sistema de Cuentas Corrientes/MDU-10303-GL-V3R1.6 - Sistema de Cuentas Corrientes.pdf",
+   "ingest": true,
+   "reason": "Manual Global de Bantotal Core Captaciones, descargado del portal SGR el 2026-10-07 (lote I1.2 de docs/PLAN-INGESTA-SGR.md)."
   }
  ]
 }

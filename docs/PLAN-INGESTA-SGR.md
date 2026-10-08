@@ -9,7 +9,7 @@ y toca la base, así que cada lote se verifica antes de pasar al siguiente.
 | ✔ | Lote | Qué | PDFs | Págs | Tiempo est. | Fecha | Resultado |
 |---|---|---|---|---|---|---|---|
 | ✅ | **I1.1** | Manuales › Core Núcleo | 106 → **74** | 4.527 | ~1 h 10 min real | 2026-10-07 | 1.460 secciones, 74/74 ✓. De Bantotal Servicios solo la última versión (2.8 + su guía, Exposer 1.2, API Institucional, Transacciones por Servicios): 32 versiones y migraciones viejas quedan `ingest: false`. Pérdida: 3 referencias cruzadas en la franja del pie. bt_docs = 15.630 |
-| [ ] | **I1.2** | Manuales › Core Captaciones | 31 | 4.447 | ~2 h | | |
+| ✅ | **I1.2** | Manuales › Core Captaciones | 31 | 4.447 | ~1 h 50 min real | 2026-10-07 | 1.875 secciones, 31/31 ✓. Pruebas: cierre de caja y renovación de DPF ✅; "apertura de cuenta corriente" ⚠️ top-1 equivocado (Migración de Tarjetas), los 3 hits de una sola mitad del híbrido → primera señal de ruido. bt_docs = 20.874 |
 | [ ] | **I1.3** | Manuales › Tesorería, Comercio Exterior, DevOps, Instalación, Conectores, BPeople, BTDevelopers | 30 | 1.662 | ~45 min | | |
 | [ ] | **Gate** | Medir la línea base del retrieval (`eval/gold.jsonl`) antes de meter ETPs | — | — | — | | |
 | [ ] | **I2** | ETP de Otros Documentos (D2, 445 PDFs) | ❓ | | | | Requiere decisión: todos o solo los programas que usa Contactar |
