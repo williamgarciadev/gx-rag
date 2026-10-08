@@ -7,6 +7,9 @@ Existe para que el próximo (persona o agente) no repita trabajo ni deshaga una 
 > su `reason`) y en la base (`chunks.source`). Este documento guarda lo que esos dos no dicen: el
 > plan, las decisiones y su porqué.
 
+> **Desde el 2026-10-07 la descarga y la ingesta van separadas**: la checklist de descarga está en
+> **`docs/PLAN-DESCARGA-SGR.md`** (635 PDFs). La ingesta de lo descargado se planifica aparte.
+
 ## Ruta rápida — traer el próximo lote
 
 1. Mira la tabla **Lotes** y toma el primero ⏳.
