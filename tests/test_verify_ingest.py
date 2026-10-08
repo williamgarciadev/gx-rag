@@ -8,7 +8,13 @@ aritmética se equivoca, informa "sin pérdida" sobre un documento incompleto.
 
 import pytest
 
-from scripts.verify_ingest import lonely_furniture, lost_words, source_patterns, uncovered_pages
+from scripts.verify_ingest import (
+    lonely_furniture,
+    lost_words,
+    scattered_toc_pages,
+    source_patterns,
+    uncovered_pages,
+)
 
 
 @pytest.mark.unit
@@ -69,6 +75,23 @@ def test_uncovered_pages_expands_ranges_and_skips_the_cover():
     # Page 1 is the cover and is never ingested by design: reporting it would
     # make every document look incomplete.
     assert uncovered_pages(["3-5", "7", ""], page_count=8) == [2, 6, 8]
+
+
+@pytest.mark.unit
+def test_scattered_toc_pages_flags_index_pages_after_the_opening_block():
+    # The verifier excludes index pages from coverage, and it learns which ones
+    # they are from the extractor's own is_toc_page — so a content page the
+    # extractor mistakes for an index was invisible: MDI-10206 reported "páginas
+    # sin cubrir: ninguna" with 51 table pages dropped. An index is one block at
+    # the start; a lone "index" page at p.21 or p.303 is content until proven
+    # otherwise.
+    assert scattered_toc_pages([2, 3, 4, 5, 21, 23, 303]) == [21, 23, 303]
+
+
+@pytest.mark.unit
+def test_scattered_toc_pages_accepts_a_single_contiguous_index():
+    assert scattered_toc_pages([2, 3, 4]) == []
+    assert scattered_toc_pages([]) == []
 
 
 @pytest.mark.unit

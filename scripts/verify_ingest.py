@@ -68,6 +68,24 @@ def uncovered_pages(page_ids: list[str], page_count: int) -> list[int]:
     return [n for n in range(2, page_count + 1) if n not in covered]
 
 
+def scattered_toc_pages(toc_pages: list[int]) -> list[int]:
+    """Páginas de índice que no pertenecen al primer bloque contiguo.
+
+    Las páginas de índice salen de `is_toc_page`, el MISMO criterio del extractor,
+    y quedan fuera de la cobertura: una página de contenido que el extractor tome
+    por índice no se ve en "páginas sin cubrir". Así se perdieron 51 páginas de
+    tabla de MDI-10206 con el reporte diciendo "ninguna" (2026-10-08). Un índice es
+    un bloque al principio; una página de "índice" suelta en mitad del documento
+    es contenido hasta que se demuestre lo contrario.
+    """
+    block_end = 0
+    for i, page in enumerate(toc_pages):
+        if i and page != toc_pages[i - 1] + 1:
+            break
+        block_end = i + 1
+    return toc_pages[block_end:]
+
+
 _DIGITS_RE = re.compile(r"\d+")
 
 #: Un pie real sale en casi todas las páginas; uno visto en menos de esta
@@ -145,6 +163,10 @@ def _report_pdf(path: Path) -> None:
 
     print(f"  capítulos extraídos: {len(docs)} · páginas: {len(pages)} · índice: {toc_pages or '—'}")
     print(f"  páginas sin cubrir (fuera de portada e índice): {missing or 'ninguna'}")
+    scattered = scattered_toc_pages(toc_pages)
+    if scattered:
+        print(f"  ⚠ tomadas como índice fuera del bloque inicial ({len(scattered)}): "
+              f"{scattered} — revisar si eran contenido")
     print(f"  palabras perdidas: {sum(lost.values())}", end="")
     print(f" → {lost.most_common(_REPORT_LIMIT)}" if lost else "")
     if lonely:
