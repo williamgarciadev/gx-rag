@@ -3166,6 +3166,256 @@
    "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 -  Pasaje de Fecha de Vto. (PCC00601).pdf",
    "ingest": true,
    "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.7 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Acreditación Batch de Cheques de otros Bancos  (PCC00602).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Ajuste de Saldos Sobregirados  (PCC00128).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cambio de Estados de Cuentas Vistas  (PCC00145).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cambios de Estado de Acuerdos a Cancelar (PCC00030).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cobertura en Cuentas Vista con Experto  (PCC00117).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cobertura y Transferencia de Cuentas Corrientes Batch  (PCC00017).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cobro de Comisiones por Administración de Acuerdos (PCC00092).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cobro de Comisiones por CC Sobregirada  (PCC00090).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Comisión de Exceso Sobregiro  (PCC00087).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Cálculo de Comisiones Genéricas  (PCC00006).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Depura Órdenes de no Pago (PCC00523).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Devengado Vista (PCC20003).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Generación Saldos Módulo Cheque Gerencia  (PCLE252).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Regeneración de FSH021  (HCC00550 - PCC00550).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.1 - Vencimiento de Acuerdos en Cuenta  (PCC00075).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.2 - Cierre de CC y CA (PCC00099).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.2 - Cálculo de Estadísticas - Generación FSH017  (PCC00001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.3 - Ajuste de Saldos Sobregirados  (PCC00028).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.3 - Cobro intereses por sobregiro con contratos y créditos internos (PCC00037).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.3 - Generación FSH021 Saldos Diarios (PCC00024 - PCC00032).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.4 - Estado de Cuenta Batch XML (PRG1904).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10303-GL-V3R1.5 - Devengado Vista (PCC00003).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10309-GL-V3R1.2 - Pasaje Cuentas Vista a Inactivas (PCC00414).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP-10310-GL-V3R1.2 - Cálculo de Estadísticas - Generación FSH017 (PCC0001N).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Depósitos a Plazo/ETP-10304-GL-V3R1.1 - Decremento de capital DPF.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Depósitos a Plazo/ETP-10304-GL-V3R1.1 - Incremento de capital DPF.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Depósitos a Plazo/ETP-10304-GL-V3R1.5 - Renovación Automática de DPF (PDP00001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Garantías Recibidas/ETP-10204-GL-V3R1.1 - Distribución de Garantías por Grupo Económico (PX999GG0).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Garantías Recibidas/ETP-10204-GL-V3R1.3 - Ajuste de Garantías Recibidas (PNU00013).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 - Código de Actividad en FSH012.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 - Expansión de campos lista y acumuladores (PSID0001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 - Generación de FSH012 Express (PBCGD10A-PBCGD20A-PBCGD20B-PBCGD20C).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 - Maestro de Tablas (HBC205T).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 - Manejo de Calificaciones (HBC201G).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 - Manual de Sistema de Informaciones (HSI001 - HSI004).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Información a Organismos Reguladores/ETP-10801-GL-V3R1.1 -Ejecución de Procesos Normativos  (HBCGN100-1).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos por Convenios/ETP-10208-GL-V3R1.1 - Generación - Cobro de cartera batch (PPP9361).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Generación de Pagos por Operación (PPP602 - PPP602M).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Generar Histórico de FSR022.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Re-expresión l Préstamos Fondeados por Terceros (PPP00124 - PPP00126).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.1 - Reclasificación Capital Corto - Largo Plazo  (PPP92065).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.2 - Cobro Batch de Préstamos (PPP92005).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.3 - Pasaje a Castigo (PPP6361).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Préstamos/ETP-10201-GL-V3R1.3 - Pasaje de Rubros por Cuota (PPP92025).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Seguridad/ETP-10108-GL-V3R1.1 - Actualización de Perfiles por Vencimiento  (PPRF900L).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Seguridad/ETP-10108-GL-V3R1.1 - Listado de Excepciones  (RFS00099).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Búsqueda de Movimientos Duplicados TDD040 (PTDD1205 PTDD1206).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Comisiones por Tenencia de TD (PTDD0155-PTDD0156).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Proceso de activación de tarjetas virtuales (PTDD0350).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - TD - Recepción De Archivo PTLF - BANELCO (PTDD0341).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.8 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Procesos Batch)."
   }
  ]
 }
