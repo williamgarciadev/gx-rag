@@ -3641,6 +3641,96 @@
    "file": "Bantotal/SGR/Otros Documentos/Riesgos/Previsionamiento/NIIF/ETP-10801-GL-V3R1.1 - Provisión NIIF (PRINI122).pdf",
    "ingest": true,
    "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.9 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › RTE's Genéricas, Procesos Batch, Riesgos)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP - 010.401 - GL - V3R1.1 - RTE Sustituye rubro en suspenso (prte192).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Impuestos/ETP -  10106- GL- V3R1. 1- IVA a pagar y pendiente de  cobro (PRTE00).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Mercados Financieros/Mercados l Títulos y Valores/ETP-167.493-GL-V3R1.1 - Valorización de operaciones (PBRKCI78).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Normativo/Genérico/ETP-RR-GL-V3R1 - Panel generador de demostrativos a demanda.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/Nueva carpeta/ETP 10201 -GL-V3R1.1 - Anulación por perfil (PRTE0137).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BData/MDU - BDATA - Analitica descriptiva - Indicadores Cliente.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/SGR/INS - SGR - 000 -Ingreso y Administración de Requerimientos.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Manuales/BANTOTAL  DEVOPS/BANTOTAL DOGOTOOLS/Dogotools l V 1.5/MDU-10102-GL.1 - Dogotools l Administración y Generación de Datos 1.5.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ECP-164545-V3R1.1 - Generar Libro Diario en CSV (HBAEN03).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP - Anulación de Transacciones (HW001RB).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP - 10110- GLV3R1.1 -Balance de Comprobación (saldos y movimientos) (HBAEN05).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10116-V3R1-Novedades de Personas Inhabilitadas (HRGLN030).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Cuentas Vistas/ETP - Identifica CV con movimientos Fvc PCC10003.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/Fecha de Incumplimiento/ECP-10201-V3R1.1 Fecha de incumplimiento (RRG0042).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - COLOCACIONES/Sistema de Préstamos/Nueva carpeta/ETP - Especificación técnica (PFSA018C).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Bantotal l DevOps/BANTOTAL DESCARTES/Mensaje de Confirmación/ECP-10102-V3R1.1 - Tipo de Mensaje OK (HFRTHEME).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Normativo/Uruguay/Informes Mensuales/Central de Riesgos/ETP-10800-V2R2.1 - Informe F1000-48 - Formato de Cuentas no PUC para el Cálculo del Patrimonio Adecuado.pdf",
+   "ingest": true,
+   "reason": "Documento de localización COLOMBIA (su portada dice 'Colombia'; F1000-48 y PUC son formatos de la Superfinanciera) aunque el portal lo archiva en Normativo/Uruguay; descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Genérico/Previsionamiento Paralelizado (PRI01122).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
   }
  ]
 }
