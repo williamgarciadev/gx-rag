@@ -3731,6 +3731,26 @@
    "file": "Bantotal/SGR/Otros Documentos/Procesos Batch/Sistema de Administración del Riesgo de Crédito/Procesos de Riesgo/Genérico/Previsionamiento Paralelizado (PRI01122).pdf",
    "ingest": true,
    "reason": "Documento Global descargado del portal SGR el 2026-10-08 (lote I3 de docs/PLAN-INGESTA-SGR.md: nombre fuera de formato, sgr_plan no le leía el código)."
+  },
+  {
+   "file": "Bantotal/ECP-283414-CO - Vencimiento CDT (PPP10010 - HPP10010).md",
+   "ingest": true,
+   "reason": "Corrección de programa (ECP) de Bantotal para Banco Contactar, COLOMBIA. Transcripción del PDF de al lado (2026-10-08): el extractor perdía la portada, única página con 'Colombia | Contactar'."
+  },
+  {
+   "file": "Bantotal/ecp-283414-.1 - vencimiento cdt.pdf",
+   "ingest": false,
+   "reason": "FUERA: original del .md transcrito de al lado. Indexado como PDF perdía la portada (país y cliente) y el nombre no da código de documento."
+  },
+  {
+   "file": "Bantotal/ECP-286469-CO - Endoso CDT (HDP0058).md",
+   "ingest": true,
+   "reason": "Corrección de programa (ECP) de Bantotal para Banco Contactar, COLOMBIA. Transcripción del PDF de al lado (2026-10-08): el extractor perdía la portada, única página con 'Colombia | Contactar'."
+  },
+  {
+   "file": "Bantotal/ecp-286469-.1 - endoso cdt.pdf",
+   "ingest": false,
+   "reason": "FUERA: original del .md transcrito de al lado. Indexado como PDF perdía la portada (país y cliente) y el nombre no da código de documento."
   }
  ]
 }
