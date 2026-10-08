@@ -1391,6 +1391,281 @@
    "file": "Bantotal/SGR/Manuales/BANTOTAL CONECTORES/MDI-10704-GL-V3R1.1 - Interfaces Monitor PLUS.pdf",
    "ingest": true,
    "reason": "Manual Global descargado del portal SGR el 2026-10-07 (lote I1.3 de docs/PLAN-INGESTA-SGR.md: DevOps, Tesorería, Instalación SQL Server, BPeople, Comercio Exterior, BTDevelopers, Conectores)."
+  },
+  {
+   "file": "Bantotal/SGR/ETP-10114-GL-V3R1.8- Distribución de Garantías WEB (PRI00102-103-104-105-106).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10101-GL-V3R1.2 - Cambio de Instrucciones (HW021).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - Alta de Depósito a Plazo (PRTE001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - Beneficiaros de CV y DPF (HTRT851-PTRT851, HRTE854-HRTE859-PRTE859).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - Cancelación de Depósitos a Plazo (PRTE006).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - Pago Periódico de Intereses Para DPF (PRTE001A).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - RTE Afectación de estado DPF en garantía (PDP00032).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - RTE Control Estados de Saldos (HRTE136).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - RTE Control de Saldos DPF en Garantía- Bloqueos (HDP00034).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - RTE Desafectación de estado DPF en garantía (PDP00033).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1 - RTE Renovación DPF cambia estado nueva operación (PRTE2268).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.1-RTE de Incremento interactivo de Ahorro Programado(HAHP622-PAHP622-PAHP623).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.2-Libre Retiro de Intereses Devengados (HRTE206).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Ahorro Programado/ETP-10304-GL-V3R1.3 - Ahorro Programado (HAHP9100 - HAHP9120 - HAHP500A).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cajas/ETP-10301-GL-V3R1.1 - Arqueo de Cajas (HMBC005).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cajas/ETP-10301-GL-V3R1.1- Cierre Forzoso de Caja (HMBC024).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cash Management/ETP -10307-GL-V3R1.1 - Depurador registros CASH en FCPG92 y FCPG93 (PCSM999a).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cofres de Seguridad/ETP-99000-GL-V3R1.1-Anulación Baja CS (PFC0142).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10302-GL-V3R1.1 - Ajuste de Saldos con Orden de Transferencia (PCC00228).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10302-GL-V3R1.1 - Transferencia Cartera Producto Pasivo (HPRD7851).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10303-GL-V3R1.1 - Envío al Clearing de Cheques Descontados y Depositados al Cobro (PCC00026).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10303-GL-V3R1.2-Estado de cuenta (HECTA).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10309-GL-V3R1.1 - Grabar titulares en textos (PRTET300-PRTET301).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10309-GL-V3R1.1 - RTE graba interés CV en texto (PRTE314).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10309-GL-V3R1.1-Cobertura y Transferencia de Cuenta Corriente Transaccional (HCC00008).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuenta Corriente y Caja de Ahorro/ETP-10310-GL-V3R1.3 - Liquidación de CV (HPRD299).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10110-GL-V3R1.1 - Cálculo de estadísticas (PCCN0001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10110-GL-V3R1.2 - Cobro de Comisión por cantidad de Mvto. (PCC00666).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.1 - Ajuste de cotización para Ctas. Vistas (PCC00133).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.1 - Chequera Inutilizada en Sucursal (HSCH052).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.1 - Cobertura en línea entre cuentas (PP006ca0).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.1 - Corresponsales - Circuito de Chequeras (HSCH050 - HSCH051).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.1 - Cálculo de Comisiones Genérica (PCC00006).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.1 - Modifica Fecha Vencimiento Cheque por Banco y Moneda (PRTE0110).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.2 - Cobrador de Saldos Pendientes (PCC00008).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10303-GL-V3R1.2 - Generación archivo plano Cheques (HCV0012).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas Corrientes/ETP-10309-GL-V3R1.2 - Cobro de intereses por sobregiro en cuenta corriente (PCCN0037 - PCCNP037 - PCCNS037).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas de Ahorro/ETP-10302-GL-V3R1.3 - Contractuales asociados al producto (HSNGDP10).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas de Ahorro/ETP-10309-GL-V3R1.1 - Cuenta de Ahorro Junior (PCC00600).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cuentas de Ahorro/ETP-10310-GL-V3R1.1 - Pasaje de estado de CV con Contabilidad (PCC00314).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP-10303-GL-V3R1.1 - CLearing Recibido Batch (PCLE100).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP-10308-GL-V3R1.1 - Acreditación Automática de Cheques al Vencimiento (PCC00027).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP-10308-GL-V3R1.1 - Clearing Enviado genero bandeja (PCLE200).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP-10308-GL-V3R1.1 - Clearing Recibido (PNUCLP00 - PNUCL000).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP-10308-GL-V3R1.1 - Graba bandejas FIF003 (HIF00052).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Cámara de compensación de Cheques/ETP-10308-GL-V3R1.1 - Tablas básicas CECOBAN (HDEMXP19).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Depósitos a Plazo/ETP-10304-GL-V3R1.1 - RTE Endoso y Fraccionamiento (HRTE306B).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Remesas/ETP-10605-GL-V3R1.2 - Giros Interagencias (HFOC1100).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/Documentacion_OnHost/ETP-10401-GL-V3R1.1 - WebService OnHost Tarjeta de Débito (PTDD1001).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - CAPTACIONES/Sistema de Tarjetas de Débito/ETP-10305-GL-V3R1.1 - Alta Masiva de Tarjetas (PTDD0011).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.1 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Captaciones)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/304968_15_1_ETP-99000-GL-V3R1.1 - Integraciones - Consumo genérico de servicios REST (PIF00540-PIF00541).pdf",
+   "ingest": false,
+   "reason": "FUERA: copia byte a byte de un documento que ya está en el manifiesto (inventario I2.0 de docs/PLAN-INGESTA-SGR.md, 2026-10-08). Ingerirlo duplicaría sus chunks."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/304968_4_1_MDU-10403-GL-V3R1.1 - BTSConsumer 2.1.pdf",
+   "ingest": false,
+   "reason": "FUERA: copia byte a byte de un documento que ya está en el manifiesto (inventario I2.0 de docs/PLAN-INGESTA-SGR.md, 2026-10-08). Ingerirlo duplicaría sus chunks."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Sin Categoria/MDI-10105-GL-V3R1.3 - Bantotal Impresor con ActiveX.pdf",
+   "ingest": false,
+   "reason": "FUERA: copia byte a byte de un documento que ya está en el manifiesto (inventario I2.0 de docs/PLAN-INGESTA-SGR.md, 2026-10-08). Ingerirlo duplicaría sus chunks."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Sin Categoria/MDI-10105-GL-V3R1.4 - Bantotal Impresor con BTP (Bantotal Protocol) (1).pdf",
+   "ingest": false,
+   "reason": "FUERA: copia byte a byte de un documento que ya está en el manifiesto (inventario I2.0 de docs/PLAN-INGESTA-SGR.md, 2026-10-08). Ingerirlo duplicaría sus chunks."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/Sin Categoria/MDI-10119-GL-V3R1.3 - Sistema de Auditoría de Base de Datos.pdf",
+   "ingest": false,
+   "reason": "FUERA: copia byte a byte de un documento que ya está en el manifiesto (inventario I2.0 de docs/PLAN-INGESTA-SGR.md, 2026-10-08). Ingerirlo duplicaría sus chunks."
   }
  ]
 }
