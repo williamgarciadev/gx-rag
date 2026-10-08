@@ -2166,6 +2166,256 @@
    "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Alertas/ETP-10116-GL-V3R1.1 - Alertas- Transacciones de Pasivos  (HBRD120).pdf",
    "ingest": true,
    "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.3 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Colocaciones y Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Alertas/ETP-10116-GL-V3R1.1 - Alertas- Transacciones individuales que superen un tope  (HBRD121).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Conciliaciones/ETP-10109-GL-V3R1.1 - Selección de corresponsales por sucursal (HXCRR061).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Configuración Bantotal/ETP-10101-GL-V3R1.1 - RTE Validación de Segmento de Mercado y Asociación de Segmentos a Productos (HRTE441 - HTRT441).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Configuración Bantotal/ETP-10101-GL-V3R1.1- FST017 I Por Usuario.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-01125-GL-V3R1.1-Contabilidad diferida.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10102-GL-V3R1.1 - Pasaje de Transacciones Dentro del mismo Servidor (HTRNPROD).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10106-GL-V3R1.1 - Fecha Máxima Consulta Históricos (HFSR022).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V2R3 2 - Implementación 7 por 24 (PP0347).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 -  Relacionar de CFDI a los asientos Contables  (HDEMXGA1).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Ajuste relación 1 préstamos suspendidos  (PNU00067).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Balance para un Período  (HBAEN31).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Cambio Masivo de Estado (HW022M).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Cambio de Sector (PCON104).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Contabilizador Light (PP006L).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Control de Condiciones sobre Ejecución de Ordinales  (HCTR0004).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Generación Resultados en ME  (PGEN508).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Implementación 7 por 24 (PP0347).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Libro Mayor (HBAEN04).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Procesamiento del Transaccional (HW000 - TRNXXX).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Rutina que analiza Saldos (PP008).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Servicio Prueba 7 por 24 (PPRU7X24).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1 - Transacciones Habilitadas para Cuentas Clientes Inhabilitadas (RP055).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1- Modificación de Estado de Operaciones (HW022T2).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.1- Respaldo de Tablas de Saldos y Movimientos (PP045).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.2 -  Cambio de Residencia (PCON103).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.2 - Generación de Mayores (HBAEN02).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.2 - Inventario Histórico de Códigos Contables (HFS000H1).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.2- Modificación de Estado de Operaciones (HW022).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10110-GL-V3R1.6 - Plan de Cuentas - Control Dual (HME00010).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10111-GL-V2R3.1 - POP UP Selección de Operaciones (HPOP011m).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contabilidad/ETP-10111-GL-V3R1.1 - Transacción Libre (HTRD015).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP -10110-GL-V3R1.1 - Tratamiento de Listas Negras - (HRGL-N002).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10108-GL-V3R1.1 - Panel de Carga de Estados Financieros (HSNGC570 Y HSNGC572).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10108-GL-V3R1.2 - Carga masiva de listas negras (HRGLN015).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10109-GL-V2R3.1 - Mantenimiento de modos para FATCA.pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10109-GL-V3R1.1 - Generación código de actividad FSD008 (PSngActi).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10110-GL-V2R3.1 - Control de Listas negras - (HRTE218A).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10110-GL-V3R1.1 - Integración Persona Jurídica - Múltiple Relación Para Misma Persona Natural (HSNGCPJ1 - HSTDR03).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10110-GL-V3R1.1 - Mantenimiento de Códigos de Actividad (HSNGCPA6).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/ETP-10110-GL-V3R1.1 -Cambio de Documento (HSNGCCHD).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/ETP-10120-GL-V3R1.1 - Alta de Facultades en transacción (HCL00201).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/ETP-10120-GL-V3R1.1 - Control Dual de Facultades y Firmantes (HBTCD01).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/ETP-10120-GL-V3R1.1 - Depurador de Facultades (PCL00210).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/ETP-10120-GL-V3R1.1 - RTE Alta de Facultades (HCL00200 PCL00202 PCL00203).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Contrapartes/Sistema de Facultades y Poderes/ETP-10304-GL-V3R1.1 - RTE Copiar Facultades DPF (PDP0046).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Definición y Ejecución de Transacciones/ETP-10113 -GL-V3R1.1 - Anulador Masivo Selectivo de Transacciones (HW001RBE).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Impuestos/ETP-10106-GL-V3R1.1 - Computa IVA (HRTE242).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Integracion con Workflow/ETP-10103-GL-V3R1.1 - Impresos Workflow (HXWFIMP).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Integracion con Workflow/ETP-10103-GL-V3R1.1 - Reasignación Instancias Workflow (HXWF922).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
+  },
+  {
+   "file": "Bantotal/SGR/Otros Documentos/BANTOTAL CORE - NÚCLEO/Sistema de Integracion con Workflow/ETP-10103-GL-V3R1.1 - Selección de cuenta para cobro de préstamos (HXWF601).pdf",
+   "ingest": true,
+   "reason": "Documento Global descargado del portal SGR el 2026-10-07 (lote I2.4 de docs/PLAN-INGESTA-SGR.md: Otros Documentos › Core Núcleo)."
   }
  ]
 }
