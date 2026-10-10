@@ -3751,6 +3751,846 @@
    "file": "Bantotal/ecp-286469-.1 - endoso cdt.pdf",
    "ingest": false,
    "reason": "FUERA: original del .md transcrito de al lado. Indexado como PDF perdía la portada (país y cliente) y el nombre no da código de documento."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_microfinanzas_flujo_de_créditos/01_video_bantotal_microfinanzas_conceptos_generales.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_microfinanzas_flujo_de_créditos/02_video_bantotal_microfinanzas_caso_práctico.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_microfinanzas_flujo_de_créditos/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_services_consumer/01_video_btconsumer_conceptual.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_services_consumer/02_video_btconsumer_instalación.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_services_consumer/03_video_btconsumer_paneles_de_configuración.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_services_consumer/04_video_btconsumer_programación.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_services_consumer/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_servicios_desarrollo/03_pdf_readme_gxobjects_merge_tool.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_servicios_desarrollo/05_video_desarrollo_de_servicios_parte_1_clientes.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_servicios_desarrollo/06_video_desarrollo_de_servicios_parte_2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_servicios_desarrollo/07_genially_ejercicio_1_desarrollo_de_servicio.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/bantotal_servicios_desarrollo/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/buenas_prácticas_de_programación/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/cajas_de_ahorro/01_pdf_seguro_de_depósitos_lectura.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/cajas_de_ahorro/03_video_caja_de_ahorro.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/cajas_de_ahorro/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/03_video_contabilidad_de_operaciones_de_entidades_financieras_1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/05_video_contabilidad_de_operaciones_de_entidades_financieras_2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/07_video_contabilidad_de_operaciones_de_entidades_financieras_3.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/08_video_contabilidad_de_operaciones_de_entidades_financieras_4.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/10_video_contabilidad_de_operaciones_de_entidades_financieras_5.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/12_video_contabilidad_de_operaciones_de_entidades_financieras_6.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/14_video_contabilidad_de_operaciones_de_entidades_financieras_7.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/16_video_contabilidad_de_operaciones_de_entidades_financieras_8.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/19_video_contabilidad_de_operaciones_de_entidades_financieras_9.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/20_video_contabilidad_de_operaciones_de_entidades_financieras_10.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/21_video_contabilidad_de_operaciones_de_entidades_financieras_11.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilidad_de_operaciones_de_entidades_financieras/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilización_batch/02_pdf_practica_sobre_contabilización_batch.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilización_batch/04_video_contabilización_batch.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contabilización_batch/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/01_video_050421_presentacionejecutiva.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/05_pdf_introducción_a_la_contabilidad_bantotal.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/09_video_cap_sistema_de_clientes_persona_física.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/10_video_cap_sistema_de_clientes_persona_jurídica_y_emisor.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/11_video_cap_sistema_de_clientes_cuenta.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/12_video_cap_sistema_de_clientes_grupos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/13_video_sistemacontabilidad_conceptual_parte_1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/14_video_sistemacontabilidad_conceptual_parte_2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/18_video_070421_preciosyproductospasivos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/19_video_sistema_de_precios_conceptual.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/20_video_sistema_de_precios_valorespormodulov2r2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/21_video_cap_cuentas_vista_alta_de_producto.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/24_video_080421_productos_activos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/25_video_cap_modelador_de_productos_de_crédito_conceptual.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/32_pdf_controles_básicos_de_cadena_de_cierre.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/33_video_090421_seguridadycadena.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/34_video_cap_sistema_de_seguridad_nivel_conceptual.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/35_video_cap_sistema_de_seguridad_nivel_usuario.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/36_video_cap_sistema_de_seguridad_nivel_implementador_recomendaciones.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/37_video_cadena_de_cierre_conceptual.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/39_video_120421_modelo_de_datos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/40_video_1300421_mdatos_y_arquitectura.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/41_video_cap_tarjeta_de_debito_conceptual.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/42_video_cap_tarjeta_débito_alta_tarjeta_nominada.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/43_video_cap_tarjeta_de_débito_alta_tarjeta_prembozada.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/44_video_cap_tarjeta_de_débito_mantenimiento_de_tarjetas.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/45_video_140421_reportes_normativos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/46_video_150421_api_y_devops.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/47_video_160421_devops_genexus_descartes.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/01_pdf_environments_gx16_btv3_propiedades.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/04_video_bantotal_pionero.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/09_pdf_ejercicio_2_grilla_sin_tabla_base.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/11_pdf_ejercicio_3_grilla_sin_tabla_base.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/13_pdf_ejercicio_4_reportes.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/18_pdf_flexibilización_con_guias_de_procesos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/21_pdf_rte_interactiva_control_de_importes.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/23_pdf_rte_batch_control_de_importes.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/26_video_rte.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/27_video_opciones_de_proceso_implementador_programador.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/28_video_guias_de_proceso_implementador_programador.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/30_pdf_controles_básicos_cadena_de_cierre.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/34_pdf_apuntes_de_clase_comportamiento_ante_errores.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/35_pdf_ejercicio_0_cadena_de_cierre_técnico.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/39_video_pasaje_de_cuentas_a_estado_de_inactivas_pcc00014.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/40_pdf_uso_del_preformato_para_contabilizar_pw103.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/43_pdf_ejercicio_1_contabilización_batch.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/51_pdf_mdu_10401_gl_v2r3_1_bantotal_services_desarrollo_de_servicio.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/52_pdf_mdu_10401_gl_v2r3_1_bantotal_services_desarrollo_de_servicio.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/53_video_bts_parte1v02.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/54_video_bts_parte2v01.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/contactar_capacitación_bantotal_v3/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/genexus_para_analistas_de_negocio/01_video_gxan_1_metodologia_y_principales_objetos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/genexus_para_analistas_de_negocio/02_video_gxan_2_entender_la_logica.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/genexus_para_analistas_de_negocio/03_video_gxan_3_ejemplosbantotal.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/genexus_para_analistas_de_negocio/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/introducción_a_la_contabilidad_bancaria/06_video_introducción_a_la_contabilidad_bancaria_parte1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/introducción_a_la_contabilidad_bancaria/07_video_introducción_a_la_contabilidad_bancaria_parte2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/introducción_a_la_contabilidad_bancaria/08_video_introducción_a_la_contabilidad_bancaria_parte3.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/introducción_a_la_contabilidad_bancaria/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/principales_conceptos_bantotal/01_video_tutorial_principales_conceptos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/principales_conceptos_bantotal/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_auditoría_base_de_datos/01_video_auditoría_de_base_de_datos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_auditoría_base_de_datos/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_ingreso_de_operaciones/01_pdf_introducción_a_la_contabilidad_bantotal_lectura_complementar.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_ingreso_de_operaciones/02_pdf_conceptos_de_contabilidad_lectura_complementaria.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_ingreso_de_operaciones/06_genially_ejercicio_ingreso_de_operaciones.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_ingreso_de_operaciones/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/01_genially_v3_analiza_los_siguientes_rubros.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/03_video_plancuentas_parte1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/04_video_plancuentas_parte2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/05_video_plancuentas_parte3.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/06_genially_practica_el_análisis_de_las_relaciones_de_rubros.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/08_video_cap_contabilidad_relacional_implementador.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/09_video_plancuentas_parte4_relaciones.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contabilidad_plan_de_cuentas/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contrapartes/02_video_cliente_bancario.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contrapartes/07_video_cap_sistema_de_clientes_instituciones_financieras.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contrapartes/08_genially_v3_ejercicio_1_alta_de_personas_clientes_grupos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contrapartes/11_genially_v3_ejercicio_2_consultas.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_contrapartes/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/01_genially_btv3r1_ejercicio_venta_de_producto.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/03_video_cap_cuentas_vista_mantenimiento_de_producto_funcionalidades.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/05_genially_v3_ejercicio_movimientos_en_cuentas_vista.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/08_video_cap_sistema_de_caja_usuario_1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/09_video_cap_cuentas_vista_emision_de_ec_consulta_de_movimientos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/10_video_cap_cuentas_vista_embargo_y_cancelación_de_embargo.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/11_video_cap_cuentas_vista_bloqueo_y_cancelación_de_bloqueo.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/12_video_cap_cuentas_vista_liquidación_cierre.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_cuentas_vista/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/01_genially_v3_ejercicio_1_nuevo_modelador_de_depósitos_a_plazo.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/03_video_modelador_de_producto.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/04_video_alta_depósito_a_plazo_fijo.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/05_video_cap_sistema_de_dpf_simulador.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/06_pdf_practica_dar_de_alta_un_dpf.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/08_video_cap_sistema_de_dpf_alta.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/09_video_cap_sistema_de_dpf_afectación_en_garantía.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/10_video_cap_sistema_de_dpf_bloqueo.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/11_video_cap_sistema_de_dpf_incremento_y_decremento.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/12_video_cap_sistema_de_dpf_fraccionamiento.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/13_video_cap_sistema_de_dpf_modificación_de_instrucciones.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/14_video_cap_sistema_de_dpf_cancelación_de_dpf.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_depósitos_a_plazo/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_parámetros_base/01_genially_qué_son_los_parámetros_generales.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_parámetros_base/02_genially_v3_ejercicio_1_parámetros_generales.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_parámetros_base/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/01_video_cap_modelador_de_productos_de_crédito_genérico.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/03_genially_btv3r1_ejercicio_modela_tu_producto.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/04_archivo_ejercicio_sistema_de_préstamos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: archivo completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/06_video_cap_modelador_de_productos_de_crédito_tipos_de_amortización.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/07_video_cap_modelador_de_productos_de_crédito_formas_de_despeje.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/08_video_cap_modelador_de_productos_de_crédito_fechas_plan_de_pagos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/09_video_cap_modelador_de_productos_de_crédito_capital_plan_de_pagos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/10_video_cap_alta_de_préstamos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/11_video_bantotal_microfinanzas_caso_práctico.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/12_video_cap_renovación_de_préstamos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/13_video_cap_refinanciación_de_préstamos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/14_video_cap_cancelacion_de_préstamos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_préstamos/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_reportes/01_genially_v3_configura_un_reporte.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_reportes/02_pdf_v2_configura_un_reporte.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_reportes/04_video_reporteador_tutorial.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_reportes/05_video_reporteador_taller.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_de_reportes/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/02_video_definición_de_transacciones_ejercicio0_parte1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/03_video_definición_de_transacciones_ejercicio0_parte2.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/04_video_definición_de_transacciones_ejercicio0_parte3.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/05_genially_ejercicio_1_definición_de_transacciones_depósito_en_ca.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/07_genially_ejercicio_2_definición_de_transacciones_depósito_con_sinónim.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/09_genially_ejercicio_3_definición_de_transacciones_depósito_rte_mixto.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/11_video_definición_de_transacciones_ejercicio1.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/13_video_definición_de_transacciones_ejercicio1_rte_ordinales_mixtos.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/14_video_definición_de_transacciones_ejercicio1_parteb.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: video completo, confianza asr."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/15_genially_ejercicio_reconocimiento_de_errores.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: genially completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/17_pdf_solución_ejercicio_9_reconocer_errores.md",
+   "ingest": true,
+   "reason": "Campus Bantotal: pdf completo, confianza literal."
+  },
+  {
+   "file": "bantotal-curado/capacitaciones/campus/sistema_transaccional/_curso.md",
+   "ingest": true,
+   "reason": "Índice del curso del campus Bantotal: descripción y estado de cada actividad."
   }
  ]
 }
