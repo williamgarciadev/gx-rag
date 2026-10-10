@@ -41,13 +41,13 @@ docker compose up
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API
 .venv/bin/python -m src.server                        # MCP server (stdio)
-.venv/bin/python -m pytest tests/ -q                 # Tests — 509 passing al 2026-10-08
+.venv/bin/python -m pytest tests/ -q                 # Tests — 520 passing al 2026-10-10
 
 # Windows (PowerShell):
 python -m venv .venv; .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\uvicorn src.api:app --reload --port 8000
 .venv\Scripts\python -m src.server
-.venv\Scripts\pytest tests/ -q                        # Tests — 509 passing al 2026-10-08
+.venv\Scripts\pytest tests/ -q                        # Tests — 520 passing al 2026-10-10
 # Marcadores (pytest.ini, --strict-markers): unit | integration
 
 # Ingesta
@@ -236,8 +236,8 @@ sesiones sí.
   WorkWithPlus (`docs.workwithplus.com`). GeneXus tiene un pattern nativo *Work With for Web* y WWP
   (DVelop) es otro producto: una query sobre "el pattern" devuelve los dos entremezclados. **Filtra
   por procedencia (la url del hit), no por presencia.**
-- **Estado del corpus, medido 2026-10-08**: `gx_docs` 50.063 chunks · `bt_docs` **~29.880** (manuales
-  MDI/MDU, ETP y ECP del portal SGR, más los videos y manuales curados de antes) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
+- **Estado del corpus, medido 2026-10-10**: `gx_docs` 50.063 chunks · `bt_docs` **34.198** (manuales
+  MDI/MDU, ETP y ECP del portal SGR; los videos y manuales curados de antes; y 4.317 chunks de los cursos del campus Bantotal, `origin=campus_bantotal`) · `gx_syntax` 26 · `bt_apis` **0**. `search_docs`
   avisa qué colecciones tienen contenido cuando consultas una vacía.
 - **Los metadatos de un PDF salen SOLO de su nombre de archivo** (`MDI-10201-CO-V3R1.22 - …`):
   `manual`, `manual_version` y `localization`. Un nombre fuera de formato deja el chunk sin ellos, y la
