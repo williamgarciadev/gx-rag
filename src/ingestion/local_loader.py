@@ -182,7 +182,7 @@ def _pdf_docs(path: Path) -> Iterator[RawDoc]:
         )
 
 
-def _parse_frontmatter(content: str) -> dict:
+def parse_frontmatter(content: str) -> dict:
     """Extrae el frontmatter YAML si el archivo comienza con '---'."""
     if not content.startswith("---"):
         return {}
@@ -202,7 +202,7 @@ def _parse_frontmatter(content: str) -> dict:
 
 
 def _markdown_title(content: str, stem: str) -> str:
-    frontmatter = _parse_frontmatter(content)
+    frontmatter = parse_frontmatter(content)
     if frontmatter and frontmatter.get("title"):
         return str(frontmatter["title"]).strip()
 
@@ -228,7 +228,7 @@ def _text_docs(path: Path) -> Iterator[RawDoc]:
     uri = path.as_uri()
     title = _markdown_title(content, path.stem)
     meta = {"doc_type": "markdown", "manual_title": title}
-    frontmatter = _parse_frontmatter(content)
+    frontmatter = parse_frontmatter(content)
     if frontmatter:
         meta.update(frontmatter)
     yield RawDoc(
