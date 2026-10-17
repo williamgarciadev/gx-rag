@@ -47,14 +47,14 @@ similitud (H4a, fase propia porque cambia veredictos para todos).
 - [x] Voseo → "tú" en `src/` y `scripts/` (82 formas) + `tests/test_registro_tu.py`
 - [x] H4b aplicado con OK del usuario: +2.614 filas (`source=corpus`), total 3.379; respaldo en la tabla `gx_syntax_bk_20261017_pre_h4b`. Verificado: `Len`/`Abs` → VÁLIDO con gx18 y PISTA con gx16. Costo medido de la similitud: 120–240 ms por consulta sin match exacto
 
-## Fase C2 — Un módulo de pedido por tool para los tres transportes
+## Fase C2 — Un módulo de pedido por tool para los tres transportes · ✅ cerrada (sin commit aún)
 
-- [ ] Test rojo: `/search` sobre `gx_kb_objects` sin `kb_name` se rechaza igual que en el MCP
-- [ ] Test rojo: `/verify` devuelve JSON, no `str(dict)`
-- [ ] Extraer `SearchRequest` (valida, acota `top_k`/`snippet_chars`/`max_per_article`, rechaza colección y filtros)
-- [ ] `dispatch_tool` y `api.py` lo usan; mismos límites en ambos
-- [ ] Política de errores única en lugar de los 8 `except` repetidos
-- [ ] Mismo tratamiento para `verify_syntax`, `get_document`, `get_article`
+- [x] Test rojo: `/search` sobre `gx_kb_objects` sin `kb_name` se rechaza igual que en el MCP (400, sin tocar el store)
+- [x] Test rojo: `/verify` devuelve JSON, no `str(dict)` (era el #31 de Fase 3)
+- [x] `src/tool_requests.py`: `parse_search`/`parse_document`/`parse_article` → pedido válido o `RequestRejected`; los filtros se validan antes de cargar e5-large
+- [x] `dispatch_tool` y `api.py` lo usan; `top_k` acotado a 1–50 en los dos (api topaba en 20)
+- [x] Tools de lectura: un handler por tool (`_READ_HANDLERS`) y un solo `try` en `dispatch_tool`; en `api.py`, un exception handler para `RequestRejected` → 400. Las 3 tools de escritura conservan su manejo propio
+- [x] Mismo tratamiento para `get_document` y `get_article`; `verify_syntax` y `list_methods` no tienen argumentos que validar
 
 ## Fase C3 — Una entrada idempotente al indexer
 
