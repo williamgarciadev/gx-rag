@@ -221,6 +221,76 @@ def test_emb_profile_column_records_the_geometry_the_vector_was_built_with(pg_st
     assert _perfiles() == {"raw"}
 
 
+def _ids_de(pg_store, article_id: str) -> dict[str, list[str]]:
+    """chunk_ids del artículo por colección, leídos directo de la tabla."""
+    with pg_store.pool.connection() as conn:
+        filas = conn.execute(
+            "SELECT collection, chunk_id FROM chunks WHERE article_id = %s ORDER BY chunk_id",
+            (article_id,),
+        ).fetchall()
+    por_coleccion: dict[str, list[str]] = {}
+    for coleccion, chunk_id in filas:
+        por_coleccion.setdefault(coleccion, []).append(chunk_id)
+    return por_coleccion
+
+
+def _embeddings_fijos(pg_store, monkeypatch):
+    from src.vectorstore import pg_indexer
+
+    monkeypatch.setattr(
+        pg_indexer.emb, "embed_texts", lambda textos: [_unit(9) for _ in textos]
+    )
+    monkeypatch.setattr(pg_indexer, "_vector_literal", lambda v: pg_store.vector(9))
+
+
+def test_add_from_url_de_un_articulo_que_se_acorto_no_deja_huerfanos(pg_store, monkeypatch):
+    """add_from_url y /scrape iban por un indexado sin DELETE: si el artículo se
+    acortaba, los _cN viejos sobrevivían al upsert y seguían saliendo en búsquedas."""
+    from scripts.scrape_wiki import ArticleMetadata, ScrapedArticle
+    from src.ingestion import ingestor
+
+    _embeddings_fijos(pg_store, monkeypatch)
+
+    def articulo(markdown: str, content_hash: str) -> ScrapedArticle:
+        meta = ArticleMetadata(
+            url="https://wiki.genexus.com/commwiki/wiki?1", title="T", page_id="1",
+            genre="guide", destination="gx_docs", source_key="wiki:1",
+            content_hash=content_hash, version_hint=None, word_count=1, scraped_at="",
+        )
+        return ScrapedArticle(metadata=meta, markdown=markdown, raw_text=markdown)
+
+    largo = "\n\n".join(f"Párrafo {i}. " + "texto " * 120 for i in range(4))
+    primero = ingestor.index_article(articulo(largo, "H1"))
+    assert primero.status == "indexed" and primero.chunk_count > 1
+
+    segundo = ingestor.index_article(articulo("Solo un párrafo corto.", "H2"))
+
+    assert segundo.status == "reindexed"
+    assert _ids_de(pg_store, "wiki:1") == {"gx_docs": ["wiki:1_c0"]}
+
+
+@pytest.mark.parametrize("hash_nuevo", ["H1", "H2"])
+def test_reindexar_en_otra_coleccion_no_deja_huerfanos_en_la_vieja(pg_store, monkeypatch, hash_nuevo):
+    """chunk_id es clave global, así que un artículo vive en UNA colección. El
+    borrado filtraba por colección: al moverlo, el upsert trasladaba los chunks
+    que coincidían y los sobrantes quedaban huérfanos en la colección vieja.
+    Con el mismo hash, además, se reportaba 'indexed' sin mover nada más."""
+    from src.vectorstore import pg_indexer
+
+    _embeddings_fijos(pg_store, monkeypatch)
+    largo = "\n\n".join(f"Párrafo {i}. " + "texto " * 120 for i in range(4))
+
+    pg_indexer.reindex_if_changed("art", "T", largo, "", "guide", "", "H1", "gx_syntax")
+    assert len(_ids_de(pg_store, "art")["gx_syntax"]) > 1
+
+    estado = pg_indexer.reindex_if_changed(
+        "art", "T", "corto", "", "guide", "", hash_nuevo, "gx_docs"
+    )
+
+    assert estado == "reindexed"
+    assert _ids_de(pg_store, "art") == {"gx_docs": ["art_c0"]}
+
+
 # ─── helpers ──────────────────────────────────────────────────────────────────
 
 

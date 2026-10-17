@@ -232,17 +232,18 @@ class _FakeCursor:
     def execute(self, sql, params=None):
         self._conn.sentencias.append(" ".join(sql.split()))
 
-    def fetchone(self):
-        # Única consulta que lee: el content_hash del artículo. None = no existe.
-        return self._conn.fila
+    def fetchall(self):
+        # Única consulta que lee: (collection, content_hash, n) por artículo.
+        # Lista vacía = no existe.
+        return self._conn.filas
 
 
 class _FakeConn:
     """Conexión mínima con la forma que usa pg_indexer: with pool.connection()
     as conn, luego with conn.cursor() as cur."""
 
-    def __init__(self, fila):
-        self.fila = fila
+    def __init__(self, filas):
+        self.filas = filas
         self.sentencias: list[str] = []
 
     def __enter__(self):
@@ -265,28 +266,28 @@ class _FakePool:
 
 @pytest.fixture
 def _indexer(monkeypatch):
-    """pg_indexer con index_article mockeado: acá se prueba la DECISIÓN
+    """pg_indexer con _write_chunks mockeado: acá se prueba la DECISIÓN
     (skipped/reindexed/indexed), no el embedding ni el SQL."""
     from src.vectorstore import pg_indexer
 
     calls = []
-    # Se parchea _write_chunks, no index_article: reindex_if_changed escribe por
-    # ahí para compartir la conexión (y evitar el deadlock del DELETE + INSERT).
+    # Se parchea _write_chunks: index_document escribe por ahí para compartir la
+    # conexión (y evitar el deadlock del DELETE + INSERT).
     monkeypatch.setattr(
         pg_indexer, "_write_chunks", lambda *a, **k: calls.append((a, k)) or ["id_c0"]
     )
     return pg_indexer, calls
 
 
-def _wire_pool(monkeypatch, indexer, fila):
-    conn = _FakeConn(fila)
+def _wire_pool(monkeypatch, indexer, filas):
+    conn = _FakeConn(filas)
     monkeypatch.setattr(indexer, "get_pool", lambda: _FakePool(conn))
     return conn
 
 
 def test_reindex_skips_when_hash_unchanged(_indexer, monkeypatch):
     indexer, calls = _indexer
-    conn = _wire_pool(monkeypatch, indexer, fila=("H",))
+    conn = _wire_pool(monkeypatch, indexer, filas=[("gx_docs", "H", 1)])
 
     status = indexer.reindex_if_changed(
         "a", "t", "content", "src", "guide", "url", "H", collection="gx_docs"
@@ -299,7 +300,7 @@ def test_reindex_skips_when_hash_unchanged(_indexer, monkeypatch):
 
 def test_reindex_reindexes_when_hash_differs(_indexer, monkeypatch):
     indexer, calls = _indexer
-    conn = _wire_pool(monkeypatch, indexer, fila=("OLD",))
+    conn = _wire_pool(monkeypatch, indexer, filas=[("gx_docs", "OLD", 1)])
 
     status = indexer.reindex_if_changed(
         "a", "t", "content", "src", "guide", "url", "NEW", collection="gx_docs"
@@ -313,7 +314,7 @@ def test_reindex_reindexes_when_hash_differs(_indexer, monkeypatch):
 def test_reindex_indexes_when_absent(_indexer, monkeypatch):
     """Sin fila previa no hay nada que borrar: se indexa y listo."""
     indexer, calls = _indexer
-    conn = _wire_pool(monkeypatch, indexer, fila=None)
+    conn = _wire_pool(monkeypatch, indexer, filas=[])
 
     status = indexer.reindex_if_changed(
         "a", "t", "content", "src", "guide", "url", "H", collection="gx_docs"

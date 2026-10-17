@@ -1,6 +1,6 @@
 """
 Módulo de ingesta compartido — guarda artículos scrapeados en el filesystem
-y los indexa en ChromaDB. Usado por la API HTTP y por el servidor MCP.
+y los indexa en Postgres. Usado por la API HTTP y por el servidor MCP.
 """
 
 import json
@@ -41,15 +41,17 @@ def save_article(article: ScrapedArticle, name: str | None = None) -> tuple[Path
     return md_path, meta_path
 
 
-def index_article(article: ScrapedArticle) -> list[str]:
+def index_article(article: ScrapedArticle):
     """
-    Indexa el artículo en ChromaDB.
-    Devuelve lista de chunk IDs insertados.
+    Indexa el artículo de forma idempotente y devuelve el IndexResult.
+
+    Antes iba por un indexado sin DELETE: si el artículo se acortaba, los chunks
+    viejos sobrevivían al upsert y seguían saliendo en las búsquedas.
     """
-    from src.vectorstore.pg_indexer import index_article as _index
+    from src.vectorstore.pg_indexer import index_document
     meta = article.metadata
 
-    chunk_ids = _index(
+    result = index_document(
         article_id=meta.source_key,
         title=meta.title,
         content=article.markdown,
@@ -60,17 +62,17 @@ def index_article(article: ScrapedArticle) -> list[str]:
         collection=meta.destination,
     )
 
-    log.info(f"Indexed {len(chunk_ids)} chunks for {meta.source_key}")
-    return chunk_ids
+    log.info(f"{result.status}: {result.chunk_count} chunks for {meta.source_key}")
+    return result
 
 
 def ingest(article: ScrapedArticle) -> dict:
     """
-    Flujo completo de ingesta: save filesystem + index ChromaDB.
+    Flujo completo de ingesta: save filesystem + index Postgres (idempotente).
     Devuelve resumen con paths y chunks.
     """
     md_path, meta_path = save_article(article)
-    chunk_ids = index_article(article)
+    result = index_article(article)
 
     return {
         "title": article.metadata.title,
@@ -80,5 +82,7 @@ def ingest(article: ScrapedArticle) -> dict:
         "word_count": article.metadata.word_count,
         "md_path": str(md_path),
         "meta_path": str(meta_path),
-        "chunks_indexed": len(chunk_ids),
+        "index_status": result.status,
+        # Chunks del artículo en el store al terminar (también cuando "skipped").
+        "chunks_indexed": result.chunk_count,
     }

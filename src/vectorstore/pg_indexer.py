@@ -1,8 +1,9 @@
 """
 Indexador sobre PostgreSQL: chunking, embedding y persistencia.
 
-Reemplaza a indexer.py (ChromaDB). Mismo contrato: index_article() y
-reindex_if_changed() con los mismos parametros y valores de retorno.
+Una sola entrada de escritura: index_document() (idempotente, borra huérfanos).
+reindex_if_changed() es la misma operación reducida a su status, para los
+cargadores por lote.
 
 Ventaja concreta del cambio: el reindexado es una transaccion. En ChromaDB el
 DELETE de los chunks viejos y el INSERT de los nuevos eran dos operaciones
@@ -14,10 +15,12 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import dataclass
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from src.vectorstore import embeddings as emb
+from src.vectorstore.chunk_ids import chunk_id
 from src.vectorstore.pg_client import get_pool
 
 log = logging.getLogger(__name__)
@@ -108,7 +111,7 @@ def _write_chunks(
     # El perfil se lee JUNTO con el embedding: es el que embed_passage acaba de usar.
     perfil = emb.EMB_PROFILE
     embs = emb.embed_passage(tuple(textos))
-    chunk_ids = [f"{article_id}_c{i}" for i in range(len(textos))]
+    chunk_ids = [chunk_id(article_id, i) for i in range(len(textos))]
 
     def _meta_de(i: int) -> str:
         """meta del chunk i, con su chunk_kind si el llamador partio por seccion.
@@ -150,7 +153,16 @@ def _write_chunks(
     return chunk_ids
 
 
-def index_article(
+@dataclass(frozen=True)
+class IndexResult:
+    """status: "indexed" | "reindexed" | "skipped".
+    chunk_count: chunks que el artículo tiene en el store al terminar."""
+
+    status: str
+    chunk_count: int
+
+
+def index_document(
     article_id: str,
     title: str,
     content: str,
@@ -164,82 +176,52 @@ def index_article(
     extra_meta: dict | None = None,
     chunk_prefix: str = "",
     chunks: list[tuple[str, str]] | None = None,
-) -> list[str]:
-    """Indexa un articulo. Devuelve los ids de chunk insertados.
+) -> IndexResult:
+    """Indexa de forma idempotente. Es la ÚNICA entrada de escritura del indexer.
 
-    OJO: no borra chunks huerfanos. Si el documento se acorto, los `_cN` viejos
-    sobreviven por encima del ON CONFLICT y siguen apareciendo en busquedas. Para
-    ingesta idempotente usar reindex_if_changed.
-    """
-    with get_pool().connection() as conn:
-        return _write_chunks(
-            conn, article_id, title, content, source, genre, url,
-            content_hash, collection, meta=meta, extra_meta=extra_meta,
-            chunk_prefix=chunk_prefix, chunks=chunks,
-        )
+    - "skipped":   el artículo ya está ENTERO en esta colección con este hash
+    - "reindexed": había chunks (con otro hash o en OTRA colección); se borran
+                   todos y se reindexa
+    - "indexed":   no había chunks
 
-
-def reindex_if_changed(
-    article_id: str,
-    title: str,
-    content: str,
-    source: str,
-    genre: str,
-    url: str,
-    content_hash: str,
-    collection: str = "gx_docs",
-    *,
-    meta: dict | None = None,
-    extra_meta: dict | None = None,
-    chunk_prefix: str = "",
-    chunks: list[tuple[str, str]] | None = None,
-) -> str:
-    """Indexa de forma idempotente, usando content_hash como clave de cambio.
-
-    Devuelve:
-      - "skipped":   ya existen chunks con el mismo hash (no se re-embebe)
-      - "reindexed": existian con otro hash; se borran los viejos y se reindexa
-      - "indexed":   no habia chunks previos
-
-    INVARIANTE de la que depende todo esto: el SELECT de abajo lee el hash con
-    LIMIT 1 y SIN ORDER BY, o sea que trae UN CHUNK CUALQUIERA del articulo. Es
-    correcto solo porque _write_chunks escribe el MISMO content_hash en todas las
-    filas del articulo. Si alguna vez se hasheara por chunk, la decision
-    skipped/reindexed pasaria a ser no deterministica entre corridas.
+    El borrado es por article_id, sin filtrar colección: chunk_id es clave
+    global, así que un artículo vive en una sola colección. Filtrando por
+    colección, moverlo dejaba huérfanos en la vieja los chunks que el upsert no
+    pisaba. Y el borrado + alta van en la MISMA transacción: el artículo nunca
+    queda a medias aunque el proceso muera en el medio.
     """
     with get_pool().connection() as conn:
         with conn.cursor() as cur:
+            # GROUP BY y no LIMIT 1: con un solo (colección, hash) el artículo
+            # está entero y al día; cualquier mezcla (hashes distintos, o restos
+            # en otra colección) se repara reindexando.
             cur.execute(
-                "SELECT content_hash FROM chunks "
-                "WHERE article_id = %s AND collection = %s LIMIT 1",
-                (article_id, collection),
+                "SELECT collection, content_hash, count(*) FROM chunks "
+                "WHERE article_id = %s GROUP BY 1, 2",
+                (article_id,),
             )
-            row = cur.fetchone()
+            estado = cur.fetchall()
 
-        if row is not None and row[0] == content_hash:
-            return "skipped"
+        if len(estado) == 1 and estado[0][:2] == (collection, content_hash):
+            return IndexResult("skipped", estado[0][2])
 
-        if row is not None:
-            # Borrado + alta en la MISMA conexion y la misma transaccion: el
-            # articulo nunca queda a medias aunque el proceso muera aca en el
-            # medio. Llamar a index_article() en este punto pedia una segunda
-            # conexion al pool que se quedaba esperando el lock del DELETE de
-            # esta: deadlock garantizado en cada reindexado.
+        if estado:
             with conn.cursor() as cur:
-                cur.execute(
-                    "DELETE FROM chunks WHERE article_id = %s AND collection = %s",
-                    (article_id, collection),
-                )
-            _write_chunks(
-                conn, article_id, title, content, source, genre, url,
-                content_hash, collection, meta=meta, extra_meta=extra_meta,
-                chunk_prefix=chunk_prefix, chunks=chunks,
-            )
-            return "reindexed"
+                cur.execute("DELETE FROM chunks WHERE article_id = %s", (article_id,))
 
-        _write_chunks(
+        ids = _write_chunks(
             conn, article_id, title, content, source, genre, url,
             content_hash, collection, meta=meta, extra_meta=extra_meta,
             chunk_prefix=chunk_prefix, chunks=chunks,
         )
-        return "indexed"
+        return IndexResult("reindexed" if estado else "indexed", len(ids))
+
+
+def reindex_if_changed(*args, **kwargs) -> str:
+    """index_document reducido a su status, con la misma firma.
+
+    Lo usan los cargadores por lote (bulk_loader, kb_loader, scrape_sac) y sus
+    tests inyectan un index_fn que devuelve el status como texto: para ellos el
+    conteo de chunks no aporta nada.
+    """
+    return index_document(*args, **kwargs).status

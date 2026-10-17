@@ -15,7 +15,6 @@ mantén esa propiedad.
 
 import json
 import logging
-import re
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
@@ -47,6 +46,7 @@ from src.tool_requests import (  # noqa: F401 - KB_COLLECTION/KNOWN_COLLECTIONS 
     parse_search,
 )
 from src.tool_requests import reject_missing_kb_name as _reject_missing_kb_name  # noqa: F401
+from src.vectorstore.chunk_ids import is_chunk_id
 
 VERIFY_SYNTAX_OUTPUT_SCHEMA = {
     "type": "object",
@@ -927,7 +927,6 @@ def reject_non_public_collection(collection: str | None) -> str | None:
     )
 
 
-_CHUNK_ID = re.compile(r"_c\d+$")
 
 
 def _article_not_found_text(article_id: str, collection: str) -> str:
@@ -950,7 +949,7 @@ def _article_not_found_text(article_id: str, collection: str) -> str:
         )
     elif dict(collection_counts()).get(collection, 0) == 0:
         lineas.append(f"La colección '{collection}' está vacía en este deployment.")
-    if _CHUNK_ID.search(article_id):
+    if is_chunk_id(article_id):
         lineas.append(
             "Ese id parece de un CHUNK (termina en _cN): eso va a get_document. "
             "El article_id es el mismo sin el sufijo."
@@ -1378,7 +1377,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                     text=f"Scraped: {result['title']}\n"
                     f"Género: {result['genre']}\n"
                     f"{routing}\n"
-                    f"Chunks indexados: {result['chunks_indexed']}\n"
+                    f"Indexado: {result['index_status']} — {result['chunks_indexed']} chunks en el store\n"
                     f"Hash: {result['content_hash'][:16]}...\n"
                     f"Palabras: {result['word_count']}\n"
                     f"Saved: {result['md_path']}",
