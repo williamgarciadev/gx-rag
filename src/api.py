@@ -23,6 +23,7 @@ from src.auth import bearer_token, client_ip, is_authorized
 from src.config import config
 from src.ingestion.ingestor import SCRAPED_DIR, ingest
 from src.net_guard import BlockedUrlError
+from src.tool_requests import RequestRejected, parse_article, parse_document, parse_search
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -103,6 +104,13 @@ async def blocked_url_handler(request: Request, exc: BlockedUrlError):
             )
         },
     )
+
+
+@app.exception_handler(RequestRejected)
+async def request_rejected_handler(request: Request, exc: RequestRejected):
+    """Argumento inválido según las mismas reglas que el MCP (src.tool_requests):
+    400 con el mensaje, que ya dice que se rechazó antes de consultar el store."""
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
 @app.exception_handler(Exception)
@@ -383,14 +391,15 @@ def sac_job_cancel(job_id: str):
 def search(
     q: Annotated[str, Query(description="Query")],
     collection: Annotated[str, Query(description="Colección")] = "gx_docs",
-    top_k: Annotated[int, Query(description="Resultados", ge=1, le=20)] = 5,
+    top_k: Annotated[int, Query(description="Resultados (se acota como en el MCP)")] = 5,
 ):
     """
-    Búsqueda híbrida (pgvector + tsvector). Proxy para MCP wrapper.
+    Búsqueda híbrida (pgvector + tsvector). Mismas reglas que search_docs del MCP.
     """
     from src.vectorstore.pg_retriever import hybrid_search
 
-    results = hybrid_search(q, collection=collection, top_k=top_k)
+    req = parse_search({"query": q, "collection": collection, "top_k": top_k})
+    results = hybrid_search(req.query, collection=req.collection, top_k=req.top_k)
     return {"results": results, "count": len(results)}
 
 
@@ -404,7 +413,8 @@ def get_document(
     """
     from src.vectorstore.pg_collections import get_document
 
-    doc = get_document(doc_id, collection=collection)
+    req = parse_document({"doc_id": doc_id, "collection": collection})
+    doc = get_document(req.doc_id, collection=req.collection)
     if not doc:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return doc
@@ -420,7 +430,8 @@ def get_article(
     """
     from src.vectorstore.pg_collections import get_article
 
-    art = get_article(article_id, collection=collection)
+    req = parse_article({"article_id": article_id, "collection": collection})
+    art = get_article(req.article_id, collection=req.collection)
     if not art:
         raise HTTPException(status_code=404, detail="Artículo no encontrado")
     return art
@@ -438,7 +449,9 @@ def verify_syntax(
     from src.syntax_db.gx_repository import verify_syntax
 
     result = verify_syntax(snippet, language=language, version=version or None)
-    return {"result": str(result)}
+    # El dict tal cual: str(result) entregaba un repr de Python que ningún
+    # cliente puede parsear.
+    return {"result": result}
 
 
 @app.get("/methods", tags=["syntax"])

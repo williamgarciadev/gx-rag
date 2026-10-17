@@ -178,3 +178,51 @@ def test_article_returns_404_when_missing(client, monkeypatch):
     response = client.get("/article", params={"id": "nope"})
 
     assert response.status_code == 404
+
+
+# ─── Mismas reglas que el MCP (docs/PLAN-arquitectura.md, C2) ──────────────────
+
+
+def test_search_en_kb_objects_sin_kb_name_se_rechaza_sin_tocar_el_store(client, monkeypatch):
+    """El MCP impone kb_name sobre gx_kb_objects; /search lo dejaba pasar."""
+    import src.vectorstore.pg_retriever as pr
+
+    monkeypatch.setattr(pr, "hybrid_search", _raise(AssertionError("no debió consultar")))
+
+    response = client.get("/search", params={"q": "x", "collection": "gx_kb_objects"})
+
+    assert response.status_code == 400
+    assert "kb_name" in response.json()["detail"]
+
+
+def test_search_acepta_el_mismo_top_k_que_el_mcp(client, monkeypatch):
+    """/search topaba en 20 (422) y el MCP en 50."""
+    import src.vectorstore.pg_retriever as pr
+
+    vistos = {}
+    monkeypatch.setattr(pr, "hybrid_search", lambda q, **kw: vistos.update(kw) or [])
+
+    response = client.get("/search", params={"q": "x", "top_k": 30})
+
+    assert response.status_code == 200
+    assert vistos["top_k"] == 30
+
+
+def test_documents_y_article_rechazan_coleccion_desconocida(client):
+    for ruta in ("/documents", "/article"):
+        response = client.get(ruta, params={"id": "x", "collection": "gx_doc"})
+        assert response.status_code == 400, ruta
+        assert "Colección desconocida" in response.json()["detail"]
+
+
+def test_verify_devuelve_el_veredicto_como_json(client, monkeypatch):
+    """Antes devolvía str(dict): un repr de Python que ningún cliente puede leer."""
+    import src.syntax_db.gx_repository as repo
+
+    monkeypatch.setattr(
+        repo, "verify_syntax", lambda *a, **k: {"verdict": "VÁLIDO", "name": "Trim"}
+    )
+
+    response = client.get("/verify", params={"snippet": "Trim(&x)"})
+
+    assert response.json()["result"]["verdict"] == "VÁLIDO"

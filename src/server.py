@@ -38,6 +38,15 @@ from mcp.types import (
 # no arrastra Postgres ni e5 al arranque.
 from src.ingestion import kb_fichas
 from src.ingestion.kb_loader import KB_MAX_INLINE
+from src.tool_requests import (  # noqa: F401 - KB_COLLECTION/KNOWN_COLLECTIONS se reexportan
+    KB_COLLECTION,
+    KNOWN_COLLECTIONS,
+    RequestRejected,
+    parse_article,
+    parse_document,
+    parse_search,
+)
+from src.tool_requests import reject_missing_kb_name as _reject_missing_kb_name  # noqa: F401
 
 VERIFY_SYNTAX_OUTPUT_SCHEMA = {
     "type": "object",
@@ -109,20 +118,9 @@ server = Server(APP_NAME)
 # ─── Tools ────────────────────────────────────────────────────────────────────
 
 
-# Colecciones que el store puede contener. Fuente ÚNICA: alimenta el enum de las
-# read tools Y el chequeo de runtime, porque el SDK no valida el inputSchema — un
-# `gx_doc` mal escrito llegaba al SQL, no matcheaba nada y volvía como "Sin
-# resultados", que el agente lee como evidencia sobre el CORPUS y no sobre su
-# propio argumento.
-KNOWN_COLLECTIONS = ("gx_docs", "bt_docs", "gx_syntax", "bt_apis", "gx_kb_objects")
-
-# La coleccion de objetos de Knowledge Base exige `kb_name` en los filtros. Es lo que
-# hace imposible mezclar dos KBs sin darse cuenta: un hit de la KB equivocada haria
-# que el agente escriba codigo con nombres de objetos que no existen en la KB activa,
-# y eso es PEOR que no recuperar nada. El CHECK de sql/003 garantiza que la clave
-# exista en cada fila; esto garantiza que la consulta la use.
-KB_COLLECTION = "gx_kb_objects"
-COLLECTIONS_REQUIRING_KB_NAME = frozenset({KB_COLLECTION})
+# Colecciones y validación de argumentos: viven en src.tool_requests, que es lo
+# que comparten los tres transportes. Se reexportan acá porque el resto del
+# módulo (y los tests) los nombran desde server.
 
 
 # Read-only tools — safe for the public internet-facing transport.
@@ -838,41 +836,6 @@ def _verdict_guidance(verdict: object) -> str:
     )
 
 
-def _reject_missing_kb_name(collection: str, filters: dict | None) -> str | None:
-    """Mensaje de rechazo si falta `kb_name` en una colección que lo exige.
-
-    Es la barrera contra el peor modo de falla de una colección multi-KB: recuperar la
-    ficha de un objeto de OTRA KB y escribir código con nombres que no existen en la
-    KB activa. Un aislamiento que depende de que el llamador se acuerde de filtrar no
-    es un aislamiento; esto lo vuelve un error ruidoso.
-    """
-    if collection not in COLLECTIONS_REQUIRING_KB_NAME:
-        return None
-    if filters and filters.get("kb_name"):
-        return None
-
-    disponibles = ""
-    try:
-        from src.vectorstore.pg_collections import meta_facets
-
-        facetas = meta_facets(collection, ("kb_name",))
-        if facetas.get("kb_name"):
-            nombres = " · ".join(f"{v} ({n} chunks)" for v, n in facetas["kb_name"])
-            disponibles = f"\nKBs indexadas en esta colección: {nombres}"
-    except Exception:  # pragma: no cover - el mensaje no puede depender de la DB
-        pass
-
-    return (
-        f"Falta el filtro obligatorio 'kb_name' para la colección '{collection}'.\n"
-        "Esta colección puede contener objetos de MAS DE UNA Knowledge Base, y un "
-        "resultado de la KB equivocada te haría escribir código con nombres de objetos "
-        "que no existen en la KB activa — peor que no recuperar nada.\n"
-        'Pasa filters={"kb_name": "<nombre>"}. Si no sabes cuál es la KB activa, '
-        "consulta genexus_whoami en el MCP de GeneXus (campo kb.active)."
-        f"{disponibles}\n"
-        "NOTA: esto se rechazó ANTES de consultar el store. No dice nada sobre su "
-        "contenido."
-    )
 
 
 def _meta_line(meta: dict | None) -> str:
@@ -947,7 +910,7 @@ def reject_non_public_collection(collection: str | None) -> str | None:
     Pública (sin `_`) porque la consume http_server: es el gate de la dimensión
     COLECCION, complementario al de la dimensión TOOL que ya hace PUBLIC_TOOL_NAMES.
     Función de módulo y no un chequeo inline en el closure para que sea testeable
-    sin levantar el transporte, siguiendo el patrón de _reject_unknown_collection.
+    sin levantar el transporte, siguiendo el patrón de tool_requests.reject_unknown_collection.
 
     `None` (colección no pasada) NO se rechaza: cae en el default del schema, que
     siempre es una colección de documentación.
@@ -1000,22 +963,6 @@ def _article_not_found_text(article_id: str, collection: str) -> str:
     return "\n".join(lineas)
 
 
-def _reject_unknown_collection(collection: str) -> str | None:
-    """Mensaje de rechazo si la colección no existe; None si es válida.
-
-    Se chequea en el handler porque el SDK NO valida el enum del inputSchema. Sin
-    esto, un nombre mal escrito viaja al SQL, no matchea nada y vuelve como "Sin
-    resultados" / "no encontrado" — indistinguible de una ausencia real, que es
-    justo la lectura que el agente propaga aguas abajo.
-    """
-    if collection in KNOWN_COLLECTIONS:
-        return None
-    return (
-        f"Colección desconocida '{collection}'. "
-        f"Válidas: {', '.join(KNOWN_COLLECTIONS)}.\n"
-        "Esto NO dice nada sobre el corpus: se rechazó el argumento ANTES de "
-        "consultar el store. Corrige el nombre y repite la llamada."
-    )
 
 
 def _run_ingest_kb_objects(arguments: dict) -> str:
@@ -1214,211 +1161,184 @@ def register_tools(
 GENERIC_ERROR = "Error interno procesando la solicitud."
 
 
+# ─── Read tools ───────────────────────────────────────────────────────────────
+#
+# Un handler por tool de lectura. Validan con src.tool_requests (que levanta
+# RequestRejected) y dejan propagar cualquier otra falla: la política de errores
+# vive UNA vez en dispatch_tool, no repetida en cada rama.
+
+
+def _handle_search_docs(arguments: dict) -> list[TextContent]:
+    from src.vectorstore.pg_retriever import hybrid_search
+
+    req = parse_search(arguments)
+    results = hybrid_search(
+        req.query,
+        collection=req.collection,
+        top_k=req.top_k,
+        min_score=req.min_score,
+        filters=req.filters,
+        rerank=req.rerank,
+        max_per_article=req.max_per_article,
+    )
+    if not results:
+        return [TextContent(type="text", text=_empty_search_text(req.collection, req.filters))]
+    lines = [f"## Resultados ({len(results)} found)\n"]
+    for r in results:
+        content = r["content"] or ""
+        snippet = content[:req.snippet_chars]
+        truncated = "…" if len(content) > req.snippet_chars else ""
+        score_label = f"score={r['score']:.3f}"
+        if r.get("reranked") and "rrf_score" in r:
+            score_label += f" [reranked, rrf={r['rrf_score']:.3f}]"
+        elif r.get("rerank_fallback"):
+            score_label += " [fallback RRF: reranker no disponible]"
+        lines.append(
+            f"**{r['title']}** ({score_label})\n"
+            f"doc_id: `{r['doc_id']}`\n"
+            f"article_id: `{r.get('id', '')}`\n"
+            f"Fuente: {r.get('url') or r.get('source', '?')}\n"
+            f"Hash: {r.get('content_hash', '')}\n"
+            f"{_meta_line(r.get('meta'))}"
+            f"{snippet}{truncated}\n"
+        )
+    return [TextContent(type="text", text="\n".join(lines))]
+
+
+def _handle_get_document(arguments: dict) -> list[TextContent]:
+    from src.vectorstore.pg_collections import get_document
+
+    req = parse_document(arguments)
+    doc = get_document(req.doc_id, collection=req.collection)
+    if not doc:
+        return [
+            TextContent(
+                type="text",
+                text=(
+                    f"No hay ningún chunk con id '{req.doc_id}' en "
+                    f"'{req.collection}'.\n"
+                    "Verifica que sea un doc_id de search_docs (id de "
+                    "CHUNK) y no un article_id — ese va a get_article."
+                ),
+            )
+        ]
+    return [
+        TextContent(
+            type="text",
+            # Rotulado como fragmento: sin esto el agente lee 800 chars y
+            # concluye que el articulo entero dice solo eso.
+            text=f"# {doc['title']} — FRAGMENTO (1 chunk, no el artículo)\n\n"
+            f"**Fuente:** {doc.get('source', '')}\n"
+            f"**Colección:** {doc.get('collection', '')}\n"
+            f"**Hash:** {doc.get('content_hash', '')}\n"
+            f"_Para el documento completo: get_article con su article_id._\n\n"
+            f"{doc.get('content', '')}",
+        )
+    ]
+
+
+def _handle_get_article(arguments: dict) -> list[TextContent]:
+    from src.vectorstore.pg_collections import get_article
+
+    req = parse_article(arguments)
+    art = get_article(req.article_id, collection=req.collection)
+    if not art:
+        return [TextContent(type="text",
+                            text=_article_not_found_text(req.article_id, req.collection))]
+    return [
+        TextContent(
+            type="text",
+            text=f"# {art['title']} ({art['chunks']} chunks)\n\n"
+            f"**Fuente:** {art.get('url') or art.get('source', '')}\n"
+            f"**Colección:** {art.get('collection', '')}\n"
+            f"**Hash:** {art.get('content_hash', '')}\n\n"
+            f"{art.get('content', '')}",
+        )
+    ]
+
+
+def _handle_verify_syntax(arguments: dict) -> ToolResult:
+    from src.syntax_db.gx_repository import verify_syntax
+
+    verdict = verify_syntax(
+        arguments.get("snippet", ""),
+        language=arguments.get("language", "gx"),
+        version=arguments.get("version"),
+    )
+    text = (
+        f"{json.dumps(verdict, ensure_ascii=False, default=str)}\n"
+        f"{_verdict_guidance(verdict)}"
+    )
+    return ToolResult(
+        [TextContent(type="text", text=text)],
+        structured_content=verdict,
+    )
+
+
+def _handle_list_methods(arguments: dict) -> list[TextContent]:
+    from src.syntax_db.gx_repository import list_methods, list_object_types
+
+    obj_type = arguments.get("object_type", "")
+    methods = list_methods(obj_type, version=arguments.get("version"))
+    if not methods:
+        # Los object_type REALES, consultados al catálogo. Antes acá se
+        # sugerían 'Transaction' y 'Procedure', que no tienen una sola
+        # fila: la tool mandaba al agente a repetir la consulta con un
+        # valor que garantiza vacío, y el segundo vacío ya se lee como
+        # "el catálogo no sabe nada de esto".
+        disponibles = ", ".join(list_object_types()) or "(catálogo vacío)"
+        return [
+            TextContent(
+                type="text",
+                text=(
+                    f"Sin entradas catalogadas para object_type='{obj_type}'.\n"
+                    "Esto NO significa que ese objeto no tenga métodos: el "
+                    "catálogo está incompleto y una lista vacía es lo normal. "
+                    "No concluyas de esta respuesta que un método no existe — "
+                    "verifica contra un objeto real de la KB o la wiki oficial.\n"
+                    f"object_type disponibles en el catálogo: {disponibles}. "
+                    "Se compara exacto."
+                ),
+            )
+        ]
+    return [
+        TextContent(
+            type="text",
+            text=f"Métodos catalogados para '{obj_type}' ({len(methods)}):\n"
+            + "\n".join(f"- {m}" for m in methods)
+            + "\n(Lista PARCIAL: es lo que hay en el catálogo, no el conjunto "
+            "completo de métodos del objeto. La ausencia no prueba nada.)",
+        )
+    ]
+
+
+_READ_HANDLERS = {
+    "search_docs": _handle_search_docs,
+    "get_document": _handle_get_document,
+    "get_article": _handle_get_article,
+    "verify_syntax": _handle_verify_syntax,
+    "list_methods": _handle_list_methods,
+}
+
+
 async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
     """Execute a tool by name. Shared by the stdio and public HTTP transports."""
     # Log argument KEYS only — values may carry PII on now-public traffic.
     log.info("call_tool: %s (args: %s)", name, sorted(arguments))
 
-    if name == "search_docs":
-        from src.vectorstore.pg_retriever import hybrid_search
-
-        q = arguments.get("query", "")
-        col = arguments.get("collection", "gx_docs")
-        k_raw = arguments.get("top_k", 5)
-        snippet_chars_raw = arguments.get("snippet_chars", 600)
+    if handler := _READ_HANDLERS.get(name):
+        # Una sola política de errores para las tools de lectura: un argumento
+        # inválido vuelve con su mensaje (el problema es SU argumento, no el
+        # corpus) y cualquier otra falla se redacta a GENERIC_ERROR.
         try:
-            k = min(max(1, int(k_raw)), 50)
-        except (ValueError, TypeError):
-            k = 5
-        try:
-            snippet_chars = min(max(100, int(snippet_chars_raw)), 4000)
-        except (ValueError, TypeError):
-            snippet_chars = 600
-        min_score = arguments.get("min_score")
-        filters = arguments.get("filters")
-        # Antes de embeddear: rechazar acá evita además pagar la carga de e5-large
-        # (~2.2 GB en frío) por un argumento que ya sabemos inválido.
-        if rejection := _reject_unknown_collection(col):
-            return error_result(rejection)
-        if rejection := _reject_missing_kb_name(col, filters):
-            return error_result(rejection)
-        rerank = bool(arguments.get("rerank", False))
-        max_per_article_raw = arguments.get("max_per_article")
-        try:
-            max_per_article = int(max_per_article_raw) if max_per_article_raw is not None else None
-            if max_per_article is not None and max_per_article <= 0:
-                max_per_article = None
-        except (ValueError, TypeError):
-            max_per_article = None
-
-        try:
-            results = hybrid_search(
-                q,
-                collection=col,
-                top_k=k,
-                min_score=min_score,
-                filters=filters,
-                rerank=rerank,
-                max_per_article=max_per_article,
-            )
-            if not results:
-                return [TextContent(type="text", text=_empty_search_text(col, filters))]
-            lines = [f"## Resultados ({len(results)} found)\n"]
-            for r in results:
-                content = r["content"] or ""
-                snippet = content[:snippet_chars]
-                truncated = "…" if len(content) > snippet_chars else ""
-                score_label = f"score={r['score']:.3f}"
-                if r.get("reranked") and "rrf_score" in r:
-                    score_label += f" [reranked, rrf={r['rrf_score']:.3f}]"
-                elif r.get("rerank_fallback"):
-                    score_label += " [fallback RRF: reranker no disponible]"
-                lines.append(
-                    f"**{r['title']}** ({score_label})\n"
-                    f"doc_id: `{r['doc_id']}`\n"
-                    f"article_id: `{r.get('id', '')}`\n"
-                    f"Fuente: {r.get('url') or r.get('source', '?')}\n"
-                    f"Hash: {r.get('content_hash', '')}\n"
-                    f"{_meta_line(r.get('meta'))}"
-                    f"{snippet}{truncated}\n"
-                )
-            return [TextContent(type="text", text="\n".join(lines))]
-        except ValueError as exc:
-            # filter_params RECHAZA claves desconocidas y listas vacías con un mensaje
-            # accionable. Si cayera en el `except Exception` de abajo se convertiría en
-            # GENERIC_ERROR y el llamador no sabría que el problema es SU argumento:
-            # buscaría la causa en el corpus o en el servidor.
+            return handler(arguments)
+        except RequestRejected as exc:
             return error_result(str(exc))
         except Exception:
-            log.exception("search_docs error")
-            return error_result(GENERIC_ERROR)
-
-    elif name == "get_document":
-        from src.vectorstore.pg_collections import get_document
-
-        doc_id = arguments.get("doc_id", "")
-        collection = arguments.get("collection", "gx_docs")
-        if rejection := _reject_unknown_collection(collection):
-            return error_result(rejection)
-        try:
-            doc = get_document(doc_id, collection=collection)
-            if not doc:
-                return [
-                    TextContent(
-                        type="text",
-                        text=(
-                            f"No hay ningún chunk con id '{doc_id}' en "
-                            f"'{collection}'.\n"
-                            "Verifica que sea un doc_id de search_docs (id de "
-                            "CHUNK) y no un article_id — ese va a get_article."
-                        ),
-                    )
-                ]
-            return [
-                TextContent(
-                    type="text",
-                    # Rotulado como fragmento: sin esto el agente lee 800 chars y
-                    # concluye que el articulo entero dice solo eso.
-                    text=f"# {doc['title']} — FRAGMENTO (1 chunk, no el artículo)\n\n"
-                    f"**Fuente:** {doc.get('source', '')}\n"
-                    f"**Colección:** {doc.get('collection', '')}\n"
-                    f"**Hash:** {doc.get('content_hash', '')}\n"
-                    f"_Para el documento completo: get_article con su article_id._\n\n"
-                    f"{doc.get('content', '')}",
-                )
-            ]
-        except Exception:
             log.exception("%s failed", name)
             return error_result(GENERIC_ERROR)
 
-    elif name == "get_article":
-        from src.vectorstore.pg_collections import get_article
-
-        article_id = arguments.get("article_id", "")
-        collection = arguments.get("collection", "gx_docs")
-        if rejection := _reject_unknown_collection(collection):
-            return error_result(rejection)
-        try:
-            art = get_article(article_id, collection=collection)
-            if not art:
-                return [TextContent(type="text",
-                                    text=_article_not_found_text(article_id, collection))]
-            return [
-                TextContent(
-                    type="text",
-                    text=f"# {art['title']} ({art['chunks']} chunks)\n\n"
-                    f"**Fuente:** {art.get('url') or art.get('source', '')}\n"
-                    f"**Colección:** {art.get('collection', '')}\n"
-                    f"**Hash:** {art.get('content_hash', '')}\n\n"
-                    f"{art.get('content', '')}",
-                )
-            ]
-        except Exception:
-            log.exception("%s failed", name)
-            return error_result(GENERIC_ERROR)
-
-    elif name == "verify_syntax":
-        from src.syntax_db.gx_repository import verify_syntax
-
-        snippet = arguments.get("snippet", "")
-        lang = arguments.get("language", "gx")
-        version = arguments.get("version")
-        try:
-            verdict = verify_syntax(snippet, language=lang, version=version)
-            text = (
-                f"{json.dumps(verdict, ensure_ascii=False, default=str)}\n"
-                f"{_verdict_guidance(verdict)}"
-            )
-            return ToolResult(
-                [TextContent(type="text", text=text)],
-                structured_content=verdict,
-            )
-        except Exception:
-            log.exception("%s failed", name)
-            return error_result(GENERIC_ERROR)
-
-    elif name == "list_methods":
-        from src.syntax_db.gx_repository import list_methods, list_object_types
-
-        obj_type = arguments.get("object_type", "")
-        version = arguments.get("version")
-        try:
-            methods = list_methods(obj_type, version=version)
-            if not methods:
-                # Los object_type REALES, consultados al catálogo. Antes acá se
-                # sugerían 'Transaction' y 'Procedure', que no tienen una sola
-                # fila: la tool mandaba al agente a repetir la consulta con un
-                # valor que garantiza vacío, y el segundo vacío ya se lee como
-                # "el catálogo no sabe nada de esto".
-                disponibles = ", ".join(list_object_types()) or "(catálogo vacío)"
-                return [
-                    TextContent(
-                        type="text",
-                        text=(
-                            f"Sin entradas catalogadas para object_type='{obj_type}'.\n"
-                            "Esto NO significa que ese objeto no tenga métodos: el "
-                            "catálogo está incompleto y una lista vacía es lo normal. "
-                            "No concluyas de esta respuesta que un método no existe — "
-                            "verifica contra un objeto real de la KB o la wiki oficial.\n"
-                            f"object_type disponibles en el catálogo: {disponibles}. "
-                            "Se compara exacto."
-                        ),
-                    )
-                ]
-            return [
-                TextContent(
-                    type="text",
-                    text=f"Métodos catalogados para '{obj_type}' ({len(methods)}):\n"
-                    + "\n".join(f"- {m}" for m in methods)
-                    + "\n(Lista PARCIAL: es lo que hay en el catálogo, no el conjunto "
-                    "completo de métodos del objeto. La ausencia no prueba nada.)",
-                )
-            ]
-        except Exception:
-            log.exception("%s failed", name)
-            return error_result(GENERIC_ERROR)
-
-    elif name == "add_from_url":
+    if name == "add_from_url":
         from scripts.scrape_wiki import scrape
         from src.ingestion.ingestor import ingest
 
