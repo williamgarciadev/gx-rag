@@ -438,28 +438,3 @@ def list_object_types() -> list[str]:
     results = [r[0] for r in query.all() if r[0]]
     session.close()
     return results
-
-
-def get_signature(
-    name: str, object_type: str, version: str | None = None
-) -> dict | None:
-    """Obtiene la firma exacta de un método/objeto."""
-    session = get_session()
-    query = session.query(GxSyntax).filter(
-        func.lower(GxSyntax.name) == name.lower(),
-        func.lower(GxSyntax.object_type) == object_type.lower(),
-    )
-    if version:
-        query = query.filter(GxSyntax.version_since == version)
-    entry = query.first()
-    session.close()
-    if not entry:
-        return None
-    return {
-        "name": entry.name,
-        "object_type": entry.object_type,
-        "signature": entry.signature,
-        "description": entry.description,
-        "version": entry.version_since,
-        "source": entry.source,
-    }

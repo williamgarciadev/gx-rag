@@ -13,13 +13,13 @@ Dos detectores, porque el voseo tiene dos formas:
 """
 
 import re
-from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.unit
+from tests._repo import RAIZ as _RAIZ
+from tests._repo import archivos_py
 
-_RAIZ = Path(__file__).resolve().parent.parent
+pytestmark = pytest.mark.unit
 
 # ií: la clase de regex [IÍ] de bulk_loader, no una palabra.
 _AGUDAS_LEGITIMAS = frozenset(
@@ -41,18 +41,9 @@ _ENCLITICOS_VOSEO = re.compile(
 )
 
 
-def _archivos():
-    return sorted(
-        p
-        for carpeta in ("src", "scripts")
-        for p in (_RAIZ / carpeta).rglob("*.py")
-        if "__pycache__" not in p.parts and "video_pilot" not in p.parts
-    )
-
-
 def test_el_codigo_no_tiene_voseo():
     hallazgos = []
-    for archivo in _archivos():
+    for archivo in archivos_py("src", "scripts"):
         for n, linea in enumerate(archivo.read_text(encoding="utf-8").splitlines(), 1):
             voseo = [
                 w for w in _AGUDA.findall(linea) if w.lower() not in _AGUDAS_LEGITIMAS

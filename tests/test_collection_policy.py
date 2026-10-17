@@ -8,15 +8,14 @@ gx_doc` llegaba al SQL y volvía como "0 chunks".
 
 import argparse
 import re
-from pathlib import Path
 
 import pytest
 
 from src import collection_policy as cp
+from tests._repo import RAIZ as _RAIZ
+from tests._repo import archivos_py
 
 pytestmark = pytest.mark.unit
-
-_RAIZ = Path(__file__).resolve().parent.parent
 
 
 def _parser(**kwargs) -> argparse.ArgumentParser:
@@ -41,7 +40,7 @@ def test_ningun_cli_declara_collection_por_su_cuenta():
     """Un --collection declarado a mano vuelve a aceptar cualquier nombre."""
     a_mano = [
         f"{p.relative_to(_RAIZ)}"
-        for p in sorted((_RAIZ / "scripts").glob("*.py"))
+        for p in archivos_py("scripts")
         if re.search(r"""add_argument\(\s*["']--collection["']""", p.read_text(encoding="utf-8"))
     ]
     assert not a_mano, f"Usa collection_policy.add_collection_argument en: {a_mano}"
@@ -53,7 +52,7 @@ def test_ningun_modulo_redefine_las_colecciones_de_la_politica():
     nombres = "KNOWN_COLLECTIONS|KB_COLLECTION|WRITABLE_COLLECTIONS|PUBLIC_COLLECTIONS|NON_PUBLIC_COLLECTIONS"
     copias = [
         f"{p.relative_to(_RAIZ)}"
-        for p in sorted((_RAIZ / "src").rglob("*.py"))
+        for p in archivos_py("src")
         if p.name != "collection_policy.py"
         and re.search(rf"^({nombres})\s*=", p.read_text(encoding="utf-8"), re.MULTILINE)
     ]
