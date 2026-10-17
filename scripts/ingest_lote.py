@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 from scripts._path_list import read_path_list
+from src.collection_policy import add_collection_argument
 
 #: Medido: 8 núcleos lógicos. La mitad deja la máquina usable a costa de ~1,5x de tiempo.
 DEFAULT_THREADS = 4
@@ -31,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("lista", type=Path)
     parser.add_argument("--threads", type=int, default=DEFAULT_THREADS)
-    parser.add_argument("--collection", default="bt_docs")
+    add_collection_argument(parser, default="bt_docs")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 

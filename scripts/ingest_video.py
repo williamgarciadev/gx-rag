@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 from scripts._console import use_utf8_stdout
+from src.collection_policy import add_collection_argument
 from src.ingestion.video_pipeline import (
     AudioTranscriber,
     FrameExtractor,
@@ -75,9 +76,8 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="DEPRECATED: La indexación directa fue retirada. Usa scripts.ingest_local --manifest.",
     )
-    parser.add_argument(
-        "--collection",
-        type=str,
+    add_collection_argument(
+        parser,
         default="bt_docs",
         help="Target collection (unused: use ingest_local --manifest to index)",
     )

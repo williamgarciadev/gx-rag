@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 from scripts._console import use_utf8_stdout
+from src.collection_policy import add_collection_argument
 from src.ingestion.bulk_loader import RawDoc, load_dump
 from src.ingestion.local_loader import iter_supported_files, parse_local_docs
 from src.ingestion.manifest import iter_manifest_paths, load_manifest
@@ -61,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("paths", nargs="*", help="Files or directories to ingest")
     p.add_argument("--manifest", help="Manifest declaring what to ingest and why")
     p.add_argument("--root", help="Override the manifest's document root")
-    p.add_argument("--collection", default=None)
+    add_collection_argument(p, default=None)
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args(argv)

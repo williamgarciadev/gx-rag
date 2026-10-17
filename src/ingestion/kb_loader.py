@@ -16,9 +16,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Callable, Iterable
 
+from src.collection_policy import KB_COLLECTION
 from src.ingestion import kb_fichas as kf
-
-KB_COLLECTION = "gx_kb_objects"
 
 # Tope de fichas por llamada MCP. Derivacion: una ficha de 4 secciones ~ 2,5 KB de
 # JSON, asi que 25 fichas ~ 62 KB de argumentos, que ya es mucho para que un LLM emita

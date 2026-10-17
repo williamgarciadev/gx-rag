@@ -36,6 +36,7 @@ from dotenv import load_dotenv
 
 from scripts._console import use_utf8_stdout
 from scripts._path_list import read_path_list
+from src.collection_policy import add_collection_argument
 from src.ingestion.bt_pdf_extract import (
     extract_pages,
     is_furniture,
@@ -182,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("paths", nargs="*", type=Path)
     parser.add_argument("--list", type=Path, help="archivo UTF-8 con una ruta por línea")
-    parser.add_argument("--collection", default="bt_docs")
+    add_collection_argument(parser, default="bt_docs")
     args = parser.parse_args(argv)
     paths = list(args.paths) + (read_path_list(args.list) if args.list else [])
     if not paths:

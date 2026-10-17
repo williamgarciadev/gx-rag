@@ -24,15 +24,6 @@ class SyntaxDBConfig(BaseSettings):
     path: Path = Path("data/syntax.db")
 
 
-class CollectionsConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="GX_")
-    gx_docs: str = "gx_docs"
-    bt_docs: str = "bt_docs"
-    gx_syntax: str = "gx_syntax"
-    bt_apis: str = "bt_apis"
-    cross_ref: str = "cross_ref"
-
-
 class Config(BaseSettings):
     # extra="ignore": el .env es de toda la app, no solo de Config. Ahi viven
     # GXRAG_DSN (lo leen pg_client y syntax_db via os.environ) y HF_HUB_DISABLE_XET
@@ -44,7 +35,6 @@ class Config(BaseSettings):
 
     vectorstore: VectorStoreConfig = VectorStoreConfig()
     syntax_db: SyntaxDBConfig = SyntaxDBConfig()
-    collections: CollectionsConfig = CollectionsConfig()
 
     server_name: str = "gx-bt-rag-mcp"
     server_transport: str = "stdio"

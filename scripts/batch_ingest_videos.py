@@ -16,6 +16,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
+from src.collection_policy import add_collection_argument
 from src.ingestion.video_pipeline import VideoIngestPipeline
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -68,12 +69,7 @@ def main() -> int:
         action="store_true",
         help="DEPRECATED: La indexación directa fue retirada. Usa scripts.ingest_local --manifest.",
     )
-    parser.add_argument(
-        "--collection",
-        type=str,
-        default="bt_docs",
-        help="Target vector collection name (unused: use ingest_local --manifest)",
-    )
+    add_collection_argument(parser, default="bt_docs", help="Target vector collection name (unused: use ingest_local --manifest)")
     args = parser.parse_args()
 
     from scripts._console import use_utf8_stdout

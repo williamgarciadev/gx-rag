@@ -35,6 +35,7 @@ import dotenv
 
 dotenv.load_dotenv(".env", override=False)
 
+from src.collection_policy import add_collection_argument  # noqa: E402
 from src.vectorstore import embeddings as emb  # noqa: E402
 
 # Por el MÓDULO y no por nombre: el bench mide las funciones de producción, y así
@@ -184,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--repeat", type=int, default=3, help="repeticiones por consulta")
     p.add_argument("--top-k", type=int, default=5)
-    p.add_argument("--collection", help="medir sólo esta colección")
+    add_collection_argument(p, default=None, help="medir sólo esta colección")
     p.add_argument("--explain", action="store_true", help="volcar EXPLAIN ANALYZE")
     args = p.parse_args(argv)
 

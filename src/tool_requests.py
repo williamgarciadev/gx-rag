@@ -16,21 +16,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Colecciones que el store puede contener. Fuente ÚNICA: alimenta el enum de las
-# read tools Y el chequeo de runtime, porque el SDK no valida el inputSchema — un
-# `gx_doc` mal escrito llegaba al SQL, no matcheaba nada y volvía como "Sin
-# resultados", que el agente lee como evidencia sobre el CORPUS y no sobre su
-# propio argumento.
-KNOWN_COLLECTIONS = ("gx_docs", "bt_docs", "gx_syntax", "bt_apis", "gx_kb_objects")
-DEFAULT_COLLECTION = "gx_docs"
-
-# La coleccion de objetos de Knowledge Base exige `kb_name` en los filtros. Es lo que
-# hace imposible mezclar dos KBs sin darse cuenta: un hit de la KB equivocada haria
-# que el agente escriba codigo con nombres de objetos que no existen en la KB activa,
-# y eso es PEOR que no recuperar nada. El CHECK de sql/003 garantiza que la clave
-# exista en cada fila; esto garantiza que la consulta la use.
-KB_COLLECTION = "gx_kb_objects"
-COLLECTIONS_REQUIRING_KB_NAME = frozenset({KB_COLLECTION})
+from src.collection_policy import (
+    COLLECTIONS_REQUIRING_KB_NAME,
+    DEFAULT_COLLECTION,
+    reject_unknown_collection,
+)
 
 # Límites de search_docs. Viven acá y no en el handler de cada transporte: api.py
 # topaba top_k en 20 y el MCP en 50.
@@ -103,16 +93,6 @@ def parse_article(args: dict) -> ArticleRequest:
     return ArticleRequest(article_id=args.get("article_id", ""), collection=_collection(args))
 
 
-def reject_unknown_collection(collection: str) -> str | None:
-    """Mensaje de rechazo si la colección no existe; None si es válida."""
-    if collection in KNOWN_COLLECTIONS:
-        return None
-    return (
-        f"Colección desconocida '{collection}'. "
-        f"Válidas: {', '.join(KNOWN_COLLECTIONS)}.\n"
-        "Esto NO dice nada sobre el corpus: se rechazó el argumento ANTES de "
-        "consultar el store. Corrige el nombre y repite la llamada."
-    )
 
 
 def reject_missing_kb_name(collection: str, filters: dict | None) -> str | None:

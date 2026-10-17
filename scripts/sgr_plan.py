@@ -28,6 +28,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from scripts._console import use_utf8_stdout
+from src.collection_policy import add_collection_argument
 from src.ingestion.bt_pdf_extract import DOC_CODE_PREFIXES
 
 _SEP = "\\"
@@ -155,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="deja en el lote solo lo que está bajo este prefijo relativo a Bantotal "
                              "V3R1 (repetible). Se aplica DESPUÉS de deduplicar sobre --carpeta")
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--collection", default="bt_docs")
+    add_collection_argument(parser, default="bt_docs")
     args = parser.parse_args(argv)
 
     marker = _SEP + args.carpeta + _SEP

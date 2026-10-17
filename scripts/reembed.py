@@ -54,6 +54,7 @@ dotenv.load_dotenv(".env", override=False)
 
 import psycopg  # noqa: E402
 
+from src.collection_policy import add_collection_argument  # noqa: E402
 from src.vectorstore import embeddings as emb  # noqa: E402
 
 LOTE = 64
@@ -169,7 +170,7 @@ def migrar(coleccion: str, destino: str) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check", action="store_true", help="reportar perfiles por coleccion")
-    ap.add_argument("--collection")
+    add_collection_argument(ap, default=None)
     ap.add_argument("--to", choices=emb.PERFILES)
     args = ap.parse_args(argv)
 

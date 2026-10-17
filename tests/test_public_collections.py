@@ -87,3 +87,29 @@ def test_the_public_transport_wires_the_collection_gate():
 
     fuente = inspect.getsource(http_srv.build_public_server)
     assert "reject_non_public_collection" in fuente
+
+
+def test_el_schema_publico_no_ofrece_colecciones_privadas():
+    """El enum de `collection` es el prompt del agente: ofrecer gx_kb_objects en
+    internet y después rechazarlo le enseña una opción que no tiene."""
+    for tool in srv.PUBLIC_READ_TOOLS:
+        enum = tool.input_schema.get("properties", {}).get("collection", {}).get("enum")
+        if enum is not None:
+            assert set(enum) <= srv.PUBLIC_COLLECTIONS, tool.name
+            assert "gx_kb_objects" not in enum, tool.name
+
+
+def test_las_tools_publicas_son_las_de_lectura_con_otro_enum():
+    assert [t.name for t in srv.PUBLIC_READ_TOOLS] == [t.name for t in srv.READ_TOOLS]
+    # El stdio sigue ofreciendo todas las conocidas: la copia no muta el original.
+    search = next(t for t in srv.READ_TOOLS if t.name == "search_docs")
+    assert "gx_kb_objects" in search.input_schema["properties"]["collection"]["enum"]
+
+
+def test_el_transporte_publico_registra_las_tools_publicas():
+    import inspect
+
+    import src.http_server as http_srv
+
+    fuente = inspect.getsource(http_srv.build_public_server)
+    assert "PUBLIC_READ_TOOLS" in fuente

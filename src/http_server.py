@@ -46,8 +46,8 @@ from starlette.types import Receive, Scope, Send
 
 from src.auth import bearer_token, client_ip, is_authorized
 from src.server import (
+    PUBLIC_READ_TOOLS,
     PUBLIC_TOOL_NAMES,
-    READ_TOOLS,
     dispatch_tool,
     error_result,
     register_tools,
@@ -121,7 +121,7 @@ def build_public_server() -> Server:
 
     # Solo READ_TOOLS se listan, y guarded_dispatch vuelve a chequear al invocar:
     # la lista es la cara visible, el guard es el que realmente cierra la puerta.
-    register_tools(public, READ_TOOLS, guarded_dispatch)
+    register_tools(public, PUBLIC_READ_TOOLS, guarded_dispatch)
 
     return public
 

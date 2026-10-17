@@ -20,6 +20,7 @@ import itertools
 import sys
 from pathlib import Path
 
+from src.collection_policy import add_collection_argument
 from src.ingestion.bulk_loader import (
     RawDoc,
     load_dump,
@@ -98,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Bulk-load documentation into the store.")
     p.add_argument("file", help="Dump .txt file, or a directory when --format files")
     p.add_argument("--format", required=True, choices=_FORMATS)
-    p.add_argument("--collection", default="gx_docs")
+    add_collection_argument(p, default="gx_docs")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument(

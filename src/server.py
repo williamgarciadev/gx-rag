@@ -13,6 +13,7 @@ afirmación falsa aguas abajo. Al tocar una descripción o un mensaje acá,
 mantén esa propiedad.
 """
 
+import copy
 import json
 import logging
 from collections.abc import Awaitable, Callable, Sequence
@@ -30,6 +31,15 @@ from mcp.types import (
     ToolAnnotations,
 )
 
+from src.collection_policy import (  # noqa: F401 - se reexportan para http_server y tests
+    KB_COLLECTION,
+    KNOWN_COLLECTIONS,
+    NON_PUBLIC_COLLECTIONS,
+    PUBLIC_COLLECTIONS,
+    WRITABLE_COLLECTIONS,
+    reject_non_public_collection,
+)
+
 # A nivel de modulo y no diferido como el resto de los src.*: los enums de las
 # secciones y los tipos sugeridos se evaluan al CONSTRUIR el inputSchema, que pasa al
 # importar. Ambos modulos son livianos —kb_fichas solo trae el splitter de
@@ -37,9 +47,7 @@ from mcp.types import (
 # no arrastra Postgres ni e5 al arranque.
 from src.ingestion import kb_fichas
 from src.ingestion.kb_loader import KB_MAX_INLINE
-from src.tool_requests import (  # noqa: F401 - KB_COLLECTION/KNOWN_COLLECTIONS se reexportan
-    KB_COLLECTION,
-    KNOWN_COLLECTIONS,
+from src.tool_requests import (
     RequestRejected,
     parse_article,
     parse_document,
@@ -436,11 +444,6 @@ READ_TOOLS: list[Tool] = [
 ]
 
 
-# Collections an ingestion call may target. Single source of truth: it feeds the
-# add_from_url enum AND the runtime check, so the schema and the validation can
-# never drift apart.
-WRITABLE_COLLECTIONS = frozenset({"gx_docs", "gx_syntax"})
-
 # Dump parsers exposed through ingest_batch, by `format` value.
 DUMP_FORMATS = ("genexus", "workwithplus")
 
@@ -663,24 +666,21 @@ PUBLIC_TOOL_NAMES = frozenset(
 )
 
 
-# Colecciones que NO se sirven en el transporte público, y su complemento.
-#
-# POR QUE HACE FALTA, y por qué no alcanza PUBLIC_TOOL_NAMES: ese frozenset cubre
-# la dimensión TOOL, y del lado write está bien cubierto. Pero `search_docs` YA es
-# público y recibe `collection` como PARAMETRO, validado solo contra
-# KNOWN_COLLECTIONS. O sea: sumar un nombre a esa tupla alcanzaba para publicar
-# una colección en internet, sin tocar http_server.py y sin que ningún test se
-# ponga rojo. El contenido de una KB de banca no puede depender de eso.
-#
-# SE DECLARA POR SUSTRACCION, no por enumeración de lo público: el default seguro
-# tiene que ser "no se publica". Con una lista blanca, agregar una colección y
-# olvidarse de la lista la deja pública; con esta forma, la deja privada.
-#
-# gx_kb_objects figura acá ANTES de existir en KNOWN_COLLECTIONS, a propósito: la
-# política precede a la capacidad, así no hay una ventana entre el commit que crea
-# la colección y el commit que la protege.
-NON_PUBLIC_COLLECTIONS = frozenset({"gx_kb_objects"})
-PUBLIC_COLLECTIONS = frozenset(KNOWN_COLLECTIONS) - NON_PUBLIC_COLLECTIONS
+# Las read tools tal como las ve el transporte público: mismo contrato, pero el
+# enum de `collection` recortado a PUBLIC_COLLECTIONS. El enum es el prompt del
+# agente: ofrecer gx_kb_objects en internet y después rechazarlo le enseña una
+# opción que no tiene. El guard de http_server sigue siendo el que cierra la puerta.
+def _with_collection_enum(tool: Tool, allowed: frozenset[str]) -> Tool:
+    schema = copy.deepcopy(tool.input_schema)
+    coleccion = schema.get("properties", {}).get("collection")
+    if coleccion and "enum" in coleccion:
+        coleccion["enum"] = [c for c in coleccion["enum"] if c in allowed]
+    return tool.model_copy(update={"input_schema": schema})
+
+
+PUBLIC_READ_TOOLS: list[Tool] = [
+    _with_collection_enum(t, PUBLIC_COLLECTIONS) for t in READ_TOOLS
+]
 
 
 # Qué significa cada estado de la ingesta de fichas, adjunto a TODA respuesta de
@@ -904,27 +904,6 @@ def _empty_search_text(collection: str, filters: dict | None) -> str:
     return f"Sin resultados en '{collection}'.{hint}"
 
 
-def reject_non_public_collection(collection: str | None) -> str | None:
-    """Mensaje de rechazo si la colección no se sirve en público; None si sí.
-
-    Pública (sin `_`) porque la consume http_server: es el gate de la dimensión
-    COLECCION, complementario al de la dimensión TOOL que ya hace PUBLIC_TOOL_NAMES.
-    Función de módulo y no un chequeo inline en el closure para que sea testeable
-    sin levantar el transporte, siguiendo el patrón de tool_requests.reject_unknown_collection.
-
-    `None` (colección no pasada) NO se rechaza: cae en el default del schema, que
-    siempre es una colección de documentación.
-    """
-    if collection is None or collection in PUBLIC_COLLECTIONS:
-        return None
-    return (
-        f"Colección '{collection}' no disponible en el endpoint público. "
-        f"Disponibles: {', '.join(sorted(PUBLIC_COLLECTIONS))}.\n"
-        # Sin esta línea un rechazo de POLITICA se lee como una colección vacía, y
-        # el agente concluye sobre el corpus a partir de una decisión de acceso.
-        "Esto NO dice nada sobre su contenido: se rechazó ANTES de consultar el "
-        "store. No concluyas que está vacía ni que el tema no existe."
-    )
 
 
 

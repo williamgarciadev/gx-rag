@@ -24,6 +24,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from scripts._console import use_utf8_stdout
+from src.collection_policy import add_collection_argument
 
 _COUNT = "SELECT count(*) FROM chunks WHERE collection = %s AND source = %s"
 _BACKUP = ("SELECT *, embedding::text AS embedding_text FROM chunks "
@@ -83,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("viejo", type=Path)
     parser.add_argument("--replaced-by", type=Path)
-    parser.add_argument("--collection", default="bt_docs")
+    add_collection_argument(parser, default="bt_docs")
     args = parser.parse_args(argv)
 
     from src.vectorstore.pg_client import close_pool, get_pool

@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 from scripts._console import use_utf8_stdout
+from src.collection_policy import add_collection_argument
 from src.ingestion.pdf_pipeline import PDFIngestPipeline
 
 
@@ -45,12 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Custom title (only applies when ingesting a single file)",
     )
-    parser.add_argument(
-        "--collection",
-        type=str,
-        default="bt_docs",
-        help="Target collection (unused: use ingest_local --manifest to index)",
-    )
+    add_collection_argument(parser, default="bt_docs", help="Target collection (unused: use ingest_local --manifest to index)")
     parser.add_argument(
         "--index",
         action="store_true",
