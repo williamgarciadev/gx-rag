@@ -199,7 +199,7 @@ def test_a_ficha_without_sections_is_rejected_not_indexed_empty():
 
     assert problemas
     assert "sections" in problemas[0]
-    assert "omitilo" in problemas[0]
+    assert "omítelo" in problemas[0]
 
 
 @pytest.mark.parametrize("campo", ["obj_name", "obj_type"])

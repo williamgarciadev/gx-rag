@@ -87,7 +87,7 @@ def check() -> int:
         "hint": (
             "Una coleccion con mas de un perfil esta A MEDIO MIGRAR: sus resultados "
             "densos comparan vectores de geometrias distintas y NO son "
-            "interpretables. Terminá la migracion antes de medir nada."
+            "interpretables. Termina la migracion antes de medir nada."
             if mixtas else
             "Ninguna coleccion mixta: cada una tiene una sola geometria."
         ),
@@ -101,7 +101,7 @@ def migrar(coleccion: str, destino: str) -> int:
             "error": f"GXRAG_EMB_PROFILE={emb.EMB_PROFILE!r} pero --to={destino!r}",
             "hint": "El prefijo lo aplica embeddings.py segun la env var, y --to es lo "
                     "que se escribe en la columna. Si difieren, la columna mentiria "
-                    "sobre la geometria real de las filas. Poné los dos iguales.",
+                    "sobre la geometria real de las filas. Pon los dos iguales.",
         })
 
     t0 = time.perf_counter()
@@ -179,7 +179,7 @@ def main(argv=None) -> int:
         return _emit({
             "ok": False, "command": "reembed",
             "error": "faltan --collection y --to",
-            "hint": "Empezá por --check para ver que hay.",
+            "hint": "Empieza por --check para ver que hay.",
         })
     return migrar(args.collection, args.to)
 

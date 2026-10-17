@@ -78,8 +78,8 @@ def main() -> int:
     for object_type, count in sorted(by_type.items(), key=lambda kv: -kv[1]):
         print(f"  {object_type:12s} {count:5d}")
     print(
-        f"\n{multiword} nombres multi-palabra: alcanzables por list_methods y por "
-        "las sugerencias, NO por la coincidencia exacta de verify_syntax."
+        f"\n{multiword} nombres multi-palabra: verify_syntax los alcanza "
+        "solo si el snippet ES el nombre suelto; list_methods y las sugerencias, siempre."
     )
 
     if not args.apply:

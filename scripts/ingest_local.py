@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         collection = args.collection or "bt_docs"
         paths = _expand(args.paths)
     else:
-        p.error("pasá rutas o --manifest")
+        p.error("pasa rutas o --manifest")
 
     docs = _iter_docs(paths, args.limit)
 

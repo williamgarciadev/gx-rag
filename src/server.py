@@ -10,7 +10,7 @@ lee al momento de concluir. Por eso ambos declaran explícitamente qué NO cubre
 el corpus y cómo NO leer cada veredicto — un agente no puede calibrar un
 resultado que no se explica, y una respuesta ambigua se convierte en una
 afirmación falsa aguas abajo. Al tocar una descripción o un mensaje acá,
-mantené esa propiedad.
+mantén esa propiedad.
 """
 
 import json
@@ -140,7 +140,7 @@ READ_TOOLS: list[Tool] = [
             "(la mejor fuente para '¿es un bug conocido?' y sus workarounds) y la wiki "
             "de WorkWithPlus. **Los tickets SAC son MÁS DE LA MITAD del corpus** y la "
             "wiki de WorkWithPlus apenas una fracción chica.\n"
-            "🔴 POR ESO, USÁ `filters={\"origin\": [...]}`. Valores: `gx_wiki` (wiki "
+            "🔴 POR ESO, USA `filters={\"origin\": [...]}`. Valores: `gx_wiki` (wiki "
             "GeneXus) · `sac` (tickets) · `wwp` (WorkWithPlus). Toda fila tiene la "
             "clave, así que un filtro que no matchea significa 'ese origen no lo "
             "tiene', nunca 'no está clasificado'.\n"
@@ -156,7 +156,7 @@ READ_TOOLS: list[Tool] = [
             "🔴 NUNCA concluyas 'no está documentado' desde un top_k chico: el corpus "
             "tiene decenas de miles de chunks y el ranking mezcla fuentes, así que "
             "un tema presente puede no entrar en los primeros 3. Antes de afirmar "
-            "una ausencia, subí top_k y reformulá con términos del dominio.\n"
+            "una ausencia, sube top_k y reformula con términos del dominio.\n"
             "QUÉ COLECCIONES HAY: gx_docs (wiki GeneXus + SAC + WorkWithPlus), "
             "bt_docs (documentación Bantotal), gx_syntax, bt_apis. **CUÁLES "
             "tienen contenido y cuánto depende del deployment, así que no lo "
@@ -186,8 +186,8 @@ READ_TOOLS: list[Tool] = [
                 "snippet_chars": {
                     "type": "integer",
                     "description": (
-                        "Largo del fragmento por resultado. Subilo para ver la "
-                        "sintaxis completa; usá get_article para el doc entero."
+                        "Largo del fragmento por resultado. Súbelo para ver la "
+                        "sintaxis completa; usa get_article para el doc entero."
                     ),
                     "default": 600,
                 },
@@ -209,7 +209,7 @@ READ_TOOLS: list[Tool] = [
                         "relevancia sino por COINCIDENCIA entre las dos mitades — es "
                         "señal de consenso, no de calidad, y su ausencia no es "
                         "evidencia de nada sobre el corpus.\n"
-                        "Para decidir si un tema está: subí top_k y reformulá con "
+                        "Para decidir si un tema está: sube top_k y reformula con "
                         "términos del dominio. No lo deduzcas del score."
                     ),
                 },
@@ -267,7 +267,7 @@ READ_TOOLS: list[Tool] = [
         name="get_article",
         description=(
             "Reensambla el documento COMPLETO a partir de sus chunks (orden "
-            "chunk_index). Usalo tras search_docs, con el article_id, cuando "
+            "chunk_index). Úsalo tras search_docs, con el article_id, cuando "
             "el fragmento no alcanza para fundamentar sin alucinar."
         ),
         inputSchema={
@@ -294,8 +294,8 @@ READ_TOOLS: list[Tool] = [
             "Devuelve UN fragmento (chunk) por su id, con su metadata y "
             "procedencia. Un chunk son ~800 caracteres: es un pedazo del "
             "artículo, NO el artículo.\n"
-            "🔴 Para el documento entero usá get_article con el article_id. Si "
-            "tratás este fragmento como el artículo completo, vas a concluir que "
+            "🔴 Para el documento entero usa get_article con el article_id. Si "
+            "tratas este fragmento como el artículo completo, vas a concluir que "
             "lo que no está en él no existe."
         ),
         inputSchema={
@@ -336,15 +336,17 @@ READ_TOOLS: list[Tool] = [
             "                   esa versión o compilando antes de usarlo.\n"
             "  INVÁLIDO       = NO coincidió exacto Y existen entradas PARECIDAS. Es\n"
             "                   un detector de TYPO (mira 'sugerencias'), NO una\n"
-            "                   prueba de que la construcción no exista. Se calcula\n"
-            "                   por similitud contra un catálogo incompleto: un\n"
-            "                   nombre válido no catalogado que se parezca a otra\n"
-            "                   entrada cae aquí. Tómalo como '¿quisiste decir X?'.\n"
+            "                   prueba de que la construcción no exista. Solo sale\n"
+            "                   con un parecido fuerte ('Lenght' → 'Length'); un\n"
+            "                   nombre distinto no catalogado ('Abs', 'Len') da\n"
+            "                   NO_VERIFICABLE. Tómalo como '¿quisiste decir X?'.\n"
             "  NO_VERIFICABLE = 'NO SÉ'. No es inválido ni inexistente.\n"
-            "QUÉ HAY: los métodos de los tipos de dato del lenguaje (DateTime, "
-            "Collection, File, BusinessComponent…), extraídos del gxtypes.xml de un "
-            "install de GeneXus 18, y comandos, funciones y eventos de la wiki. Son "
-            "cientos de entradas, no miles, y el tamaño depende del deployment: "
+            "QUÉ HAY: depende del deployment, y NO asumas que una categoría está "
+            "completa. La base son los métodos de los tipos de dato del lenguaje "
+            "(DateTime, Collection, File, BusinessComponent…), extraídos del "
+            "gxtypes.xml de un install de GeneXus 18, más algunas reglas, eventos "
+            "y comandos de la wiki. Funciones de uso diario (Len, Abs, Upper) "
+            "pueden NO estar. Usa list_methods para ver qué tipos y entradas hay. "
             "GeneXus es mucho más grande, así que NO_VERIFICABLE es la respuesta "
             "ESPERADA para muchas construcciones perfectamente válidas.\n"
             "Ante NO_VERIFICABLE o INVÁLIDO, verifica por otra vía antes de "
@@ -532,22 +534,22 @@ WRITE_TOOLS: list[Tool] = [
         description=(
             "Indexa fichas YA CONSTRUIDAS de objetos de una Knowledge Base GeneXus "
             f"en la colección '{KB_COLLECTION}'. Idempotente por objeto.\n"
-            "EMPEZÁ POR EL DRY RUN, que es el default, porque te dice algo que "
-            "necesitás y no sabés: CUÁLES de las fichas que le pasás son realmente "
+            "EMPIEZA POR EL DRY RUN, que es el default, porque te dice algo que "
+            "necesitas y no sabes: CUÁLES de las fichas que le pasas son realmente "
             "nuevas. Compara el hash de procedencia de cada una contra lo indexado, "
             "con un solo SELECT y sin embeddear nada. Si navegaste 12 objetos y 9 no "
-            "cambiaron, el dry run te lo dice y escribís 3.\n"
+            "cambiaron, el dry run te lo dice y escribes 3.\n"
             "🔴 ESTA TOOL NO LEE LA KB. No abre GeneXus, no le habla al MCP de "
             "GeneXus, y NO verifica que la ficha describa el objeto real: indexa el "
-            "texto que le pasás. Si la ficha está mal, queda mal indexada y una "
+            "texto que le pasas. Si la ficha está mal, queda mal indexada y una "
             "búsqueda posterior la va a devolver como si fuera verdad.\n"
             "🔴 `kb_hash` es la clave de idempotencia y debería ser el hash del "
-            "SOURCE del objeto en la KB, no de la ficha. Si lo omitís, cada corrida "
+            "SOURCE del objeto en la KB, no de la ficha. Si lo omites, cada corrida "
             "con prosa distinta cuenta como cambio y se re-embeddea todo de nuevo.\n"
             "🔴 NO acepta una ruta de archivo, a propósito. La carga masiva inicial "
             "la hace scripts/bootstrap_kb.py, que llama a la misma función de "
             "librería sin pasar por MCP. Esta tool es para el flujo incremental: "
-            f"navegás objetos, armás sus fichas y las pasás inline (máximo "
+            f"navegas objetos, armas sus fichas y las pasas inline (máximo "
             f"{KB_MAX_INLINE} por llamada; arriba de eso se RECHAZA la llamada "
             "entera, no se trunca).\n"
             "Las fichas van en PROSA ESTRUCTURADA por secciones, no XML ni Source "
@@ -696,8 +698,8 @@ _INGEST_STATUS_GUIDANCE = {
     "skipped": (
         "ya estaba con el MISMO hash. NO es error, NO es que la ficha esté mal, y NO "
         "hace falta repetir la llamada: es idempotencia. Si esperabas un cambio y "
-        "salió skipped, lo que no cambió es el kb_hash que MANDASTE — revisá cómo lo "
-        "calculás, no reintentes."
+        "salió skipped, lo que no cambió es el kb_hash que MANDASTE — revisa cómo lo "
+        "calculas, no reintentes."
     ),
     "would_index": "en una escritura real entraría como nueva.",
     "would_reindex": "en una escritura real reemplazaría la versión indexada.",
@@ -744,7 +746,7 @@ def _render_ingest_report(reporte) -> str:
     problemas = [r for r in reporte.results if r.status in ("invalid", "error")]
     if problemas:
         nada = (
-            " NADA se escribió (on_invalid=stop). Corregí y repetí la llamada entera:"
+            " NADA se escribió (on_invalid=stop). Corrige y repite la llamada entera:"
             if reporte.dry_run is False and reporte.contar("indexed") == 0
             else ""
         )
@@ -770,9 +772,9 @@ def _render_ingest_report(reporte) -> str:
         lineas += [
             "",
             f"⚠ {reporte.sin_kb_hash} ficha(s) sin `kb_hash`. La idempotencia de esas "
-            "queda colgada de que vuelvas a generar la MISMA prosa: si la redactás "
+            "queda colgada de que vuelvas a generar la MISMA prosa: si la redactas "
             "distinto, la próxima corrida las cuenta como cambio y se re-embeddean. "
-            "Pasá el hash del source del objeto en la KB.",
+            "Pasa el hash del source del objeto en la KB.",
         ]
 
     if not reporte.dry_run and reporte.contar("indexed") + reporte.contar("reindexed"):
@@ -799,24 +801,24 @@ def _render_ingest_report(reporte) -> str:
 # where a NO_VERIFICABLE gets mistaken for "does not exist".
 _VERDICT_GUIDANCE = {
     "VÁLIDO": (
-        "→ Confirmado contra el catálogo curado. Podés afirmarlo; citá el 'source'."
+        "→ Confirmado contra el catálogo curado. Puedes afirmarlo; cita el 'source'."
     ),
     "INVÁLIDO": (
         "→ NO es prueba de que no exista. Significa: no matcheó exacto y hay "
-        "entradas parecidas (mirá 'sugerencias') — señal de TYPO, calculada por "
+        "entradas parecidas (mira 'sugerencias') — señal de TYPO, calculada por "
         "similitud contra un catálogo incompleto. Antes de descartar la "
-        "construcción, verificala contra un objeto real de la KB o la wiki oficial."
+        "construcción, verifícala contra un objeto real de la KB o la wiki oficial."
     ),
     "NO_VERIFICABLE": (
         "→ Es 'NO SÉ', NO 'inválido' ni 'no existe'. El catálogo cubre una "
         "fracción mínima de GeneXus, así que este es el veredicto esperado para "
-        "casi todo, incluidas construcciones válidas. Verificá por otra vía: leé "
+        "casi todo, incluidas construcciones válidas. Verifica por otra vía: lee "
         "un objeto de la KB que ya use la construcción (mirarlo, no recordarlo) o "
         "la wiki oficial. El token quedó en la cola de curación."
     ),
     "PISTA": (
         "→ No es un veredicto definitivo: es un indicio. Figura en el catálogo, "
-        "que se nutre de fuentes gx18 y no trae columna de versión. Confirmalo "
+        "que se nutre de fuentes gx18 y no trae columna de versión. Confírmalo "
         "contra la KB de esa versión (MCP genexus16) o compilando, antes de usarlo."
     ),
 }
@@ -831,7 +833,7 @@ def _verdict_guidance(verdict: object) -> str:
     key = verdict.get("verdict") if isinstance(verdict, dict) else None
     return _VERDICT_GUIDANCE.get(
         key,
-        "→ Veredicto no reconocido: tratalo como NO concluyente y verificá contra "
+        "→ Veredicto no reconocido: trátalo como NO concluyente y verifica contra "
         "la KB real o la wiki oficial.",
     )
 
@@ -865,8 +867,8 @@ def _reject_missing_kb_name(collection: str, filters: dict | None) -> str | None
         "Esta colección puede contener objetos de MAS DE UNA Knowledge Base, y un "
         "resultado de la KB equivocada te haría escribir código con nombres de objetos "
         "que no existen en la KB activa — peor que no recuperar nada.\n"
-        'Pasá filters={"kb_name": "<nombre>"}. Si no sabés cuál es la KB activa, '
-        "consultá genexus_whoami en el MCP de GeneXus (campo kb.active)."
+        'Pasa filters={"kb_name": "<nombre>"}. Si no sabes cuál es la KB activa, '
+        "consulta genexus_whoami en el MCP de GeneXus (campo kb.active)."
         f"{disponibles}\n"
         "NOTA: esto se rechazó ANTES de consultar el store. No dice nada sobre su "
         "contenido."
@@ -921,7 +923,7 @@ def _empty_search_text(collection: str, filters: dict | None) -> str:
             pass
         lineas.append(
             "Si ninguno de esos valores es el que buscabas, el filtro puede ser "
-            "correcto y el tema realmente no estar indexado — pero verificalo sin "
+            "correcto y el tema realmente no estar indexado — pero verifícalo sin "
             "filtros antes de afirmarlo."
         )
         return "\n".join(lineas)
@@ -934,7 +936,7 @@ def _empty_search_text(collection: str, filters: dict | None) -> str:
     hint = (
         f" Colecciones con contenido: {', '.join(populated)}."
         if populated
-        else " No hay colecciones con contenido; ingestá con add_from_url."
+        else " No hay colecciones con contenido; carga contenido con add_from_url."
     )
     return f"Sin resultados en '{collection}'.{hint}"
 
@@ -1012,7 +1014,7 @@ def _reject_unknown_collection(collection: str) -> str | None:
         f"Colección desconocida '{collection}'. "
         f"Válidas: {', '.join(KNOWN_COLLECTIONS)}.\n"
         "Esto NO dice nada sobre el corpus: se rechazó el argumento ANTES de "
-        "consultar el store. Corregí el nombre y repetí la llamada."
+        "consultar el store. Corrige el nombre y repite la llamada."
     )
 
 
@@ -1048,8 +1050,8 @@ def _run_ingest_kb_objects(arguments: dict) -> str:
         raise ValueError(
             f"{len(objects)} fichas exceden el máximo de {KB_MAX_INLINE} por llamada. "
             "NO se indexó ninguna (no se truncó el lote: un lote truncado reportaría "
-            f"éxito parcial como éxito). Partí en tandas de hasta {KB_MAX_INLINE} y "
-            "llamá una vez por tanda. Para la carga masiva inicial usá "
+            f"éxito parcial como éxito). Divide en tandas de hasta {KB_MAX_INLINE} y "
+            "llama una vez por tanda. Para la carga masiva inicial usa "
             "scripts/bootstrap_kb.py, que no pasa por MCP."
         )
 
@@ -1147,7 +1149,7 @@ def _run_ingest_batch(arguments: dict) -> str:
             for d in samples
         ]
         lines.append(
-            "Para escribir de verdad, repetí la llamada con dry_run=false. "
+            "Para escribir de verdad, repite la llamada con dry_run=false. "
             "Es idempotente: lo ya indexado sin cambios se salta."
         )
         return "\n".join(lines)
@@ -1156,7 +1158,7 @@ def _run_ingest_batch(arguments: dict) -> str:
     if report.total == 0:
         return (
             f"0 documentos parseados de '{path}' con formato '{fmt}': "
-            f"nada indexado. Revisá que el formato del dump sea el correcto."
+            f"nada indexado. Revisa que el formato del dump sea el correcto."
         )
     return (
         f"Ingesta OK en '{collection}' — total={report.total} "
@@ -1307,7 +1309,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                         text=(
                             f"No hay ningún chunk con id '{doc_id}' en "
                             f"'{collection}'.\n"
-                            "Verificá que sea un doc_id de search_docs (id de "
+                            "Verifica que sea un doc_id de search_docs (id de "
                             "CHUNK) y no un article_id — ese va a get_article."
                         ),
                     )
@@ -1397,7 +1399,7 @@ async def dispatch_tool(name: str, arguments: dict) -> list[TextContent]:
                             "Esto NO significa que ese objeto no tenga métodos: el "
                             "catálogo está incompleto y una lista vacía es lo normal. "
                             "No concluyas de esta respuesta que un método no existe — "
-                            "verificá contra un objeto real de la KB o la wiki oficial.\n"
+                            "verifica contra un objeto real de la KB o la wiki oficial.\n"
                             f"object_type disponibles en el catálogo: {disponibles}. "
                             "Se compara exacto."
                         ),

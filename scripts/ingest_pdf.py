@@ -54,7 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--index",
         action="store_true",
-        help="DEPRECATED: La indexación directa fue retirada. Usá scripts.ingest_local --manifest.",
+        help="DEPRECATED: La indexación directa fue retirada. Usa scripts.ingest_local --manifest.",
     )
     parser.add_argument(
         "--dry-run",
@@ -116,7 +116,7 @@ def main() -> int:
         print(
             "Error: La opción '--index' fue retirada de ingest_pdf para evitar identidades duplicadas (#10, #11).\n"
             "ingest_pdf solo genera Markdown estructurado (.md y .meta.json).\n"
-            "Para indexar en la base de datos, declará el documento en data/manuals.json y corré:\n"
+            "Para indexar en la base de datos, declara el documento en data/manuals.json y corre:\n"
             "    python -m scripts.ingest_local --manifest data/manuals.json",
             file=sys.stderr,
         )

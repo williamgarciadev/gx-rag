@@ -338,7 +338,7 @@ def extract(args) -> int:
             "select": args.select, "selection": sel, "selected": 0,
             "error": "el selector no matcheó ningún objeto del inventario",
             "hint": "La comparación de `type:` y de nombre es EXACTA (case-insensitive). "
-                    "Revisá `selection.terms`: un término con 0 casi siempre es un typo "
+                    "Revisa `selection.terms`: un término con 0 casi siempre es un typo "
                     "del tipo. Los tipos que EXISTEN en el inventario están en "
                     "`available_types`.",
             "available_types": sorted({o.get("type") or "?" for o in
@@ -510,7 +510,7 @@ def status(args) -> int:
             "ok": True, "command": "status", "out": str(salida), "exists": False,
             "total": 0,
             "hint": "Nada extraído todavía. El inventario lo arma el agente con "
-                    "genexus_list_objects paginado; después corré extract.",
+                    "genexus_list_objects paginado; después corre extract.",
             "next": "python scripts/bootstrap_kb.py extract --inventory <inv.json> "
                     f"--out {salida}",
         })
@@ -698,8 +698,8 @@ def ingest(args) -> int:
             "Estas fichas son un PISO derivado del crudo, no prosa redactada: el texto "
             "es el contenido de las partes con un encabezado. Sirven para que el corpus "
             "sea buscable ya, pero un hit mecánico es peor que uno redactado. Para "
-            "mejorar un objeto: leelo con genexus_read, redactá la ficha en prosa por "
-            "secciones, y reingestala con ingest_kb_objects — el mismo article_id la "
+            "mejorar un objeto: léelo con genexus_read, redacta la ficha en prosa por "
+            "secciones, y reingéstala con ingest_kb_objects — el mismo article_id la "
             "reemplaza."
         )
     if args.dry_run:
@@ -785,19 +785,19 @@ def _hint_para(exc: Exception) -> str:
     """Qué hacer ante cada falla conocida. Sin esto, el LLM reintenta a ciegas."""
     texto = str(exc)
     if isinstance(exc, FileNotFoundError) or "No such file" in texto:
-        return ("Falta un archivo. Si es el gateway, pasá --exe con la ruta a "
-                "GxMcp18.Gateway.exe. Si es el inventario o el JSONL, revisá la ruta.")
+        return ("Falta un archivo. Si es el gateway, pasa --exe con la ruta a "
+                "GxMcp18.Gateway.exe. Si es el inventario o el JSONL, revisa la ruta.")
     if "el gateway cerro stdout" in texto:
-        return ("El gateway murió. Causas medidas: no encuentra su config (pasá "
+        return ("El gateway murió. Causas medidas: no encuentra su config (pasa "
                 "--config con el GX_CONFIG_PATH correcto), o la KB no está accesible. "
-                "El stderr del gateway está suprimido: para verlo, corré el .exe a "
+                "El stderr del gateway está suprimido: para verlo, corre el .exe a "
                 "mano una vez.")
     if "WorkerBusy" in texto:
-        return ("El worker del SDK rechaza en vez de encolar. Esperá y volvé a correr "
+        return ("El worker del SDK rechaza en vez de encolar. Espera y vuelve a correr "
                 "el mismo comando: el JSONL es el checkpoint y no se repite trabajo.")
     if isinstance(exc, ResponseTooLarge) or "response_exceeded_cap" in texto:
         return ("Un objeto excedió el cap de 220 KB del gateway y su payload vuelve "
-                "VACÍO, no truncado. Bajá --batch, o salteá ese objeto.")
+                "VACÍO, no truncado. Baja --batch, o saltea ese objeto.")
     if "does not exist" in texto and "meta" in texto:
         return ("La base no tiene la columna `meta`: falta aplicar sql/003-chunk-meta"
                 ".sql. Ver docs/deploy-vps.md, sección de migración obligatoria.")

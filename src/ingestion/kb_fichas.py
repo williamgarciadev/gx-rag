@@ -145,7 +145,7 @@ def validate_ficha(ficha: object) -> list[str]:
         # que la KB no tiene.
         problemas.append(
             "'sections' vacio o ausente: una ficha sin secciones no tiene contenido "
-            "que indexar. Si el objeto existe pero no pudiste leerlo, omitilo en vez "
+            "que indexar. Si el objeto existe pero no pudiste leerlo, omítelo en vez "
             "de mandar una ficha vacia"
         )
         return problemas

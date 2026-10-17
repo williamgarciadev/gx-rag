@@ -89,7 +89,7 @@ def _dry_run(docs, collection: str) -> None:
         print(f"    - [{d.page_id}] {d.title[:60]}  ({len(d.content)} chars)  {d.url}")
     if total:
         print(
-            "[dry-run] para escribir de verdad, repetí el comando sin --dry-run. "
+            "[dry-run] para escribir de verdad, repite el comando sin --dry-run. "
             "Es idempotente: lo ya indexado sin cambios se saltea."
         )
 

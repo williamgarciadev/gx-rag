@@ -174,7 +174,7 @@ def filter_params(filters: dict | None) -> dict:
         valores = [crudo] if isinstance(crudo, str) else [v for v in crudo if v]
         if not valores:
             raise ValueError(
-                f"Filtro '{clave}' vino vacio. Omitilo para no filtrar por esa clave."
+                f"Filtro '{clave}' vino vacio. Omítelo para no filtrar por esa clave."
             )
         params[f"f_{clave}"] = valores
     return params

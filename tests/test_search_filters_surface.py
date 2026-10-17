@@ -196,7 +196,7 @@ def test_the_filtered_empty_text_does_not_claim_the_topic_is_absent(monkeypatch)
         "search_docs", query="x", collection="gx_docs", filters={"origin": ["wwp"]}
     )
 
-    assert "verificalo sin" in salida
+    assert "verifícalo sin" in salida
 
 
 # ─── render de metadatos ──────────────────────────────────────────────────────
