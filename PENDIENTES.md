@@ -3,6 +3,13 @@
 Backlog abierto tras la migración que reemplazó al MCP `genexus-docs` (2026-07-26).
 Cada ítem trae **evidencia**, no impresión. Ordenados por impacto sobre la calidad del RAG.
 
+> **Actualización 2026-10-17** (`docs/AUDITORIA-2026-10-17.md`): corpus medido hoy —
+> `gx_docs` **50.063** (wiki 19.783 + SAC 28.155 + WWP 2.125; ya no existe la
+> colección `gx_sac`, SAC es `meta.origin='sac'` dentro de `gx_docs`) · `bt_docs`
+> **34.198** · `gx_syntax` 26. §1 cerrado (catálogo cargado), §2 resuelto, §3 obsoleto,
+> §6bis sigue vigente en el corpus pero con el síntoma documentado ya no reproducible.
+> La tabla de abajo es la del cierre de la migración de julio, como registro.
+
 Estado del corpus al cierre de esa migración:
 
 | Colección | Chunks | Naturaleza |
@@ -14,7 +21,14 @@ Estado del corpus al cierre de esa migración:
 
 ---
 
-## 1. El catálogo de `verify_syntax` — ✅ POBLADO Y ACTIVO (2026-10-06)
+## 1. El catálogo de `verify_syntax` — ✅ POBLADO Y ACTIVO (2026-10-06; ampliado 2026-10-17)
+
+> **2026-10-17**: el catálogo en Postgres tiene **3.379 filas** (`gxtypes` 706, `wiki` 59,
+> `corpus` 2.614 cargadas con `scripts/load_catalog.py --apply`; respaldo previo en la
+> tabla `gx_syntax_bk_20261017_pre_h4b`) y **ninguna** con `version_since`: los "706 con
+> `version_since`" de abajo eran del SQLite `data/syntax.db`, que el server no lee
+> mientras `GXRAG_DSN` esté definida. La lectura del snippet se rehízo
+> (`snippet_parser.py`) porque daba INVÁLIDO a código válido según el contexto.
 
 **Estado actual en PostgreSQL (2026-10-06)**:
 El catálogo cuenta con **765 filas**, 706 con `version_since` y **96 `object_type`** (tipos de datos del lenguaje y categorías wiki).
@@ -86,7 +100,10 @@ antes cómo se versiona una entrada del catálogo.**
 
 ---
 
-## 2. Manual Descartes duplicado en `bt_docs` (~570 chunks) — MEDIA
+## 2. Manual Descartes duplicado en `bt_docs` (~570 chunks) — ✅ RESUELTO
+
+> **Verificado 2026-10-17**: queda una sola copia de cada manual (Diseñador Web UI
+> V3R1.3, 489 chunks; Servidor de Procesos, 104). Los `-extracted.md` ya no están.
 
 **Qué pasa**: el mismo manual entró dos veces — el PDF original y el `-extracted.md` que había
 producido el pipeline del proyecto anterior.
@@ -112,7 +129,10 @@ hay `delete_matching_by_metadata()`. Se necesita esa función (con su `--dry-run
 
 ---
 
-## 3. `tests/test_retriever.py` — 5 tests rojos pre-existentes — MEDIA
+## 3. `tests/test_retriever.py` — 5 tests rojos pre-existentes — ⚪ OBSOLETO
+
+> **Verificado 2026-10-17**: el archivo ya no existe (se fue con `retriever.py` y
+> ChromaDB). La suite está verde completa.
 
 **No son regresión de la migración.** El fake `_FakeCollection.get()` no acepta los kwargs
 `limit`/`offset` que `src/vectorstore/retriever.py:47` ya usa para paginar (la paginación se
@@ -156,7 +176,12 @@ Verificar primero que la caché esté completa (arrancar con la variable puesta 
 
 ---
 
-## 6bis. Los chunks de *backlinks* desplazan al cuerpo del artículo — ALTA
+## 6bis. Los chunks de *backlinks* desplazan al cuerpo del artículo — MEDIA (era ALTA)
+
+> **Medido 2026-10-17**: 4.449 de 19.783 chunks de wiki (22 %) siguen trayendo la
+> sección `Backlinks`, casi siempre pegada al final del cuerpo; 208 la tienen en el
+> primer cuarto. Pero la query de abajo ya no lo reproduce: 0 de 6 hits son listas.
+> Antes de reindexar `gx_wiki`, medir con el gold set que el fix mejora algo.
 
 _(Agregado 2026-07-27, fuera del orden por impacto para no renumerar. Impacto real: **ALTA**.)_
 

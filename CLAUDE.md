@@ -41,13 +41,13 @@ docker compose up
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/uvicorn src.api:app --reload --port 8000   # HTTP API
 .venv/bin/python -m src.server                        # MCP server (stdio)
-.venv/bin/python -m pytest tests/ -q                 # Tests — 520 passing al 2026-10-10
+.venv/bin/python -m pytest tests/ -q                 # Tests — 599 passing al 2026-10-17
 
 # Windows (PowerShell):
 python -m venv .venv; .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\uvicorn src.api:app --reload --port 8000
 .venv\Scripts\python -m src.server
-.venv\Scripts\pytest tests/ -q                        # Tests — 520 passing al 2026-10-10
+.venv\Scripts\pytest tests/ -q                        # Tests — 599 passing al 2026-10-17
 # Marcadores (pytest.ini, --strict-markers): unit | integration
 
 # Ingesta
@@ -131,8 +131,10 @@ Flujo de datos:
 > colección `gx_syntax` NO alimenta el catálogo del validador**, aunque el nombre lo sugiera.
 
 Frontend (`frontend/src/`): Vue 3 + Vite, UI admin para gestión y curación de corpus — **no** es un
-chat RAG (las consultas entran por MCP). `src/tools/` y `src/prompts/` están vacíos: la lógica de
-tools vive inline en `server.py` y `api.py`.
+chat RAG (las consultas entran por MCP). `src/tools/` y `src/prompts/` están vacíos: los handlers de
+las tools viven en `server.py` (`_READ_HANDLERS`), y lo que comparten los transportes en
+`src/tool_requests.py` (validar y acotar argumentos) y `src/collection_policy.py` (qué
+colecciones existen, cuáles son escribibles y cuáles públicas).
 
 ## Configuration
 

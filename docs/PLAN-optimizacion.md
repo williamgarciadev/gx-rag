@@ -360,7 +360,7 @@ Los docs de `docs/` describen **qué se quería**; esta tabla dice contra qué q
 | Dos capas separadas: retrieval mitiga, validación corta | `README §Principios` | **IMPLEMENTADO** | almacenes distintos por diseño; escrito como regla dura en `CLAUDE.md` |
 | Gate humano para el crecimiento del corpus | `crecimiento-controlado` | **IMPLEMENTADO** en MCP / **PARCIAL** en CLI | `server.py:392` (`dry_run=True` por defecto) vs `ingest_dump.py:103` (`--dry-run` opt-in, #13) |
 | Tool `search_cross(query_gx, query_bt)` y colección `cross_ref` | `mcp-stack §4`, `§3` | **AUSENTE** | no existen; `CollectionsConfig.cross_ref` declarada sin implementación |
-| Tool `get_signature(method, object_type, version)` | `mcp-stack §4` | **PARCIAL** | la función existe (`gx_repository.get_signature`) pero **no está expuesta como tool MCP** |
+| Tool `get_signature(method, object_type, version)` | `mcp-stack §4` | **NO IMPLEMENTADA** | `gx_repository.get_signature` se borró el 2026-10-17: no tenía llamadores y filtraba `version_since` por igualdad (la semántica equivocada). Si se expone la tool, escribirla sobre `_lookup_entry` y `_judge_entry` |
 | `snippet_mode` y `version` en `search_docs` | `mcp-stack §4` | **AUSENTE** | el retrieval no filtra por metadata más allá de `collection`; hay `snippet_chars`, que no es lo mismo |
 | Reranker cross-encoder | `mcp-stack §2` | **DESCARTADO A PROPÓSITO** | documentado en `CLAUDE.md` y `RAG_SYSTEM_MAP.md §5.2`: modelo English-trained sobre corpus español, diferido hasta tener uno multilingüe y un set etiquetado |
 | ChromaDB como vector DB | `mcp-stack §2` | **DESCARTADO A PROPÓSITO** | reemplazado por Postgres+pgvector en `c4fb609` |

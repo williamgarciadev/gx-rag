@@ -81,6 +81,6 @@ similitud (H4a, fase propia porque cambia veredictos para todos).
 
 ## Limpieza suelta
 
-- [ ] Borrar `scripts/purge_collection.py`, `scripts/split_collection.py`, `scripts/ab_e5_prefix.py` (no importan)
-- [ ] Borrar `get_signature` (`gx_repository.py:478`, sin llamadores)
-- [ ] Corregir lo stale de `RAG_SYSTEM_MAP.md`, `CLAUDE.md` y `PENDIENTES.md` (tabla (c) de la auditoría)
+- [x] Borrados `scripts/purge_collection.py`, `scripts/split_collection.py`, `scripts/ab_e5_prefix.py` (importaban `chroma_client`); `tests/test_imports_resuelven.py` detecta el próximo import roto sin ejecutar nada
+- [x] Borrado `get_signature` (sin llamadores; filtraba `version_since` por igualdad)
+- [x] `RAG_SYSTEM_MAP.md` corregido en el lugar (y el texto ajeno movido a `docs/investigacion-gateway-mcp-gxgenie.md`); `PENDIENTES.md` y `CLAUDE.md` al día

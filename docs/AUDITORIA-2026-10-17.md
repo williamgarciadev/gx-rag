@@ -155,7 +155,7 @@ hicieron con `_log_verdict` y `_record_missing` neutralizados, para no ensuciar 
 | Manual Descartes duplicado | **Resuelto**: una sola copia de cada manual (Diseñador V3R1.3 489, Servidor 104); los `-extracted.md` no están |
 | 5 tests rojos en `test_retriever.py` | **Obsoleto**: el archivo ya no existe; suite 520 passed |
 | Sin set de relevancia | **Resuelto en lo esencial** (VERIFIED que existen `scripts/eval_retrieval.py`, `eval_etp_titles.py`, `tests/test_gold_set.py`; no reevalué su resolución) |
-| Sin tool de borrado | **Vigente como tool MCP**; existe por CLI: `scripts/retire_source.py` y `purge_collection.py` |
+| Sin tool de borrado | **Vigente como tool MCP**; por CLI solo funciona `scripts/retire_source.py` (`purge_collection.py` no importaba: dependía de ChromaDB; se borró en la limpieza del plan) |
 
 ## (b) Top 3 por riesgo/esfuerzo
 
