@@ -67,12 +67,12 @@ similitud (H4a, fase propia porque cambia veredictos para todos).
 - [ ] Diferido, con razón: pasar a un `Document` con campos con nombre. Costaría ~20 fakes de `index_fn` en los tests para quitar dos llamadas con argumentos de relleno (`kb_loader`, `bulk_loader`). Retomarlo si aparece un tercer llamador
 - [ ] Diferido: que `src.ingestion` deje de importar `scripts.scrape_wiki` (`ScrapedArticle`, `compute_hash`). Exige mover el scraper a `src/`, y `api.py` también lo importa; es su propia fase
 
-## Fase C4 — Política de colecciones en un módulo
+## Fase C4 — Política de colecciones en un módulo · ✅ cerrada (sin commit aún)
 
-- [ ] Módulo `collections` con `existe / escribible / pública / exige_kb_name / default`
-- [ ] Borrar `CollectionsConfig` y la copia de `KB_COLLECTION` en `kb_loader.py`
-- [ ] El enum del schema público se deriva de la política (no ofrece `gx_kb_objects`)
-- [ ] Los CLIs validan la colección
+- [x] `src/collection_policy.py` (puro, sin DB): colecciones conocidas y default, `KB_COLLECTION` y la regla de `kb_name`, escribibles, públicas por sustracción, `reject_unknown_collection`, `reject_non_public_collection` y `add_collection_argument`
+- [x] Borrados `CollectionsConfig` (nadie lo leía; listaba `cross_ref`) y la copia de `KB_COLLECTION` en `kb_loader.py`; test que impide redefinir las colecciones fuera de la política (con `is` no se detecta: Python interna los literales)
+- [x] `PUBLIC_READ_TOOLS`: el transporte público publica el enum de colección recortado a las públicas (ya no ofrece `gx_kb_objects`); el stdio no cambia
+- [x] Los 11 CLIs con `--collection` validan con `add_collection_argument` (`choices`); test que impide declararlo a mano
 
 ## Fase C5 — *Seam* de conexión (especulativa)
 
