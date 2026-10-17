@@ -56,13 +56,16 @@ similitud (H4a, fase propia porque cambia veredictos para todos).
 - [x] Tools de lectura: un handler por tool (`_READ_HANDLERS`) y un solo `try` en `dispatch_tool`; en `api.py`, un exception handler para `RequestRejected` → 400. Las 3 tools de escritura conservan su manejo propio
 - [x] Mismo tratamiento para `get_document` y `get_article`; `verify_syntax` y `list_methods` no tienen argumentos que validar
 
-## Fase C3 — Una entrada idempotente al indexer
+## Fase C3 — Una entrada idempotente al indexer · ✅ cerrada (sin commit aún)
 
-- [ ] Test rojo: `add_from_url` de un artículo que se acortó no deja chunks huérfanos
-- [ ] `index_document(Document)` con campos con nombre; garantiza hash y huérfanos
-- [ ] `ingestor`, `kb_loader` y `bulk_loader` migran; se borra la entrada no idempotente
-- [ ] El formato `{id}_c{i}` queda interno (resolver `server.py:965`)
-- [ ] `src.ingestion` deja de importar `scripts.scrape_wiki`
+- [x] Test rojo: `add_from_url` de un artículo que se acortó no deja chunks huérfanos
+- [x] Test rojo (hallado al leer el código): reindexar en OTRA colección dejaba huérfanos en la vieja, y con el mismo hash reportaba `indexed`
+- [x] `index_document(...) -> IndexResult(status, chunk_count)`: única entrada de escritura; borra por `article_id` en todas las colecciones (chunk_id es clave global) y repara mezclas de hash; `reindex_if_changed` queda como su status para los cargadores por lote
+- [x] Borrada la entrada no idempotente (`pg_indexer.index_article`); `ingestor` (ruta de `add_from_url` y `/scrape`) usa `index_document` y reporta el status
+- [x] El formato `{id}_c{i}` tiene un solo dueño: `src/vectorstore/chunk_ids.py` (lo usan el indexer y `server.py`)
+- [x] Medido en la base real: 0 artículos con hashes mezclados, repartidos entre colecciones o con huecos → el defecto era latente, no hay nada que limpiar
+- [ ] Diferido, con razón: pasar a un `Document` con campos con nombre. Costaría ~20 fakes de `index_fn` en los tests para quitar dos llamadas con argumentos de relleno (`kb_loader`, `bulk_loader`). Retomarlo si aparece un tercer llamador
+- [ ] Diferido: que `src.ingestion` deje de importar `scripts.scrape_wiki` (`ScrapedArticle`, `compute_hash`). Exige mover el scraper a `src/`, y `api.py` también lo importa; es su propia fase
 
 ## Fase C4 — Política de colecciones en un módulo
 
