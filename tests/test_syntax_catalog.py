@@ -414,3 +414,48 @@ def test_receptor_tipado_tambien_pasa_por_el_gate_de_version(temp_db):
 
     for snippet in ("Date.AddDays(1)", "&d.AddDays(1)"):
         assert verify_syntax(snippet, version="gx16")["verdict"] == "PISTA", snippet
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INVÁLIDO es un detector de typo: solo con un parecido de verdad (H4a)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "snippet, catalogo",
+    [
+        ("Abs(&n)", ["Abort", "SaveAs", "Assign", "AddDays"]),
+        ("Len(&s)", ["Length"]),
+        ("TrimLeftInexistente(&s)", ["Trim"]),
+    ],
+)
+def test_un_nombre_distinto_no_catalogado_es_no_verificable_no_typo(temp_db, snippet, catalogo):
+    """Abs no es un typo de Abort, ni Len de Length: son otras funciones que el
+    catálogo no tiene. Con difflib a 0,4 salían INVÁLIDO con sugerencias sin
+    relación, y la guía le dice al agente que busque el typo."""
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    for nombre in catalogo:
+        _promote(cr, nombre, object_type="Function")
+
+    assert verify_syntax(snippet)["verdict"] == "NO_VERIFICABLE", snippet
+
+
+@pytest.mark.parametrize(
+    "snippet, nombre, esperado",
+    [
+        ("Trmi(&x)", "Trim", "Trim"),
+        ("&d.AddDay(1)", "AddDays", "AddDays"),
+        ("&d.AddYear(1)", "AddYears method", "AddYears method"),
+    ],
+)
+def test_un_typo_real_sigue_saliendo_invalido_con_la_sugerencia(temp_db, snippet, nombre, esperado):
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, nombre, object_type="Function")
+    v = verify_syntax(snippet)
+
+    assert v["verdict"] == "INVÁLIDO", v
+    assert v["sugerencias"][0] == esperado, v

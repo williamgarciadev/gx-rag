@@ -168,28 +168,30 @@ def _verify_bt_api(snippet: str, token: str, version: str | None) -> dict:
         session.close()
 
 
+# Parecido mínimo para llamar "typo" a un nombre. Un INVÁLIDO le dice al agente
+# que busque el error de tipeo, así que solo vale con un parecido de verdad:
+# 'Trmi'→'Trim' da 0,75 y 'AddDay'→'AddDays' 0,92, mientras 'Len'→'Length' da
+# 0,67 y 'Abs'→'Abort' 0,50, que son OTRAS funciones. Con difflib a 0,4 y las
+# reglas de subcadena, cualquier nombre no catalogado salía INVÁLIDO con cinco
+# sugerencias sin relación (docs/AUDITORIA-2026-10-17.md, H4).
+TYPO_SIMILARITY = 0.75
+
+
 def _find_similar(session, token: str) -> list[str]:
-    """Busca identificadores similares en el catálogo para evitar alucinaciones."""
-    all_names = [r[0] for r in session.query(GxSyntax.name).distinct().all()]
-    t_lower = token.lower()
-    matches: list[str] = []
-
-    # 1. Coincidencia por subcadena / prefijo mutuo
-    for n in all_names:
-        n_lower = n.lower()
-        if len(n) >= 3 and (
-            n_lower in t_lower
-            or t_lower.startswith(n_lower)
-            or (len(t_lower) >= 4 and n_lower.startswith(t_lower[:4]))
-        ):
-            if n not in matches:
-                matches.append(n)
-
-    # 2. Distancia Levenshtein / difflib si no hubo coincidencias directas
-    if not matches:
-        matches = difflib.get_close_matches(token, all_names, n=5, cutoff=0.4)
-
-    return matches
+    """Nombres del catálogo que parecen un typo de `token`, el más parecido primero."""
+    t = token.lower()
+    scored: list[tuple[float, str]] = []
+    for (name,) in session.query(GxSyntax.name).distinct().all():
+        # Contra el nombre entero y contra su primera palabra: el título de la
+        # wiki 'AddYears method' tiene que parecerse a 'AddYear'.
+        score = max(
+            difflib.SequenceMatcher(None, t, form.lower()).ratio()
+            for form in (name, name.split(" ", 1)[0])
+        )
+        if score >= TYPO_SIMILARITY:
+            scored.append((score, name))
+    scored.sort(key=lambda par: (-par[0], par[1]))
+    return [name for _, name in scored]
 
 
 def _version_rank(version: str | None) -> int | None:
@@ -391,7 +393,7 @@ def _judge_entry(entry: GxSyntax, otras: list[str], version: str | None) -> _Jud
         version_note = (
             f" OJO: el catálogo no registra versión para esta entrada, así que "
             f"este veredicto no discrimina versiones — NO es evidencia de que la "
-            f"firma sea la de {version}. Confirmalo contra un objeto real de la KB."
+            f"firma sea la de {version}. Confírmalo contra un objeto real de la KB."
         )
     elif version and version != entry.version_since:
         version_note = (
