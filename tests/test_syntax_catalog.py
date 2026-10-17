@@ -298,3 +298,119 @@ def test_a_token_too_short_to_compare_is_not_an_accusation(temp_db):
     _promote(cr, "AddYears method", object_type="Method")
 
     assert verify_syntax("Ad")["verdict"] == "NO_VERIFICABLE"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Falsos INVÁLIDO por el contexto del snippet (docs/AUDITORIA-2026-10-17.md, H1-H3)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("snippet", ["&x = Trim(&y)", "If Trim(&s) = ''"])
+def test_contexto_de_sentencia_no_vuelve_invalido_lo_catalogado(temp_db, snippet):
+    """H1: una construcción catalogada no puede salir INVÁLIDO por lo que la rodea.
+
+    El extractor solo reconoce la llamada si abre el snippet; si no, une todos los
+    tokens ('x Trim y') y la similitud encuentra 'Trim' como subcadena. El agente
+    recibe '¿quisiste decir Trim?' cuando escribió Trim.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "Trim", object_type="Character")
+
+    assert verify_syntax(snippet)["verdict"] != "INVÁLIDO", snippet
+
+
+def test_literal_con_punto_no_se_toma_como_receptor(temp_db):
+    """H2: el punto dentro de un literal no es una invocación de miembro.
+
+    Todo msg()/error() con un punto en el texto invalidaba la regla que lo contiene.
+    """
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "Msg rule", object_type="Rule")
+
+    v = verify_syntax("Msg('Error. Revise los datos')")
+    assert v["verdict"] == "VÁLIDO" and v["name"] == "Msg rule", v
+
+
+def test_receptor_desconocido_no_acusa_pertenencia(temp_db):
+    """H3: un receptor que no es tipo catalogado (un procedure de la KB) no prueba
+    que el miembro 'no pertenezca al tipo'. Proc.Call() es la sintaxis normal."""
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "Call", object_type="GXProgram")
+
+    assert verify_syntax("PJCCY657.Call(&a)")["verdict"] != "INVÁLIDO"
+
+
+def test_receptor_que_si_es_tipo_catalogado_sigue_detectando_el_cruce(temp_db):
+    """Control de H3: el fix no puede apagar el gate legítimo de tipo."""
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddDays", object_type="Date")
+    _promote(cr, "Trim", object_type="Character")
+
+    assert verify_syntax("Date.Trim()")["verdict"] == "INVÁLIDO"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Telemetría en un solo punto: juzgar no escribe
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_juzgar_contra_el_catalogo_no_escribe_telemetria(temp_db, monkeypatch):
+    """El juicio es la parte testeable sin efectos: devuelve el veredicto y quien
+    lo llama decide qué registrar. Antes había 8 escrituras repartidas entre las
+    ramas, y cualquier test de veredicto dejaba filas en validation_log."""
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db import gx_repository as repo
+    from src.syntax_db.models import get_session
+    from src.syntax_db.snippet_parser import parse_snippet
+
+    _promote(cr, "Trim", object_type="Character")
+
+    def _prohibido(*a, **k):
+        raise AssertionError("_judge no debe escribir telemetría")
+
+    monkeypatch.setattr(repo, "_log_verdict", _prohibido)
+    monkeypatch.setattr(repo, "_record_missing", _prohibido)
+
+    session = get_session()
+    try:
+        for snippet in ("Trim(&x)", "Zzzqqq(&x)", "Trmi(&x)"):
+            repo._judge(session, parse_snippet(snippet), None)
+    finally:
+        session.close()
+
+
+@pytest.mark.parametrize("snippet", ["Trim(&x)", "Zzzqqq(&x)", "Trmi(&x)"])
+def test_cada_veredicto_deja_exactamente_una_fila_de_telemetria(temp_db, snippet):
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+    from src.syntax_db.models import ValidationLog, get_session
+
+    _promote(cr, "Trim", object_type="Character")
+    verify_syntax(snippet)
+
+    session = get_session()
+    try:
+        assert session.query(ValidationLog).count() == 1
+    finally:
+        session.close()
+
+
+def test_receptor_tipado_tambien_pasa_por_el_gate_de_version(temp_db):
+    """Date.AddDays y &d.AddDays son la misma construcción: con gx16 las dos son
+    PISTA. El camino del receptor tipado armaba su propio VÁLIDO y se saltaba el
+    gate, que es exactamente el falso VÁLIDO que el gate existe para evitar."""
+    from src.syntax_db import candidate_repository as cr
+    from src.syntax_db.gx_repository import verify_syntax
+
+    _promote(cr, "AddDays", object_type="Date")
+
+    for snippet in ("Date.AddDays(1)", "&d.AddDays(1)"):
+        assert verify_syntax(snippet, version="gx16")["verdict"] == "PISTA", snippet

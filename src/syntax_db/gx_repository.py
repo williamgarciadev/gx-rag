@@ -7,6 +7,7 @@ from __future__ import annotations
 import difflib
 import logging
 import re
+from dataclasses import dataclass
 from typing import Literal
 
 from sqlalchemy import func
@@ -18,6 +19,7 @@ from src.syntax_db.models import (
     ValidationLog,
     get_session,
 )
+from src.syntax_db.snippet_parser import ParsedSnippet, parse_snippet
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +36,6 @@ _INVOCABILITY = {
     "property": 5,
 }
 
-MIN_SIMILARITY_TOKEN = 3
-
 _ENTRY_SUFFIXES = (
     "method",
     "property",
@@ -51,67 +51,10 @@ _ENTRY_SUFFIXES = (
 # Sufijos de título que nombran un MIEMBRO de otra cosa (un command no lo es).
 _MEMBER_SUFFIXES = ("method", "property", "event")
 
-# &fecha.AddYears(5) -> AddYears   |   &col.Add(&item) -> Add
-_MEMBER_CALL = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(")
-# &var.ResourceName (acceso a propiedad o método sin paréntesis)
-_MEMBER_ACCESS = re.compile(r"\.\s*([A-Za-z_][A-Za-z0-9_]*)")
 
-# Patrón receptor.miembro: &fecha.AddYears(...) o Date.AddDays
-_RECEIVER_MEMBER = re.compile(r"([&]?[A-Za-z0-9_]+)?\.\s*([A-Za-z_][A-Za-z0-9_]*)")
-
-
-def _extract_candidate(snippet: str) -> tuple[str | None, str]:
-    """Extrae el receptor (clase/variable) y el identificador de método/función de un snippet.
-
-    Ejemplos:
-    - '&fecha.ToFormattedString(3)' -> ('&fecha', 'ToFormattedString')
-    - 'Date.AddDays(1)'             -> ('Date', 'AddDays')
-    - 'TrimLeftInexistente'         -> (None, 'TrimLeftInexistente')
-    - 'Null(&var)'                  -> (None, 'Null')
-    """
-    s = snippet.strip()
-
-    # 1. Invocación con punto (&var.Metodo(...) o Tipo.Metodo(...) o .Metodo(...))
-    m = _RECEIVER_MEMBER.search(s)
-    if m:
-        receiver, member = m.groups()
-        return receiver, member
-
-    # 2. Llamada a función suelta: Func(...)
-    func_match = re.search(r"^([A-Za-z_][A-Za-z0-9_]*)\s*\(", s)
-    if func_match:
-        return None, func_match.group(1)
-
-    # 3. Token normalizado completo si no hay punto ni llamada
-    return None, _normalize_token(s)
-
-
-def _member_tokens(snippet: str) -> list[str]:
-    """Miembros invocados o accedidos en un snippet, del más probable al menos."""
-    vistos: list[str] = []
-    for rx in (_MEMBER_CALL, _MEMBER_ACCESS):
-        for m in rx.findall(snippet):
-            if m not in vistos:
-                vistos.append(m)
-    return vistos
-
-
-def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None) -> list[GxSyntax]:
+def _lookup_entry(session, nombres: tuple[str, ...], *, invoked_as_member: bool) -> list[GxSyntax]:
     """Entradas de gx_syntax que matchean alguno de `nombres`, mejor primero."""
     for base in nombres:
-        # Si tenemos un tipo receptor conocido (ej. Date), filtrar por él primero
-        if receiver_type and not receiver_type.startswith("&"):
-            exacta_tipo = (
-                session.query(GxSyntax)
-                .filter(
-                    func.lower(GxSyntax.name) == base.lower(),
-                    func.lower(GxSyntax.object_type) == receiver_type.lower(),
-                )
-                .all()
-            )
-            if exacta_tipo:
-                return exacta_tipo
-
         for nombre in [base] + [f"{base} {s}" for s in _ENTRY_SUFFIXES]:
             n = nombre.lower()
             exacta = (
@@ -132,7 +75,7 @@ def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None)
             # VÁLIDO a «Component» con «Refresh Web Component command»: una
             # palabra dentro del nombre de otro construct no es ese construct.
             forma = func.lower(GxSyntax.name).like(f"{n} %")
-            if receiver_type:
+            if invoked_as_member:
                 for sufijo in _MEMBER_SUFFIXES:
                     forma = forma | func.lower(GxSyntax.name).like(f"% {base.lower()} {sufijo}")
             calificadas = (
@@ -147,18 +90,6 @@ def _lookup_entry(session, nombres: list[str], receiver_type: str | None = None)
                     key=lambda e: _INVOCABILITY.get((e.object_type or "").lower(), 99),
                 )
     return []
-
-
-def _normalize_token(snippet: str) -> str:
-    """Normaliza un snippet a tokens clave para búsqueda."""
-    tokens = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", snippet)
-    stop = {
-        "if", "else", "for", "while", "do", "return", "var", "let",
-        "const", "function", "class", "import", "export", "new", "this",
-        "self", "true", "false", "null", "none", "async", "await", "def",
-        "in", "or", "and", "then", "endif", "endfor", "event", "endevent",
-    }
-    return " ".join(t for t in tokens if t.lower() not in stop).strip()
 
 
 def _log_verdict(
@@ -276,11 +207,14 @@ def verify_syntax(
     """
     Verifica un snippet contra el catálogo gx_syntax.
     Retorna veredicto con procedencia.
-    """
-    receiver, candidate_token = _extract_candidate(snippet)
-    token = _normalize_token(snippet)
 
-    if not candidate_token and not token:
+    Tres pasos con dueños distintos: parse_snippet decide QUÉ nombres consultar
+    (puro), _judge los juzga contra el catálogo (lee, no escribe), y acá se
+    registra la telemetría UNA vez por veredicto.
+    """
+    parsed = parse_snippet(snippet)
+
+    if not parsed.names:
         _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
         return {
             "verdict": "NO_VERIFICABLE",
@@ -294,167 +228,196 @@ def verify_syntax(
 
     # bt_api snippets are verified against the BtApi catalog, NOT GxSyntax.
     if language == "bt_api":
-        return _verify_bt_api(snippet, candidate_token or token, version)
+        return _verify_bt_api(snippet, parsed.names[0], version)
 
     session = get_session()
     try:
-        query_token = candidate_token or token
+        judgment = _judge(session, parsed, version)
+    finally:
+        session.close()
 
-        # 1. Si el receptor es una clase concreta (ej. Date.AddDays)
-        if receiver and not receiver.startswith("&"):
-            exacta_clase = (
-                session.query(GxSyntax)
-                .filter(
-                    func.lower(GxSyntax.name) == query_token.lower(),
-                    func.lower(GxSyntax.object_type) == receiver.lower(),
-                )
-                .first()
+    _log_verdict(
+        "verify_syntax", snippet, judgment.result["verdict"],
+        judgment.entry_id, version, judgment.source,
+    )
+    if judgment.missing:
+        _record_missing(judgment.missing, None, version)
+    return judgment.result
+
+
+@dataclass(frozen=True)
+class _Judgment:
+    """El veredicto y lo que la telemetría necesita registrar de él."""
+
+    result: dict
+    entry_id: int | None = None
+    source: str | None = None
+    missing: str | None = None  # token a encolar para curación
+
+
+def _is_catalog_type(session, name: str) -> bool:
+    """¿Es `name` un object_type del catálogo (Date, Character...)?
+
+    Un receptor sin & puede ser un tipo (Date.AddDays) o un objeto de la KB
+    (PJCCY657.Call): solo en el primer caso tiene sentido acusar que el miembro
+    'no pertenece al tipo'.
+    """
+    return (
+        session.query(GxSyntax.id)
+        .filter(func.lower(GxSyntax.object_type) == name.lower())
+        .first()
+        is not None
+    )
+
+
+def _judge(session, parsed: ParsedSnippet, version: str | None) -> _Judgment:
+    """Juzga los nombres leídos contra el catálogo. Lee la base, no escribe."""
+    query_token = parsed.names[0]
+    receiver = parsed.receiver
+    receiver_type = (
+        receiver
+        if receiver and not receiver.startswith("&") and _is_catalog_type(session, receiver)
+        else None
+    )
+
+    # 1. El receptor es un tipo del catálogo (ej. Date.AddDays)
+    if receiver_type:
+        exacta_clase = (
+            session.query(GxSyntax)
+            .filter(
+                func.lower(GxSyntax.name) == query_token.lower(),
+                func.lower(GxSyntax.object_type) == receiver_type.lower(),
             )
-            if exacta_clase:
-                entry = exacta_clase
-                _log_verdict("verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source)
-                return {
-                    "verdict": "VÁLIDO",
-                    "name": entry.name,
-                    "object_type": entry.object_type,
-                    "signature": entry.signature,
-                    "version": entry.version_since,
-                    "source": entry.source,
-                    "notes": f"Válido según {entry.source} ({entry.object_type}.{entry.name})",
-                }
+            .first()
+        )
+        if exacta_clase:
+            # Por _judge_entry como cualquier otra entrada: un VÁLIDO propio de
+            # este camino se saltaba el gate de versión (Date.AddDays con gx16
+            # daba VÁLIDO; &d.AddDays, PISTA).
+            return _judge_entry(exacta_clase, [], version)
 
-            # Si no está en esa clase, verificar si existe en otros tipos (Defecto 5.3)
-            other_entries = (
-                session.query(GxSyntax)
-                .filter(func.lower(GxSyntax.name) == query_token.lower())
-                .all()
-            )
-            if other_entries:
-                other_types = sorted(list(set(e.object_type for e in other_entries)))
-                _log_verdict("verify_syntax", snippet, "INVÁLIDO", None, version, None)
-                return {
-                    "verdict": "INVÁLIDO",
-                    "reason": f"'{query_token}' no pertenece al tipo '{receiver}' (disponible en: {', '.join(other_types)}).",
-                    "sugerencias": other_types,
-                }
+        # Si no está en esa clase, verificar si existe en otros tipos (Defecto 5.3)
+        other_entries = (
+            session.query(GxSyntax)
+            .filter(func.lower(GxSyntax.name) == query_token.lower())
+            .all()
+        )
+        if other_entries:
+            other_types = sorted(list(set(e.object_type for e in other_entries)))
+            return _Judgment({
+                "verdict": "INVÁLIDO",
+                "reason": f"'{query_token}' no pertenece al tipo '{receiver_type}' (disponible en: {', '.join(other_types)}).",
+                "sugerencias": other_types,
+            })
 
-        # 2. Búsqueda con sufijos y miembros de llamada
-        candidates_to_try = [query_token]
-        for m in _member_tokens(snippet):
-            if m not in candidates_to_try:
-                candidates_to_try.append(m)
+    # 2. Búsqueda con sufijos sobre todos los nombres leídos
+    matches = _lookup_entry(session, parsed.names, invoked_as_member=receiver is not None)
+    if matches:
+        return _judge_entry(matches[0], [m.name for m in matches[1:]], version)
 
-        matches = _lookup_entry(session, candidates_to_try, receiver_type=receiver)
-        otras: list[str] = []
-        entry = None
-        if matches:
-            entry = matches[0]
-            otras = [m.name for m in matches[1:]]
-        else:
-            # Búsqueda exacta directa en name
-            entry = session.query(GxSyntax).filter(func.lower(GxSyntax.name) == query_token.lower()).first()
+    # 3. Búsqueda por similaridad (tolerante: prefijo + difflib)
+    similar = _find_similar(session, query_token)
 
-        if entry:
-            asked = _version_rank(version)
-            since = _version_rank(entry.version_since)
-            if since is not None and asked is not None and asked < since:
-                _log_verdict("verify_syntax", snippet, "INVÁLIDO", entry.id, version, entry.source)
-                return {
-                    "verdict": "INVÁLIDO",
-                    "name": entry.name,
-                    "object_type": entry.object_type,
-                    "version": entry.version_since,
-                    "source": entry.source,
-                    "reason": (
-                        f"'{entry.name}' existe en el catálogo pero a partir de "
-                        f"{entry.version_since}; se consultó por {version}, donde todavía no "
-                        f"está disponible."
-                    ),
-                    "notes": (
-                        "No lo uses en esta versión. Si necesitas el comportamiento, "
-                        "busca la alternativa propia de la versión consultada."
-                    ),
-                }
+    if not similar:
+        return _Judgment(
+            {
+                "verdict": "NO_VERIFICABLE",
+                "reason": "No encontrado en el catálogo. Verificar manualmente.",
+                "token": query_token,
+            },
+            missing=query_token,
+        )
 
-            if since is None and asked is not None and asked < CATALOG_SOURCE_VERSION:
-                _log_verdict("verify_syntax", snippet, "PISTA", entry.id, version, entry.source)
-                return {
-                    "verdict": "PISTA",
-                    "name": entry.name,
-                    "object_type": entry.object_type,
-                    "signature": entry.signature,
-                    "version": None,
-                    "source": entry.source,
-                    "reason": (
-                        f"'{entry.name}' figura en el catálogo, que se nutre de fuentes "
-                        f"gx{CATALOG_SOURCE_VERSION} y no trae columna de versión. "
-                        f"Se consultó por {version}: el catálogo NO puede confirmarlo "
-                        f"ahí."
-                    ),
-                    "notes": (
-                        "No es un veredicto: es un indicio. Confírmalo contra la KB "
-                        "de esa versión (MCP genexus16) o compilando, antes de usarlo."
-                    ),
-                }
+    # Encontrado similar → INVÁLIDO
+    return _Judgment({
+        "verdict": "INVÁLIDO",
+        "reason": f"'{query_token}' no coincide exactamente con ninguna entrada del catálogo.",
+        "sugerencias": similar[:5],
+    })
 
-            version_note = ""
-            if version and not entry.version_since:
-                version_note = (
-                    f" OJO: el catálogo no registra versión para esta entrada, así que "
-                    f"este veredicto no discrimina versiones — NO es evidencia de que la "
-                    f"firma sea la de {version}. Confirmalo contra un objeto real de la KB."
-                )
-            elif version and version != entry.version_since:
-                version_note = (
-                    f" (versión pedida {version}; catálogo indica {entry.version_since})"
-                )
-            _log_verdict(
-                "verify_syntax", snippet, "VÁLIDO", entry.id, version, entry.source
-            )
-            ambiguo = (
-                f" Ojo: el catálogo tiene {len(otras) + 1} entradas para este miembro "
-                f"({', '.join(otras)}); se devuelve la primera."
-                if otras
-                else ""
-            )
-            resultado = {
-                "verdict": "VÁLIDO",
+
+def _judge_entry(entry: GxSyntax, otras: list[str], version: str | None) -> _Judgment:
+    """Veredicto para una entrada encontrada: el gate de versión decide."""
+    asked = _version_rank(version)
+    since = _version_rank(entry.version_since)
+    if since is not None and asked is not None and asked < since:
+        return _Judgment(
+            {
+                "verdict": "INVÁLIDO",
+                "name": entry.name,
+                "object_type": entry.object_type,
+                "version": entry.version_since,
+                "source": entry.source,
+                "reason": (
+                    f"'{entry.name}' existe en el catálogo pero a partir de "
+                    f"{entry.version_since}; se consultó por {version}, donde todavía no "
+                    f"está disponible."
+                ),
+                "notes": (
+                    "No lo uses en esta versión. Si necesitas el comportamiento, "
+                    "busca la alternativa propia de la versión consultada."
+                ),
+            },
+            entry.id,
+            entry.source,
+        )
+
+    if since is None and asked is not None and asked < CATALOG_SOURCE_VERSION:
+        return _Judgment(
+            {
+                "verdict": "PISTA",
                 "name": entry.name,
                 "object_type": entry.object_type,
                 "signature": entry.signature,
-                "version": entry.version_since,
+                "version": None,
                 "source": entry.source,
-                "notes": (
-                    f"Válido según {entry.source} ({entry.object_type})"
-                    f"{version_note}{ambiguo}"
+                "reason": (
+                    f"'{entry.name}' figura en el catálogo, que se nutre de fuentes "
+                    f"gx{CATALOG_SOURCE_VERSION} y no trae columna de versión. "
+                    f"Se consultó por {version}: el catálogo NO puede confirmarlo "
+                    f"ahí."
                 ),
-            }
-            if otras:
-                resultado["otras_entradas"] = otras
-            return resultado
+                "notes": (
+                    "No es un veredicto: es un indicio. Confírmalo contra la KB "
+                    "de esa versión (MCP genexus16) o compilando, antes de usarlo."
+                ),
+            },
+            entry.id,
+            entry.source,
+        )
 
-        # 3. Búsqueda por similaridad (tolerante: prefijo + difflib)
-        target_for_similarity = candidate_token or token
-        similar = _find_similar(session, target_for_similarity)
-
-        if not similar:
-            _log_verdict("verify_syntax", snippet, "NO_VERIFICABLE", None, version, None)
-            _record_missing(target_for_similarity, None, version)
-            return {
-                "verdict": "NO_VERIFICABLE",
-                "reason": "No encontrado en el catálogo. Verificar manualmente.",
-                "token": target_for_similarity,
-            }
-
-        # Encontrado similar → INVÁLIDO
-        _log_verdict("verify_syntax", snippet, "INVÁLIDO", None, version, None)
-        return {
-            "verdict": "INVÁLIDO",
-            "reason": f"'{target_for_similarity}' no coincide exactamente con ninguna entrada del catálogo.",
-            "sugerencias": similar[:5],
-        }
-    finally:
-        session.close()
+    version_note = ""
+    if version and not entry.version_since:
+        version_note = (
+            f" OJO: el catálogo no registra versión para esta entrada, así que "
+            f"este veredicto no discrimina versiones — NO es evidencia de que la "
+            f"firma sea la de {version}. Confirmalo contra un objeto real de la KB."
+        )
+    elif version and version != entry.version_since:
+        version_note = (
+            f" (versión pedida {version}; catálogo indica {entry.version_since})"
+        )
+    ambiguo = (
+        f" Ojo: el catálogo tiene {len(otras) + 1} entradas para este miembro "
+        f"({', '.join(otras)}); se devuelve la primera."
+        if otras
+        else ""
+    )
+    resultado = {
+        "verdict": "VÁLIDO",
+        "name": entry.name,
+        "object_type": entry.object_type,
+        "signature": entry.signature,
+        "version": entry.version_since,
+        "source": entry.source,
+        "notes": (
+            f"Válido según {entry.source} ({entry.object_type})"
+            f"{version_note}{ambiguo}"
+        ),
+    }
+    if otras:
+        resultado["otras_entradas"] = otras
+    return _Judgment(resultado, entry.id, entry.source)
 
 
 def list_methods(object_type: str, version: str | None = None) -> list[str]:

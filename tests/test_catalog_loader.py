@@ -9,10 +9,10 @@ All CRLF, no header row.
 
 Two consequences the loader has to face rather than paper over:
 
-- `_normalize_token` reduces a snippet to ONE word, so a multi-word name like
-  "Accent Color" can never be matched by verify_syntax's exact path. Those rows
-  are still loaded — list_methods and the near-miss suggestions reach them — but
-  the exact-match path is honestly limited to single-word names.
+- A multi-word name like "Accent Color" is matched by verify_syntax's exact
+  path only when the snippet is the bare name: `parse_snippet` never builds one
+  out of a statement. Those rows are still loaded — list_methods and the
+  near-miss suggestions reach them.
 - Names collide ACROSS files: "Call" is both a command and a property. Keying on
   name alone would make the verdict depend on insertion order.
 """

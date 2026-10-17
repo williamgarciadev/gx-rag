@@ -14,10 +14,11 @@ version column. Every row therefore lands with `version_since = NULL`, which
 catalog's own. Loading these BEFORE that verdict existed would have produced
 false VÁLIDOs at scale against the GX16 Bantotal KBs.
 
-Known limitation, stated rather than hidden: `_normalize_token` reduces a
-snippet to a single word, so multi-word names ("Accent Color" — 80% of
-properties) can never be hit by the exact-match path. They are still loaded:
-`list_methods` enumerates them and the near-miss lookup suggests them.
+Known limitation, stated rather than hidden: multi-word names ("Accent Color"
+— 80% of properties) are hit by the exact-match path only when the snippet IS
+the bare name. Inside code, `parse_snippet` reads identifiers, members and
+calls, so they are never formed from a statement. `list_methods` enumerates
+them and the near-miss lookup suggests them.
 """
 
 import logging
