@@ -485,6 +485,7 @@ Las fases están cortadas para minimizar colisión de archivos. Si trabajan dos 
 | Fase 3 (interfaz) | `pg_collections.py`, `api.py`, `ingest_dump.py`, `frontend/` | nadie |
 | ✅ Auditoría de interfaz (2026-08-11, **cerrada**) | `src/syntax_db/gx_repository.py`, `src/server.py` (descripciones + handlers de lectura), `src/vectorstore/pg_collections.py`, `tests/test_interface_contract.py` (nuevo), `tests/test_syntax_catalog.py` | 🔴 tocó `server.py`, que Fase 1 también toca (ahí eran "solo los strings 54 y 146" — ya están corregidos, revalidar líneas) |
 | Fase 4 (bootstrap) | `docs/BOOTSTRAP-agente.md` (nuevo) | nadie |
+| ✅ Arquitectura C1 (2026-10-17, **cerrada** en `e552a0d`) — ver `docs/PLAN-arquitectura.md` | `src/syntax_db/gx_repository.py`, `src/syntax_db/snippet_parser.py` (nuevo), `tests/test_syntax_catalog.py`, `tests/test_snippet_parser.py` (nuevo) | nadie mientras no se toque el catálogo |
 
 **Fase 3 y Fase 4 son las más seguras para tomar en paralelo**: no tocan ningún archivo de Fase 0/1/2.
 **Antes de entrar a Fase 2, correr `git status` y leer el diff vivo de `pg_retriever.py`.**

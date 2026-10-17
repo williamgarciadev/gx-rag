@@ -244,15 +244,20 @@ sesiones sí.
   carpeta no corrige nada (el F1000-48 es de Colombia y el portal lo archiva en Uruguay). Para un
   documento así, transcríbelo a `.md` con frontmatter (`localization: CO`) y pon el país en el título:
   el agente lee el texto del chunk, no los metadatos. Ojo: el frontmatter también se indexa como chunk.
-- **El catálogo del validador (`gx_syntax`, SQL) tiene 765 entradas, 706 con `version_since` y 96 `object_type`.**
-  Las fuentes principales provienen de GeneXus 18 (incluyendo `gxtypes.xml`). Para una versión previa
+- **El catálogo del validador (`gx_syntax`, SQL) tiene 3.379 entradas, 0 con `version_since` y 102
+  `object_type`** (medido 2026-10-17): `gxtypes` 706, `wiki` 59 y `corpus` 2.614 (funciones, métodos,
+  propiedades, eventos, comandos y data types de `~/.claude/genexus/corpus/*.tsv`, cargados con
+  `scripts/load_catalog.py --apply`; respaldo previo en la tabla `gx_syntax_bk_20261017_pre_h4b`).
+  ⚠️ El `data/syntax.db` (SQLite, 706 filas con `version_since='18.0.15'`) es un store VIEJO que el
+  server no lee mientras `GXRAG_DSN` esté definida. Las fuentes son todas GeneXus 18. Para una versión previa
   como `gx16` (las KBs Bantotal), un método no diferenciable por versión sale como veredicto `PISTA`
   (no `VÁLIDO`), indicando que debe verificarse contra un objeto de la KB. `list_methods` no filtra
   por versión pero lista los métodos disponibles por tipo.
-- **`object_type` NO es el tipo de objeto GeneXus (Transaction, Procedure...).** Contiene 96 tipos reales
+- **`object_type` NO es el tipo de objeto GeneXus (Transaction, Procedure...).** Contiene 102 tipos reales
   divididos en dos familias: (1) tipos de dato del lenguaje con sus métodos (`DateTime`, `Date`,
-  `Character`, `Collection`, `File`, `BusinessComponent`, etc.); (2) categorías de la wiki (`Method`,
-  `Event`, `Command`, `Rule`, `Property`). Pedir `Transaction` o `Procedure` devuelve vacío por
+  `Character`, `Collection`, `File`, `BusinessComponent`, etc.); (2) categorías (`Method`, `Event`,
+  `Command`, `Rule`, `Property` de la wiki, y `function`, `method`, `property`, `event`, `command`,
+  `data type` en minúscula del corpus). Pedir `Transaction` o `Procedure` devuelve vacío por
   taxonomía ajena al catálogo.
 - **El `tsv` de la base viva usa la config `es_simple`** (= `simple` + `unaccent`, ver
   `sql/002-unaccent-tsv.sql`), y `pg_retriever` consulta con esa misma config. ⚠️ Pero
